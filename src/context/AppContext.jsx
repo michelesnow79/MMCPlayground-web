@@ -38,46 +38,59 @@ export const AppProvider = ({ children }) => {
 
     // 1. Auth Listener
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                // Fetch additional user data from Firestore if exists
-                const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-                const userData = userDoc.exists() ? userDoc.data() : {};
-
-                setUser({
-                    uid: firebaseUser.uid,
-                    email: firebaseUser.email,
-                    name: userData.name || firebaseUser.email.split('@')[0].toUpperCase(),
-                    isAdmin: userData.isAdmin || firebaseUser.email === 'MissMe@missmeconnection.com', // Admin fallback
-                    ...userData
-                });
-                setIsLoggedIn(true);
-            } else {
-                setUser(null);
-                setIsLoggedIn(false);
-            }
+        if (!auth) {
             setLoading(false);
+            return;
+        }
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            try {
+                if (firebaseUser) {
+                    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+                    const userData = userDoc.exists() ? userDoc.data() : {};
+
+                    setUser({
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        name: userData.name || firebaseUser.email.split('@')[0].toUpperCase(),
+                        isAdmin: userData.isAdmin || firebaseUser.email === 'MissMe@missmeconnection.com',
+                        ...userData
+                    });
+                    setIsLoggedIn(true);
+                } else {
+                    setUser(null);
+                    setIsLoggedIn(false);
+                }
+            } catch (err) {
+                console.error("Auth sync error:", err);
+            } finally {
+                setLoading(false);
+            }
         });
         return () => unsubscribe();
     }, []);
 
     // 2. Pins Real-time Listener
     useEffect(() => {
-        const q = query(collection(db, 'pins'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const pinsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                // Format Firestore timestamp to a readable string or Date
-                date: doc.data().createdAt?.toDate()?.toISOString() || doc.data().date
-            }));
-            setPins(pinsData);
-        });
-        return () => unsubscribe();
+        if (!db) return;
+        try {
+            const q = query(collection(db, 'pins'), orderBy('createdAt', 'desc'));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const pinsData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    date: doc.data().createdAt?.toDate()?.toISOString() || doc.data().date
+                }));
+                setPins(pinsData);
+            });
+            return () => unsubscribe();
+        } catch (err) {
+            console.error("Pins listener error:", err);
+        }
     }, []);
 
     // 3. Replies Real-time Listener
     useEffect(() => {
+        if (!db) return;
         const unsubscribe = onSnapshot(collection(db, 'replies'), (snapshot) => {
             const repliesData = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -90,6 +103,7 @@ export const AppProvider = ({ children }) => {
 
     // 4. Ratings Global Listener (for average calculation)
     useEffect(() => {
+        if (!db) return;
         const unsubscribe = onSnapshot(collection(db, 'ratings'), (snapshot) => {
             const ratingsMap = {};
             snapshot.docs.forEach(doc => {
