@@ -81,11 +81,29 @@ div[role="button"] {
     align-items: center;
 }
 
+.map-hamburger-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 5px;
+}
+
+.hamburger-line-small {
+    width: 22px;
+    height: 2px;
+    background-color: white;
+    border-radius: 1px;
+}
+
 .top-bar-side-left {
     position: absolute;
     left: 16px;
     display: flex;
     align-items: center;
+    gap: 15px;
 }
 
 .original-search-form {

@@ -9,6 +9,11 @@ import Account from './pages/Account';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 import ConnectionMapMockup from './pages/ConnectionMapMockup';
+import About from './pages/About';
+import FAQ from './pages/FAQ';
+import Support from './pages/Support';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import { AppProvider } from './context/AppContext';
 import './index.css';
 
@@ -27,6 +32,11 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/mockup" element={<ConnectionMapMockup />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
           </Routes>
         </div>
       </Router>

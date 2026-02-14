@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { APIProvider, Map as GoogleMap, Marker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 import BottomNav from '../components/BottomNav';
+import SideMenu from '../components/SideMenu';
 import './MapView.css';
 import { useApp } from '../context/AppContext';
 
@@ -24,6 +25,7 @@ const mapThemeDark = [
 const MapView = () => {
     const navigate = useNavigate();
     const { pins, addPin, isLoggedIn, user, hiddenPins, hidePin, removePin, formatDate, getAverageRating, ratings } = useApp();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const [isPosting, setIsPosting] = useState(false);
     const [tempCoords, setTempCoords] = useState(null);
@@ -183,8 +185,14 @@ const MapView = () => {
     return (
         <APIProvider apiKey={API_KEY} libraries={['places', 'marker']}>
             <div className="map-view-container">
+                <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
                 <header className="map-top-bar-original">
                     <div className="top-bar-side-left">
+                        <button className="map-hamburger-btn" onClick={() => setIsMenuOpen(true)}>
+                            <div className="hamburger-line-small"></div>
+                            <div className="hamburger-line-small"></div>
+                            <div className="hamburger-line-small"></div>
+                        </button>
                         <form className="original-search-form" onSubmit={handleSearch}>
                             <input
                                 type="text"

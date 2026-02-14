@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import SideMenu from '../components/SideMenu';
 import './Landing.css';
 
 // Importing assets
@@ -17,9 +18,18 @@ import speechBubbleImg from '../assets/speech-bubble.svg';
 
 const Landing = () => {
     const navigate = useNavigate();
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
     return (
         <div className="landing-page">
+            <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+
+            {/* Hamburger Button */}
+            <button className="hamburger-btn-static" onClick={() => setIsMenuOpen(true)}>
+                <div className="hamburger-line"></div>
+                <div className="hamburger-line"></div>
+                <div className="hamburger-line"></div>
+            </button>
             {/* Hero Section */}
             <div className="hero-section" style={{ backgroundImage: `url(${mapBg})` }}>
                 <div className="halftone-legacy-overlay"></div>

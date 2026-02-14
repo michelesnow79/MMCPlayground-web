@@ -3,6 +3,28 @@
     min-height: 100vh;
 }
 
+.hamburger-btn-static {
+    position: fixed;
+    top: 25px;
+    left: 25px;
+    z-index: 100;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+}
+
+.hamburger-line {
+    width: 32px;
+    height: 3px;
+    background-color: white;
+    border-radius: 2px;
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+}
+
 .hero-section {
     position: relative;
     height: 720px;
