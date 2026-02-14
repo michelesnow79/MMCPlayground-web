@@ -5,9 +5,22 @@ import BottomNav from '../components/BottomNav';
 import './Messages.css';
 
 const Messages = () => {
-    const { user, pins, replies, formatDate } = useApp();
+    const { user, loading, pins, replies, formatDate } = useApp();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = React.useState('received');
+
+    // Redirect to login if not logged in and not loading
+    React.useEffect(() => {
+        if (!loading && !user) {
+            navigate('/login');
+        }
+    }, [user, loading, navigate]);
+
+    if (loading) {
+        return <div className="loading-screen-missme">LOADING MESSAGES...</div>;
+    }
+
+    if (!user) return null; // Prevent crash before redirect
 
     // Replies I received (to my pins)
     const myPins = pins.filter(p => p.ownerEmail === user.email);

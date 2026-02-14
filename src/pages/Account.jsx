@@ -10,7 +10,7 @@ import logoAsset from '../assets/heart-logo.svg';
 import { useApp } from '../context/AppContext';
 
 const Account = () => {
-    const { user, logout, deleteAccount, dateFormat, setDateFormat, pins, hiddenPins, hidePin, unhidePin, clearHiddenPins, mapMode, setMapMode } = useApp();
+    const { user, loading, logout, deleteAccount, dateFormat, setDateFormat, pins, hiddenPins, hidePin, unhidePin, clearHiddenPins, mapMode, setMapMode } = useApp();
     const navigate = useNavigate();
     const [showDeleteModal, setShowDeleteModal] = React.useState(false);
     const [showHiddenList, setShowHiddenList] = React.useState(false);
@@ -34,6 +34,19 @@ const Account = () => {
         { icon: null, label: "Privacy policy", actionIcon: "❯" },
         { icon: null, label: "About us", actionIcon: "❯" },
     ];
+
+    // Redirect to login if not logged in and not loading
+    React.useEffect(() => {
+        if (!loading && !user) {
+            navigate('/login');
+        }
+    }, [user, loading, navigate]);
+
+    if (loading) {
+        return <div className="loading-screen-missme">LOADING PROFILE...</div>;
+    }
+
+    if (!user) return null; // Prevent crash before redirect
 
     if (showHiddenList) {
         return (
