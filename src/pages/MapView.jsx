@@ -5,7 +5,7 @@ import BottomNav from '../components/BottomNav';
 import './MapView.css';
 import { useApp } from '../context/AppContext';
 
-const API_KEY = 'AIzaSyBUGLv8B8MKbvq5Spevgl6QnSHUvaaW7ec';
+const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const mapThemeDark = [
     { "elementType": "geometry", "stylers": [{ "color": "#1d1d1b" }] },
