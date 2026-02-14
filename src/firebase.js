@@ -13,20 +13,27 @@ const firebaseConfig = {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Resilient initialization
+let app;
+let auth;
+let db;
+let analytics;
 
-let analytics = null;
 try {
-    // Only initialize analytics in browser and if ID exists
-    if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
-        analytics = getAnalytics(app);
+    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== 'undefined') {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+            analytics = getAnalytics(app);
+        }
+    } else {
+        console.warn("Firebase API Key is missing. App is running in offline mode.");
     }
-} catch (e) {
-    console.warn("Firebase Analytics could not be initialized:", e);
+} catch (error) {
+    console.error("Firebase failed to initialize:", error);
 }
 
-export { analytics };
+export { auth, db, analytics };
 export default app;
