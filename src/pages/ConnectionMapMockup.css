@@ -1,0 +1,212 @@
+.connection-map-mockup {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background-color: #121214;
+    color: #fff;
+    overflow: hidden;
+    font-family: 'Lato', sans-serif;
+}
+
+/* Floating Search Bar */
+.search-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 440px;
+    z-index: 1000;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background: rgba(30, 30, 34, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 12px 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.search-bar:focus-within {
+    border-color: #FE2C55;
+    background: rgba(35, 35, 40, 1);
+}
+
+.search-icon {
+    margin-right: 12px;
+    color: #8E8E93;
+}
+
+.search-input {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    width: 100%;
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: #8E8E93;
+}
+
+/* Map Styling Overrides */
+.map-underlay {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.leaflet-container {
+    background: #121214 !important;
+}
+
+/* floating list at bottom */
+.connection-cards-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 20px;
+    background: linear-gradient(to top, rgba(18, 18, 20, 1) 0%, rgba(18, 18, 20, 0) 100%);
+}
+
+.cards-scroller {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.cards-scroller::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+.connection-card {
+    flex: 0 0 280px;
+    background: rgba(30, 30, 34, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 20px;
+    scroll-snap-align: center;
+    transition: transform 0.3s ease;
+}
+
+.connection-card:active {
+    transform: scale(0.98);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 18px;
+    color: #FE2C55;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card-time {
+    font-size: 12px;
+    color: #8E8E93;
+}
+
+.card-description {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #D1D1D6;
+    margin-bottom: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #8E8E93;
+}
+
+.location-pill {
+    padding: 4px 10px;
+    background: rgba(254, 44, 85, 0.1);
+    color: #FE2C55;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+/* Floating Action Button */
+.fab-add {
+    position: absolute;
+    bottom: 180px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: #FE2C55;
+    border-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 10px 20px rgba(254, 44, 85, 0.4);
+    border: none;
+    color: #fff;
+    font-size: 30px;
+    z-index: 1000;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.fab-add:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 25px rgba(254, 44, 85, 0.5);
+}
+
+.fab-add:active {
+    transform: scale(0.95);
+}
+
+/* Custom Marker Style */
+.custom-marker {
+    background: none;
+    border: none;
+}
+
+.marker-pin {
+    width: 40px;
+    height: 40px;
+    background: #FE2C55;
+    border-radius: 20px 20px 20px 0;
+    transform: rotate(-45deg);
+    border: 3px solid #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 15px rgba(254, 44, 85, 0.6);
+}
+
+.marker-pin::after {
+    content: '❤';
+    transform: rotate(45deg);
+    color: #fff;
+    font-size: 16px;
+}

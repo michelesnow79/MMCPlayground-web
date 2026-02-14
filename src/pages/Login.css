@@ -1,0 +1,121 @@
+.login-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    background-color: var(--bg-dark);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 440px;
+    background: rgba(30, 30, 34, 0.85);
+    padding: 40px;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.login-title {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.login-subtitle {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 35px;
+    letter-spacing: 1px;
+}
+
+.login-form {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.login-input {
+    width: 100%;
+    padding: 14px 18px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 12px;
+    outline: none;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.login-input:focus {
+    border-color: var(--missme-cyan);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.login-submit-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--missme-pink);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Bangers', cursive;
+    font-size: 1.6rem;
+    margin-top: 15px;
+    cursor: pointer;
+    box-shadow: 4px 4px 0px #000;
+    transition: all 0.1s;
+}
+
+.login-submit-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0px #000;
+}
+
+.login-explore-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.login-explore-btn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.signup-prompt {
+    margin-top: 30px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.signup-link {
+    color: var(--missme-cyan);
+    font-weight: 900;
+    cursor: pointer;
+}

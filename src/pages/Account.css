@@ -1,0 +1,433 @@
+.account-page-premium {
+    min-height: 100vh;
+    background-color: #000000;
+    color: white;
+    padding-bottom: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.premium-account-header {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    background: #1a1a1e;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.account-title-center {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5rem;
+    color: white;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.side-menu-btn {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.back-arrow {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.header-spacer {
+    width: 34px;
+    /* Matches hamburger for centering */
+}
+
+.premium-profile-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-pin-container {
+    margin-bottom: 25px;
+}
+
+.pin-background-circle {
+    width: 130px;
+    height: 130px;
+    background: rgba(40, 40, 45, 0.8);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+}
+
+.profile-heart-pin {
+    width: 45%;
+    height: 45%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.5));
+}
+
+.profile-identity {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.profile-hero-name {
+    font-family: 'Bangers', cursive;
+    font-size: 2.8rem;
+    color: #fe2c55;
+    /* MissMe Pink */
+    margin: 0;
+    line-height: 1;
+    text-shadow: 2px 2px 0 #000;
+    letter-spacing: 1px;
+}
+
+.profile-email-cyan {
+    color: #00f0ff;
+    /* MissMe Cyan */
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 8px;
+    display: block;
+}
+
+.profile-divider-small {
+    width: 40px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 15px 0;
+}
+
+.zip-display-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.zip-label-text {
+    display: block;
+    color: #8e8e93;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.zip-value-text {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: white;
+}
+
+.settings-rows-container {
+    width: 100%;
+    background: #121214;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-row-item,
+.preferences-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: background 0.2s;
+}
+
+.settings-row-item:last-child {
+    border-bottom: none;
+}
+
+.row-label {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #e0e0e0;
+}
+
+.row-action-indicator {
+    color: #8e8e93;
+    font-size: 0.9rem;
+}
+
+.preferences-row {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.format-pills-group {
+    display: flex;
+    gap: 8px;
+}
+
+.pref-pill {
+    background: #252529;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #8e8e93;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pref-pill.active {
+    background: #00f0ff;
+    color: #000;
+    border-color: #00f0ff;
+}
+
+.format-pills-group-full {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.pref-pill-full {
+    background: #252529;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #8e8e93;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.pref-pill-full.active {
+    background: #00f0ff;
+    color: #000;
+    border-color: #00f0ff;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+/* Hidden List Styles */
+.hidden-list-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+    flex-grow: 1;
+}
+
+.hidden-items-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.hidden-item-card {
+    background: #121214;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hidden-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hidden-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: white;
+}
+
+.hidden-meta {
+    font-size: 0.8rem;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.unhide-btn-pill {
+    background: transparent;
+    border: 1px solid #fe2c55;
+    color: #fe2c55;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.unhide-btn-pill:hover {
+    background: #fe2c55;
+    color: white;
+}
+
+.clear-all-hidden-btn {
+    margin-top: 20px;
+    background: rgba(254, 44, 85, 0.1);
+    border: 1px solid rgba(254, 44, 85, 0.3);
+    color: #fe2c55;
+    padding: 15px;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+}
+
+.empty-hidden-state {
+    text-align: center;
+    padding-top: 100px;
+    color: #8e8e93;
+}
+
+.btn-cyan-glow-small {
+    margin-top: 20px;
+    background: #00f0ff;
+    color: black;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 30px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.profile-actions-footer {
+    width: 100%;
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+
+.action-link-btn {
+    background: #1a1a1e;
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    color: #00f0ff;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+}
+
+.action-link-btn:hover {
+    background: rgba(0, 240, 255, 0.1);
+    border-color: #00f0ff;
+}
+
+.logout-text {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+.unhide-btn {
+    background: rgba(254, 44, 85, 0.05);
+    border-color: rgba(254, 44, 85, 0.2);
+    color: #fe2c55;
+}
+
+.danger-zone-minimal {
+    margin-top: 50px;
+    text-align: center;
+}
+
+.delete-acc-link {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 10px;
+}
+
+.delete-acc-link:hover {
+    color: #fe2c55;
+}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+}
+
+.modal-card {
+    background: #121214;
+    border: 1px solid rgba(254, 44, 85, 0.3);
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.modal-title {
+    font-family: 'Bangers', cursive;
+    color: #fe2c55;
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+.modal-text {
+    color: #a0a0a0;
+    margin-bottom: 25px;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-btn-confirm {
+    background: #fe2c55;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.modal-btn-cancel {
+    background: transparent;
+    border: 1px solid #333;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+}.admin-link-text { color: var(--missme-cyan) !important; }

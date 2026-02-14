@@ -1,0 +1,78 @@
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background-color: #1a1a1e;
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    padding-bottom: 5px;
+}
+
+.nav-item {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #ffffff;
+    /* Brighter white for icons */
+    transition: all 0.2s;
+    opacity: 0.6;
+}
+
+.nav-item.active {
+    color: var(--missme-cyan);
+    opacity: 1;
+}
+
+.nav-item svg {
+    margin-bottom: 5px;
+}
+
+.nav-fab-container {
+    position: relative;
+    top: -20px;
+}
+
+.cyan-fab-circle {
+    width: 60px;
+    height: 60px;
+    background-color: var(--missme-cyan);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(6, 174, 212, 0.6);
+}
+
+.fab-plus {
+    color: white;
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 1;
+}
+
+.nav-fab-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.2s;
+}
+
+.nav-fab-btn:hover {
+    transform: scale(1.05);
+}
+
+.nav-label {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

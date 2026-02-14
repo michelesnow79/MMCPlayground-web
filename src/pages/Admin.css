@@ -1,0 +1,131 @@
+.admin-container {
+    min-height: 100vh;
+    background-color: #000;
+    color: white;
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #1a1a1b;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.admin-title {
+    font-family: 'Bangers', cursive;
+    font-size: 2rem;
+    letter-spacing: 2px;
+    color: var(--missme-cyan);
+}
+
+.admin-back-btn {
+    background: #1a1a1b;
+    border: 1px solid #333;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.admin-stats {
+    display: flex;
+    gap: 20px;
+    font-weight: 800;
+    color: #8E8E93;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 768px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.admin-section {
+    background: #111;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #222;
+}
+
+.section-title {
+    font-family: 'Bangers', cursive;
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+    color: var(--missme-pink);
+}
+
+.admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-item {
+    background: #1a1a1b;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #333;
+}
+
+.item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.item-label {
+    font-weight: 800;
+    font-size: 1rem;
+    color: #fff;
+}
+
+.item-sub-label {
+    font-size: 0.8rem;
+    color: #8E8E93;
+}
+
+.item-delete-btn {
+    background: #400;
+    color: #f55;
+    border: 1px solid #800;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.item-delete-btn:hover {
+    background: #800;
+    color: white;
+}
+
+.admin-badge {
+    background: var(--missme-cyan);
+    color: black;
+    font-size: 0.6rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.admin-loading {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Bangers', cursive;
+    font-size: 3rem;
+}

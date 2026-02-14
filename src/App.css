@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Lato:wght@400;700&display=swap');
+
+:root {
+  --missme-pink: #FE1C55;
+  --missme-dark: #18181B;
+  --missme-yellow: #FED400;
+  --text-white: #ffffff;
+  --text-gray: #b0b0b0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Lato', sans-serif;
+  background-color: var(--missme-dark);
+  color: var(--text-white);
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+.nav-label,
+.cta-button {
+  font-family: 'Bebas Neue', sans-serif;
+  font-style: italic;
+  text-transform: uppercase;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

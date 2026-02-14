@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Lato:wght@400;700&family=Bangers&family=Nunito:wght@500;900&display=swap');
+
+:root {
+  --missme-pink: #fe2c55;
+  --missme-yellow: #fed400;
+  --missme-cyan: #06aed4;
+  --bg-dark: #1a1a1b;
+  --text-white: #ffffff;
+  --text-muted: #a0a0ab;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root,
+.app-container {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #1a1a1b;
+  /* match your app background */
+}
+
+.app-container {
+  min-height: 0;
+  /* stop fighting height:100% */
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  color: var(--text-white);
+  overflow: hidden;
+  /* Prevent global scroll */
+}
+
+h1,
+h2,
+h3,
+.mm-heading {
+  font-family: 'Bangers', cursive;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
