@@ -35,10 +35,10 @@ const Account = () => {
         { icon: null, label: "About us", actionIcon: "❯" },
     ];
 
-    // Redirect to login if not logged in and not loading
+    // Redirect to home if not logged in and not loading
     React.useEffect(() => {
         if (!loading && !user) {
-            navigate('/login');
+            navigate('/');
         }
     }, [user, loading, navigate]);
 

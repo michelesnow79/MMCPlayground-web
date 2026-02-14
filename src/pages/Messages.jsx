@@ -9,10 +9,10 @@ const Messages = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = React.useState('received');
 
-    // Redirect to login if not logged in and not loading
+    // Redirect to home if not logged in and not loading
     React.useEffect(() => {
         if (!loading && !user) {
-            navigate('/login');
+            navigate('/');
         }
     }, [user, loading, navigate]);
 
