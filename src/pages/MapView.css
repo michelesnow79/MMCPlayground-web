@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap');
+
 .map-view-container {
     height: 100%;
     width: 100%;
@@ -55,8 +57,6 @@ div[role="button"] {
     z-index: 2050;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap');
 
 .map-logo-title-original {
     font-family: 'Inter', sans-serif;

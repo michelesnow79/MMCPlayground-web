@@ -4,18 +4,25 @@ dist
 .env
 *.local
 
-# Design/Specs (Too large for quick push)
+# Design/Specs (Keep excluded)
+figma_file_info.json
 *.json
 !package.json
 !package-lock.json
+!firebase.json
 
-# Screenshots & Reference Images
-*.png
-*.jpg
-*.svg
+# Screenshots (Exclude root screenshots)
+app_*.png
+ref_*.png
+reference_*.png
+refinement_*.png
+site_*.png
+
+# Allow Project Assets
+!src/assets/*.png
+!public/*.png
 !src/assets/*.svg
 !public/*.svg
-!public/*.png
 
 # System
 .git
