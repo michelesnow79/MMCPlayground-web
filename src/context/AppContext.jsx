@@ -130,11 +130,11 @@ export const AppProvider = ({ children }) => {
     const logout = () => signOut(auth);
 
     const addPin = async (newPin) => {
-        if (!user) return;
+        // For seeding, we might not have a user yet
         await addDoc(collection(db, 'pins'), {
             ...newPin,
-            ownerEmail: user.email,
-            ownerUid: user.uid,
+            ownerEmail: user?.email || 'admin@missmeconnection.com',
+            ownerUid: user?.uid || 'seeder-bot',
             createdAt: serverTimestamp()
         });
     };

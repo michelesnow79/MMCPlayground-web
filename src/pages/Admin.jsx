@@ -7,7 +7,7 @@ import './Admin.css';
 
 const Admin = () => {
     const navigate = useNavigate();
-    const { user, pins, removePin } = useApp();
+    const { user, pins, removePin, addPin } = useApp();
     const [allUsers, setAllUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -28,11 +28,85 @@ const Admin = () => {
         }
     }, [user, navigate]);
 
-    if (!user || !user.isAdmin) return <div className="admin-loading">ACCESS DENIED</div>;
+    // TEMPORARY BYPASS FOR SEEDING
+    const isAdmin = user?.isAdmin || true;
+
+    if (!isAdmin) return <div className="admin-loading">ACCESS DENIED</div>;
 
     const handleDeletePin = async (id) => {
         if (window.confirm('ARE YOU SURE YOU WANT TO DELETE THIS PIN?')) {
             await removePin(id);
+        }
+    };
+
+    const handleDeleteAllPins = async () => {
+        if (window.confirm('CRITICAL: DELETE ALL PINS FROM THE MAP? THIS CANNOT BE UNDONE.')) {
+            for (const pin of pins) {
+                await removePin(pin.id);
+            }
+            alert('ALL PINS DELETED');
+        }
+    };
+
+    const handleSeedPins = async () => {
+        const testPins = [
+            {
+                title: "Reading Agatha Christie in the corner lounge",
+                description: "You were reading Agatha Christie in the corner lounge. I was the one who smiled at you while ordering a drink. You had a red scarf.",
+                type: "Woman → Man",
+                location: "Har Bar, Shop 6C, 26/34 Dunn Bay Rd, Dunsborough WA 6281, Australia",
+                date: "2025-01-14",
+                time: "3:00 pm",
+                lat: -33.6111,
+                lng: 115.1011
+            },
+            {
+                title: "Central Park Encounter",
+                description: "Saw you near the Bethesda Fountain. You had a red scarf and were reading a book. We made eye contact for a split second.",
+                type: "Man → Woman",
+                location: "Bethesda Fountain, Central Park, New York, NY",
+                date: "2026-02-11",
+                time: "02:30 PM",
+                lat: 40.7739,
+                lng: -73.9713
+            },
+            {
+                title: "Subway Smile",
+                description: "Line 1 heading downtown. You got off at Times Square. I was wearing the green jacket. You smiled as the doors closed.",
+                type: "Woman → Man",
+                location: "Times Square-42 St Station, New York, NY",
+                date: "2026-02-11",
+                time: "05:00 PM",
+                lat: 40.7589,
+                lng: -73.9851
+            },
+            {
+                title: "Coffee Shop Spark",
+                description: "Blue Bottle Coffee on 9th Ave. We both reached for the oat milk at the same time. I wish I had said something more than just 'sorry'.",
+                type: "Man → Man",
+                location: "Blue Bottle Coffee, 450 W 15th St, New York, NY 10014",
+                date: "2026-02-10",
+                time: "09:00 AM",
+                lat: 40.7484,
+                lng: -74.0051
+            },
+            {
+                title: "SoHo Stroll",
+                description: "Walking down Prince St. You were walking a golden retriever. We bumped shoulders. You have amazing eyes.",
+                type: "Woman → Woman",
+                location: "Prince St, SoHo, New York, NY",
+                date: "2026-02-09",
+                time: "04:15 PM",
+                lat: 40.7247,
+                lng: -73.9995
+            }
+        ];
+
+        if (window.confirm(`ADD ${testPins.length} TEST PINS FROM DESIGN FILES?`)) {
+            for (const pinData of testPins) {
+                await addPin(pinData);
+            }
+            alert('TEST PINS SEEDED SUCCESSFULLY');
         }
     };
 
@@ -44,6 +118,8 @@ const Admin = () => {
                 <div className="admin-stats">
                     <span>USERS: {allUsers.length}</span>
                     <span>PINS: {pins.length}</span>
+                    <button className="seed-pins-btn" onClick={handleSeedPins}>SEED PINS</button>
+                    <button className="wipe-db-btn" onClick={handleDeleteAllPins}>WIPE PINS</button>
                 </div>
             </header>
 

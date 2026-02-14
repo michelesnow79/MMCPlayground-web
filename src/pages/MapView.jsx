@@ -27,6 +27,10 @@ const MapView = () => {
     const { pins, addPin, isLoggedIn, user, hiddenPins, hidePin, removePin, formatDate, getAverageRating, ratings } = useApp();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+    useEffect(() => {
+        console.log("📍 MAP DEBUG: Total pins loaded from Firebase:", pins.length);
+    }, [pins]);
+
     const [isPosting, setIsPosting] = useState(false);
     const [tempCoords, setTempCoords] = useState(null);
     const [newType, setNewType] = useState('');
@@ -221,7 +225,7 @@ const MapView = () => {
                         gestureHandling={'greedy'}
                         disableDefaultUI={false}
                         zoomControl={true}
-                        zoomControlOptions={{ position: 5 }} // RIGHT_CENTER
+                        zoomControlOptions={{ position: 8 }} // RIGHT_CENTER
                         streetViewControl={false}
                         mapTypeControl={false}
                         fullscreenControl={false}

@@ -7,11 +7,13 @@ import './Account.css';
 import hamburgerIcon from '../assets/hamburger.svg';
 import deleteIcon from '../assets/delete_btn.svg';
 import logoAsset from '../assets/heart-logo.svg';
+import SideMenu from '../components/SideMenu';
 import { useApp } from '../context/AppContext';
 
 const Account = () => {
     const { user, loading, logout, deleteAccount, dateFormat, setDateFormat, pins, hiddenPins, hidePin, unhidePin, clearHiddenPins, mapMode, setMapMode } = useApp();
     const navigate = useNavigate();
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [showDeleteModal, setShowDeleteModal] = React.useState(false);
     const [showHiddenList, setShowHiddenList] = React.useState(false);
 
@@ -51,6 +53,7 @@ const Account = () => {
     if (showHiddenList) {
         return (
             <div className="account-page-premium">
+                <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
                 <header className="premium-account-header">
                     <button className="side-menu-btn" onClick={() => setShowHiddenList(false)}>
                         <span className="back-arrow">←</span>
@@ -91,8 +94,9 @@ const Account = () => {
 
     return (
         <div className="account-page-premium">
+            <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
             <header className="premium-account-header">
-                <button className="side-menu-btn">
+                <button className="side-menu-btn" onClick={() => setIsMenuOpen(true)}>
                     <img src={hamburgerIcon} alt="Menu" width="24" height="24" />
                 </button>
                 <h1 className="account-title-center">ACCOUNT & SETTINGS</h1>

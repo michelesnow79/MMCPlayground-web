@@ -13,6 +13,10 @@ const ConnectionDetail = () => {
     const [showReplyModal, setShowReplyModal] = React.useState(false);
     const [isEditing, setIsEditing] = React.useState(false);
 
+    if (loading) {
+        return <div className="detail-loading">LOADING CONNECTION...</div>;
+    }
+
     const pin = pins.find(p => String(p.id) === String(id));
 
     const currentRating = ratings[pin?.id] || 0;
@@ -22,7 +26,7 @@ const ConnectionDetail = () => {
     };
 
     // Find if current user already replied to this pin
-    const existingReply = replies.find(r => String(r.pinId) === String(id) && r.senderEmail === user.email);
+    const existingReply = replies.find(r => String(r.pinId) === String(id) && r.senderEmail === user?.email);
 
     const handleReplyClick = () => {
         if (existingReply) {
@@ -164,7 +168,7 @@ const ConnectionDetail = () => {
                         </span>
                     </div>
 
-                    {pin.ownerEmail === user.email && (
+                    {pin.ownerEmail === user?.email && (
                         <div className="owner-replies-section">
                             <h3 className="section-title-mini">REPLIES ({replies.filter(r => r.pinId === pin.id).length})</h3>
                             <div className="replies-list-mini">
@@ -187,7 +191,7 @@ const ConnectionDetail = () => {
                     )}
 
                     <div className="detail-cta-group">
-                        {pin.ownerEmail === user.email ? (
+                        {pin.ownerEmail === user?.email ? (
                             <button className="btn-cyan-glow-reply" onClick={() => navigate('/messages')}>
                                 VIEW REPLIES
                             </button>

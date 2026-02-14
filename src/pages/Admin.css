@@ -34,8 +34,27 @@
 .admin-stats {
     display: flex;
     gap: 20px;
+    align-items: center;
     font-weight: 800;
     color: #8E8E93;
+}
+
+.wipe-db-btn {
+    background: #f00;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-family: 'Bangers', cursive;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 2px 2px 0px #000;
+}
+
+.wipe-db-btn:hover {
+    background: #c00;
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000;
 }
 
 .admin-grid {
