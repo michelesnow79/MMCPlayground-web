@@ -118,6 +118,81 @@ const findIntersectionWithFallback = async (lat, lng) => {
     );
 };
 
+// Unified privacy logic for both geocoder results and Autocomplete place objects
+const fuzzAndProcessLocation = async (placeOrResult) => {
+    if (!placeOrResult || !placeOrResult.geometry || !placeOrResult.geometry.location) return null;
+
+    const types = placeOrResult.types || [];
+    const comps = placeOrResult.address_components || [];
+    const loc = placeOrResult.geometry.location;
+    const lat = typeof loc.lat === 'function' ? loc.lat() : loc.lat;
+    const lng = typeof loc.lng === 'function' ? loc.lng() : loc.lng;
+
+    console.log("📍 PRIVACY DEBUG: Processing location types:", types);
+    console.log("📍 PRIVACY DEBUG: Address components:", comps);
+
+    // 1) VENUE/POI: keep exact
+    const isVenue = (
+        types.includes("point_of_interest") ||
+        types.includes("establishment") ||
+        types.includes("stadium") ||
+        types.includes("park") ||
+        types.includes("airport") ||
+        types.includes("natural_feature")
+    ) && !types.includes("subpremise") && !types.includes("premise");
+
+    if (isVenue) {
+        console.log("📍 PRIVACY: Detected as VENUE. Keeping exact coordinates.");
+        return {
+            coords: { lat, lng },
+            label: placeOrResult.formatted_address || placeOrResult.name || "Public Venue"
+        };
+    }
+
+    // 2) RESIDENTIAL DETECTION
+    const hasStreetNumber = comps.some((c) => c.types.includes("street_number"));
+    const isStreetAddressType =
+        types.includes("street_address") ||
+        types.includes("premise") ||
+        types.includes("subpremise") ||
+        types.includes("home_goods_store"); // Sometimes Google tags misc things as residential
+
+    const isResidential = hasStreetNumber || isStreetAddressType;
+    console.log("📍 PRIVACY: Is Residential?", isResidential);
+
+    // 3) Privacy jitter in meters (always calculate for fallback)
+    const jitterMeters = 100 + Math.random() * 100; // 100–200m
+    const angle = Math.random() * Math.PI * 2;
+    const latJitter = (Math.sin(angle) * jitterMeters) / 111111;
+    const lngJitter = (Math.cos(angle) * jitterMeters) / (111111 * Math.cos(lat * Math.PI / 180));
+
+    const fuzzedCoords = {
+        lat: lat + latJitter,
+        lng: lng + lngJitter,
+    };
+
+    // 4) If residential → snap to intersection
+    if (isResidential) {
+        const intersection = await findIntersectionWithFallback(fuzzedCoords.lat, fuzzedCoords.lng);
+        if (intersection) {
+            const label = (intersection.streets?.length >= 2)
+                ? `Near ${intersection.streets[0]} & ${intersection.streets[1]}`
+                : "Near a cross street";
+
+            return {
+                coords: { lat: intersection.lat, lng: intersection.lng },
+                label
+            };
+        }
+    }
+
+    // Fallback for residential (failed snap) or generic non-venue location
+    return {
+        coords: fuzzedCoords,
+        label: "Public Area"
+    };
+};
+
 const MapView = () => {
     const navigate = useNavigate();
     const { pins, addPin, isLoggedIn, user, hiddenPins, hidePin, removePin, formatDate, getAverageRating, ratings } = useApp();
@@ -189,15 +264,14 @@ const MapView = () => {
             types: ['geocode', 'establishment']
         });
 
-        autocomplete.addListener('place_changed', () => {
+        autocomplete.addListener('place_changed', async () => {
             const place = autocomplete.getPlace();
-            if (place.formatted_address || place.name) {
-                setNewLocation(place.name || place.formatted_address);
-                if (place.geometry && place.geometry.location) {
-                    setTempCoords({
-                        lat: place.geometry.location.lat(),
-                        lng: place.geometry.location.lng()
-                    });
+            if (place && place.geometry) {
+                setNewLocation("Processing privacy...");
+                const processed = await fuzzAndProcessLocation(place);
+                if (processed) {
+                    setTempCoords(processed.coords);
+                    setNewLocation(processed.label);
                 }
             }
         });
@@ -225,85 +299,22 @@ const MapView = () => {
         const geocoder = new window.google.maps.Geocoder();
 
         geocoder.geocode({ location: centerCoords }, async (results, status) => {
-            // Hard fallback
             if (status !== "OK" || !results?.[0]) {
-                setTempCoords(centerCoords);
+                const jitterMeters = 100 + Math.random() * 100;
+                const angle = Math.random() * Math.PI * 2;
+                setTempCoords({
+                    lat: centerCoords.lat + (Math.sin(angle) * jitterMeters) / 111111,
+                    lng: centerCoords.lng + (Math.cos(angle) * jitterMeters) / (111111 * Math.cos(centerCoords.lat * Math.PI / 180))
+                });
                 setNewLocation("Public Area");
                 return;
             }
 
-            const top = results[0];
-            const types = top.types || [];
-            const comps = top.address_components || [];
-
-            // 1) VENUE/POI: keep exact
-            const isVenue =
-                (types.includes("point_of_interest") ||
-                    types.includes("establishment") ||
-                    types.includes("stadium") ||
-                    types.includes("park") ||
-                    types.includes("airport")) &&
-                !types.includes("natural_feature");
-
-            if (isVenue) {
-                const loc = top.geometry.location;
-                setTempCoords({ lat: loc.lat(), lng: loc.lng() });
-                setNewLocation(top.formatted_address || top.name || "Public Venue");
-                return;
+            const processed = await fuzzAndProcessLocation(results[0]);
+            if (processed) {
+                setTempCoords(processed.coords);
+                setNewLocation(processed.label);
             }
-
-            // 2) RESIDENTIAL DETECTION: intersection snapping only if residential-ish
-            const hasStreetNumber = comps.some((c) => c.types.includes("street_number"));
-            const isStreetAddressType =
-                types.includes("street_address") ||
-                types.includes("premise") ||
-                types.includes("subpremise");
-
-            const isResidential = hasStreetNumber || isStreetAddressType;
-
-            // 3) Privacy jitter in meters
-            const jitterMeters = 100 + Math.random() * 100; // 100–200m
-            const angle = Math.random() * Math.PI * 2;
-            const latJitter = (Math.sin(angle) * jitterMeters) / 111111;
-            const lngJitter = (Math.cos(angle) * jitterMeters) / (111111 * Math.cos(centerCoords.lat * Math.PI / 180));
-
-            const fuzzedCoords = {
-                lat: centerCoords.lat + latJitter,
-                lng: centerCoords.lng + lngJitter,
-            };
-
-            // 4) If residential → snap to intersection; else keep fuzzed but generic label
-            let finalCoords = fuzzedCoords;
-            let finalLabel = "Public Area";
-
-            if (isResidential) {
-                const intersection = await findIntersectionWithFallback(
-                    fuzzedCoords.lat,
-                    fuzzedCoords.lng
-                );
-
-                if (intersection) {
-                    finalCoords = { lat: intersection.lat, lng: intersection.lng };
-
-                    if (intersection.streets?.length >= 2) {
-                        const [sA, sB] = intersection.streets.slice(0, 2);
-                        finalLabel = `Near ${sA} & ${sB}`;
-                    } else {
-                        finalLabel = "Near a cross street";
-                    }
-                } else {
-                    // If Overpass fails/rate-limits, still safe: use fuzzed coords
-                    finalCoords = fuzzedCoords;
-                    finalLabel = "Public Area";
-                }
-            } else {
-                // Not venue, not residential: keep vague
-                finalCoords = fuzzedCoords;
-                finalLabel = "Public Area";
-            }
-
-            setTempCoords(finalCoords);
-            setNewLocation(finalLabel);
         });
     };
 
