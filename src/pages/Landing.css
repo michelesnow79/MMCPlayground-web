@@ -3,27 +3,6 @@
     min-height: 100vh;
 }
 
-.hamburger-btn-static {
-    position: fixed;
-    top: 25px;
-    left: 25px;
-    z-index: 100;
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px;
-}
-
-.hamburger-line {
-    width: 32px;
-    height: 3px;
-    background-color: white;
-    border-radius: 2px;
-    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
-}
 
 .hero-section {
     position: relative;
@@ -202,14 +181,20 @@
 }
 
 .faq-pill {
-    background-color: var(--missme-teal);
+    background-color: var(--missme-cyan);
     color: white;
     border: none;
-    padding: 10px 25px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-style: italic;
-    font-size: 1.4rem;
+    padding: 6px 18px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
     border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.faq-pill:hover {
+    background-color: var(--missme-pink);
 }
 
 .features-grid {
@@ -358,10 +343,19 @@
     gap: 30px;
 }
 
-.footer-nav a {
+.footer-link-btn {
+    background: none;
+    border: none;
     color: #888;
-    text-decoration: none;
+    cursor: pointer;
     font-size: 0.9rem;
+    padding: 0;
+    transition: color 0.2s;
+    font-family: inherit;
+}
+
+.footer-link-btn:hover {
+    color: white;
 }
 
 .footer-bottom {

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { APIProvider, Map as GoogleMap, Marker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 import BottomNav from '../components/BottomNav';
 import SideMenu from '../components/SideMenu';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import './MapView.css';
 import { useApp } from '../context/AppContext';
 
@@ -22,6 +24,100 @@ const mapThemeDark = [
     { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#0e1a1a" }] }
 ];
 
+// ===============================
+// INTERSECTION PRIVACY HELPERS
+// (No Roads API required)
+// ===============================
+
+// Haversine distance in meters
+const haversineMeters = (lat1, lon1, lat2, lon2) => {
+    const R = 6371000;
+    const toRad = (d) => (d * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+};
+
+// Find nearest node shared by 2+ named roads (practical "intersection")
+const getNearestCrossStreetsOSM = async (lat, lng, radiusMeters = 200) => {
+    const overpassUrl = "https://overpass-api.de/api/interpreter";
+
+    const query = `
+    [out:json][timeout:25];
+    (
+      way(around:${radiusMeters},${lat},${lng})["highway"]["name"];
+    );
+    (._;>;);
+    out body;
+  `;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+    try {
+        const resp = await fetch(overpassUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+            body: "data=" + encodeURIComponent(query),
+            signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!resp.ok) return null;
+        const data = await resp.json();
+
+        const ways = data.elements.filter((e) => e.type === "way" && e.tags?.name);
+        const nodes = data.elements.filter((e) => e.type === "node");
+
+        const nodeMap = new Map(nodes.map((n) => [n.id, { lat: n.lat, lng: n.lon }]));
+        const nodeToStreetNames = new Map();
+
+        for (const w of ways) {
+            const streetName = (w.tags.name || "").trim();
+            if (!streetName) continue;
+            for (const nodeId of w.nodes || []) {
+                if (!nodeToStreetNames.has(nodeId)) nodeToStreetNames.set(nodeId, new Set());
+                nodeToStreetNames.get(nodeId).add(streetName);
+            }
+        }
+
+        const intersectionCandidates = [];
+        for (const [nodeId, streetSet] of nodeToStreetNames.entries()) {
+            if (streetSet.size >= 2 && nodeMap.has(nodeId)) {
+                intersectionCandidates.push({
+                    nodeId,
+                    streets: Array.from(streetSet),
+                    ...nodeMap.get(nodeId),
+                });
+            }
+        }
+
+        if (intersectionCandidates.length === 0) return null;
+
+        return intersectionCandidates
+            .map((c) => ({ ...c, dist: haversineMeters(lat, lng, c.lat, c.lng) }))
+            .sort((a, b) => a.dist - b.dist)[0];
+    } catch (err) {
+        console.error("OSM Fetch failed:", err);
+        return null;
+    }
+};
+
+// Try multiple radii so it works even where intersections are sparse
+const findIntersectionWithFallback = async (lat, lng) => {
+    return (
+        (await getNearestCrossStreetsOSM(lat, lng, 200)) ||
+        (await getNearestCrossStreetsOSM(lat, lng, 350)) ||
+        (await getNearestCrossStreetsOSM(lat, lng, 500))
+    );
+};
+
 const MapView = () => {
     const navigate = useNavigate();
     const { pins, addPin, isLoggedIn, user, hiddenPins, hidePin, removePin, formatDate, getAverageRating, ratings } = useApp();
@@ -31,12 +127,30 @@ const MapView = () => {
         console.log("📍 MAP DEBUG: Total pins loaded from Firebase:", pins.length);
     }, [pins]);
 
+    // Geolocation on mount
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    console.log("📍 User location found:", latitude, longitude);
+                    isCenterManualRef.current = true;
+                    setMapCenter({ lat: latitude, lng: longitude });
+                },
+                (error) => {
+                    console.warn("📍 Geolocation error:", error.message);
+                }
+            );
+        }
+    }, []);
+
     const [isPosting, setIsPosting] = useState(false);
     const [tempCoords, setTempCoords] = useState(null);
     const [newType, setNewType] = useState('');
     const [newTitle, setNewTitle] = useState('');
     const [newLocation, setNewLocation] = useState('');
-    const [newDate, setNewDate] = useState('');
+    const [newDate, setNewDate] = useState(new Date());
+    const [newTime, setNewTime] = useState(new Date());
     const [newDescription, setNewDescription] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPin, setSelectedPin] = useState(null);
@@ -101,57 +215,109 @@ const MapView = () => {
 
     const handleAddClick = async () => {
         if (!mapInstance) return;
+
         const center = mapInstance.getCenter();
         const centerCoords = { lat: center.lat(), lng: center.lng() };
 
         setIsPosting(true);
-        setNewLocation('Identifying location...');
+        setNewLocation("Identifying location...");
 
         const geocoder = new window.google.maps.Geocoder();
 
         geocoder.geocode({ location: centerCoords }, async (results, status) => {
-            if (status === "OK" && results[0]) {
-                const types = results[0].types || [];
-                const isVenue = (types.includes("point_of_interest") ||
+            // Hard fallback
+            if (status !== "OK" || !results?.[0]) {
+                setTempCoords(centerCoords);
+                setNewLocation("Public Area");
+                return;
+            }
+
+            const top = results[0];
+            const types = top.types || [];
+            const comps = top.address_components || [];
+
+            // 1) VENUE/POI: keep exact
+            const isVenue =
+                (types.includes("point_of_interest") ||
                     types.includes("establishment") ||
                     types.includes("stadium") ||
                     types.includes("park") ||
-                    types.includes("airport"));
+                    types.includes("airport")) &&
+                !types.includes("natural_feature");
 
-                if (isVenue) {
-                    const venueLoc = results[0].geometry.location;
-                    setTempCoords({ lat: venueLoc.lat(), lng: venueLoc.lng() });
-                    setNewLocation(results[0].formatted_address);
-                    return;
-                }
-
-                // Privacy Jitter
-                const moveDist = 0.001 + (Math.random() * 0.001);
-                const angle = Math.random() * Math.PI * 2;
-                const fuzzedCoords = {
-                    lat: centerCoords.lat + Math.sin(angle) * moveDist,
-                    lng: centerCoords.lng + Math.cos(angle) * moveDist
-                };
-
-                setTempCoords(fuzzedCoords);
-                setNewLocation(results[0].formatted_address);
-            } else {
-                setTempCoords(centerCoords);
-                setNewLocation('Public Area');
+            if (isVenue) {
+                const loc = top.geometry.location;
+                setTempCoords({ lat: loc.lat(), lng: loc.lng() });
+                setNewLocation(top.formatted_address || top.name || "Public Venue");
+                return;
             }
+
+            // 2) RESIDENTIAL DETECTION: intersection snapping only if residential-ish
+            const hasStreetNumber = comps.some((c) => c.types.includes("street_number"));
+            const isStreetAddressType =
+                types.includes("street_address") ||
+                types.includes("premise") ||
+                types.includes("subpremise");
+
+            const isResidential = hasStreetNumber || isStreetAddressType;
+
+            // 3) Privacy jitter in meters
+            const jitterMeters = 100 + Math.random() * 100; // 100–200m
+            const angle = Math.random() * Math.PI * 2;
+            const latJitter = (Math.sin(angle) * jitterMeters) / 111111;
+            const lngJitter = (Math.cos(angle) * jitterMeters) / (111111 * Math.cos(centerCoords.lat * Math.PI / 180));
+
+            const fuzzedCoords = {
+                lat: centerCoords.lat + latJitter,
+                lng: centerCoords.lng + lngJitter,
+            };
+
+            // 4) If residential → snap to intersection; else keep fuzzed but generic label
+            let finalCoords = fuzzedCoords;
+            let finalLabel = "Public Area";
+
+            if (isResidential) {
+                const intersection = await findIntersectionWithFallback(
+                    fuzzedCoords.lat,
+                    fuzzedCoords.lng
+                );
+
+                if (intersection) {
+                    finalCoords = { lat: intersection.lat, lng: intersection.lng };
+
+                    if (intersection.streets?.length >= 2) {
+                        const [sA, sB] = intersection.streets.slice(0, 2);
+                        finalLabel = `Near ${sA} & ${sB}`;
+                    } else {
+                        finalLabel = "Near a cross street";
+                    }
+                } else {
+                    // If Overpass fails/rate-limits, still safe: use fuzzed coords
+                    finalCoords = fuzzedCoords;
+                    finalLabel = "Public Area";
+                }
+            } else {
+                // Not venue, not residential: keep vague
+                finalCoords = fuzzedCoords;
+                finalLabel = "Public Area";
+            }
+
+            setTempCoords(finalCoords);
+            setNewLocation(finalLabel);
         });
     };
 
     const handleSavePin = (e) => {
         e.preventDefault();
         const newPin = {
-            id: Date.now(),
+            id: Date.now().toString(), // Use string ID
             lat: tempCoords.lat,
             lng: tempCoords.lng,
             type: newType,
             title: newTitle.toUpperCase(),
             location: sanitizeLocation(newLocation),
-            date: newDate || 'Today',
+            date: newDate.toISOString(),
+            time: newTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             description: newDescription,
             ownerEmail: user?.email
         };
@@ -161,12 +327,16 @@ const MapView = () => {
         setNewType('');
         setNewTitle('');
         setNewLocation('');
+        setNewDate(new Date());
+        setNewTime(new Date());
         setNewDescription('');
     };
 
     const cancelPost = () => {
         setIsPosting(false);
         setTempCoords(null);
+        setNewDate(new Date());
+        setNewTime(new Date());
     };
 
     const handleSearch = (e) => {
@@ -277,7 +447,7 @@ const MapView = () => {
                                     <div className="popup-rating-row">
                                         <div className="popup-hearts readonly">
                                             {[1, 2, 3, 4, 5].map(val => (
-                                                <span key={val} className={`popup-heart ${val <= (ratings[selectedPin.id] || 0) ? 'filled' : ''}`}>❤️</span>
+                                                <span key={val} className={`popup-heart ${val <= Math.round(getAverageRating(selectedPin.id)) ? 'filled' : ''}`}>❤️</span>
                                             ))}
                                         </div>
                                         <span className="popup-avg-text">AVG: {getAverageRating(selectedPin.id)}</span>
@@ -295,14 +465,25 @@ const MapView = () => {
                                         <button className="popup-details-link-btn" onClick={() => navigate(`/browse/${selectedPin.id}`)}>
                                             View Details —
                                         </button>
-                                        {selectedPin.ownerEmail === user?.email && (
-                                            <button className="popup-delete-btn" onClick={() => {
-                                                removePin(selectedPin.id);
+
+                                        <div className="popup-footer-right">
+                                            <button className="popup-its-not-me-btn" onClick={() => {
+                                                hidePin(selectedPin.id);
                                                 setSelectedPin(null);
                                             }}>
-                                                Delete Pin
+                                                IT'S NOT ME.
                                             </button>
-                                        )}
+
+                                            {(selectedPin.ownerEmail === user?.email || user?.isAdmin) && (
+                                                <button className="popup-delete-btn" onClick={() => {
+                                                    console.log("🗑️ Deleting pin ID:", selectedPin.id);
+                                                    removePin(selectedPin.id);
+                                                    setSelectedPin(null);
+                                                }}>
+                                                    Delete
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </InfoWindow>
@@ -357,9 +538,31 @@ const MapView = () => {
                                             <button type="button" className="location-refresh-btn" onClick={handleAddClick}>📍</button>
                                         </div>
                                     </div>
-                                    <div className="post-input-group">
-                                        <label>Date</label>
-                                        <input type="text" className="post-input" placeholder="When?" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
+                                    <div className="date-time-inputs">
+                                        <div className="post-input-group">
+                                            <label>Date</label>
+                                            <DatePicker
+                                                selected={newDate}
+                                                onChange={(date) => setNewDate(date)}
+                                                className="post-input"
+                                                placeholderText="When?"
+                                                dateFormat="MM/dd/yyyy"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="post-input-group">
+                                            <label>Time (Optional)</label>
+                                            <DatePicker
+                                                selected={newTime}
+                                                onChange={(time) => setNewTime(time)}
+                                                showTimeSelect
+                                                showTimeSelectOnly
+                                                timeIntervals={15}
+                                                timeCaption="Time"
+                                                dateFormat="h:mm aa"
+                                                className="post-input"
+                                            />
+                                        </div>
                                     </div>
                                     <div className="post-input-group">
                                         <label>Description</label>

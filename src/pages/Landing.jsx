@@ -68,7 +68,7 @@ const Landing = () => {
             <div className="features-section">
                 <div className="features-header">
                     <h2>FEATURES</h2>
-                    <button className="faq-pill">FAQ S</button>
+                    <button className="faq-pill" onClick={() => navigate('/faq')}>FAQs</button>
                 </div>
 
                 <div className="features-grid">
@@ -120,11 +120,11 @@ const Landing = () => {
                         <a href="https://youtube.com" className="social-icon">YT</a>
                     </div>
                     <nav className="footer-nav">
-                        <a href="#">About</a>
-                        <a href="#">FAQs</a>
-                        <a href="#">Support</a>
-                        <a href="#">Terms</a>
-                        <a href="#">Privacy</a>
+                        <button className="footer-link-btn" onClick={() => navigate('/about')}>About</button>
+                        <button className="footer-link-btn" onClick={() => navigate('/faq')}>FAQs</button>
+                        <button className="footer-link-btn" onClick={() => navigate('/support')}>Support</button>
+                        <button className="footer-link-btn" onClick={() => navigate('/terms')}>Terms</button>
+                        <button className="footer-link-btn" onClick={() => navigate('/privacy')}>Privacy</button>
                     </nav>
                 </div>
                 <div className="footer-bottom">

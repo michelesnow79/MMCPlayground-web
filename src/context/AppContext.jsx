@@ -76,8 +76,8 @@ export const AppProvider = ({ children }) => {
             const q = query(collection(db, 'pins'), orderBy('createdAt', 'desc'));
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const pinsData = snapshot.docs.map(doc => ({
-                    id: doc.id,
                     ...doc.data(),
+                    id: doc.id,
                     date: doc.data().createdAt?.toDate()?.toISOString() || doc.data().date
                 }));
                 setPins(pinsData);
@@ -93,8 +93,8 @@ export const AppProvider = ({ children }) => {
         if (!db) return;
         const unsubscribe = onSnapshot(collection(db, 'replies'), (snapshot) => {
             const repliesData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
+                ...doc.data(),
+                id: doc.id
             }));
             setReplies(repliesData);
         });
@@ -130,17 +130,41 @@ export const AppProvider = ({ children }) => {
     const logout = () => signOut(auth);
 
     const addPin = async (newPin) => {
-        // For seeding, we might not have a user yet
-        await addDoc(collection(db, 'pins'), {
+        if (!newPin) return;
+
+        const pinData = {
             ...newPin,
-            ownerEmail: user?.email || 'admin@missmeconnection.com',
+            ownerEmail: user?.email || newPin.ownerEmail || 'admin@missmeconnection.com',
             ownerUid: user?.uid || 'seeder-bot',
             createdAt: serverTimestamp()
-        });
+        };
+
+        if (newPin.id) {
+            // If ID is provided, use setDoc to ensure we don't duplicate or to use a specific ID
+            await setDoc(doc(db, 'pins', String(newPin.id)), pinData);
+        } else {
+            // Otherwise use addDoc for auto-generated ID
+            await addDoc(collection(db, 'pins'), pinData);
+        }
     };
 
     const removePin = async (pinId) => {
-        await deleteDoc(doc(db, 'pins', pinId));
+        console.log("🗑️ PIN DELETE ATTEMPT: Targeting doc ID:", pinId);
+        try {
+            await deleteDoc(doc(db, 'pins', pinId));
+            console.log("✅ PIN DELETE SUCCESS");
+        } catch (err) {
+            console.error("❌ PIN DELETE FAILED:", err);
+        }
+    };
+
+    const updatePin = async (pinId, updatedData) => {
+        if (!user) return;
+        const pinRef = doc(db, 'pins', pinId);
+        await updateDoc(pinRef, {
+            ...updatedData,
+            updatedAt: serverTimestamp()
+        });
     };
 
     const ratePin = async (pinId, rating) => {
@@ -170,6 +194,15 @@ export const AppProvider = ({ children }) => {
             senderEmail: user.email,
             senderUid: user.uid,
             createdAt: serverTimestamp()
+        });
+    };
+
+    const updateReply = async (replyId, content) => {
+        if (!user) return;
+        const replyRef = doc(db, 'replies', replyId);
+        await updateDoc(replyRef, {
+            content,
+            updatedAt: serverTimestamp()
         });
     };
 
@@ -211,7 +244,7 @@ export const AppProvider = ({ children }) => {
     return (
         <AppContext.Provider value={{
             user, pins, isLoggedIn, loading, signup, login, logout,
-            addPin, removePin, ratePin, getAverageRating, addReply,
+            addPin, removePin, updatePin, ratePin, getAverageRating, addReply, updateReply,
             hiddenPins, hidePin, unhidePin, clearHiddenPins,
             formatDate, dateFormat, setDateFormat, mapMode, setMapMode,
             replies, ratings

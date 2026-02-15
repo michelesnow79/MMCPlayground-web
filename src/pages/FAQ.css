@@ -1,0 +1,177 @@
+.faq-page {
+    background-color: #18181B;
+    min-height: 100vh;
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.faq-hero {
+    position: relative;
+    height: 380px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    border-bottom: 2px solid #000;
+    /* Golden Tint for the map */
+    background-color: #fed400;
+    background-blend-mode: multiply;
+}
+
+.faq-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+    z-index: 1;
+}
+
+.faq-hero-halftone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../assets/halftone-dense.svg');
+    background-size: 400px;
+    opacity: 0.15;
+    z-index: 1;
+    pointer-events: none;
+    mask-image: linear-gradient(to bottom, black, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+}
+
+.faq-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+}
+
+.faq-title {
+    font-family: 'Bangers', cursive;
+    font-size: 5.5rem;
+    color: white;
+    text-shadow:
+        -3px -3px 0 #000,
+        3px -3px 0 #000,
+        -3px 3px 0 #000,
+        3px 3px 0 #000,
+        6px 6px 0 rgba(254, 44, 85, 0.8);
+    margin: 0 0 -5px 0;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+
+.faq-subtitle {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    max-width: 750px;
+    margin: 0 auto;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    line-height: 1.25;
+}
+
+.faq-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 80px 25px 120px;
+}
+
+.faq-content-title {
+    font-family: 'Bangers', cursive;
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 40px;
+    letter-spacing: 1px;
+}
+
+.faq-item {
+    margin-bottom: 50px;
+}
+
+.faq-question {
+    color: #FE2C55;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+}
+
+.faq-answer {
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: #ddd;
+    font-weight: 500;
+}
+
+.faq-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.faq-link:hover {
+    text-decoration: underline;
+    color: #FE2C55;
+}
+
+.faq-back-btn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+}
+
+.faq-back-btn:hover {
+    background: #FE2C55;
+    transform: rotate(90deg);
+}
+
+@media (max-width: 768px) {
+    .faq-title {
+        font-size: 4rem;
+    }
+
+    .faq-hero {
+        height: 320px;
+    }
+
+    .faq-question {
+        font-size: 1.3rem;
+    }
+
+    .faq-answer {
+        font-size: 1.05rem;
+    }
+
+    .faq-content-title {
+        font-size: 2rem;
+    }
+}

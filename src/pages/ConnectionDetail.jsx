@@ -2,16 +2,25 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import './ConnectionDetail.css';
 
 const ConnectionDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, pins, replies, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, formatDate, hiddenPins } = useApp();
+    const { user, pins, replies, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, updatePin, removePin, formatDate, hiddenPins, loading } = useApp();
 
     const [replyText, setReplyText] = React.useState('');
     const [showReplyModal, setShowReplyModal] = React.useState(false);
     const [isEditing, setIsEditing] = React.useState(false);
+
+    // Edit Pin State
+    const [showEditModal, setShowEditModal] = React.useState(false);
+    const [editTitle, setEditTitle] = React.useState('');
+    const [editDescription, setEditDescription] = React.useState('');
+    const [editDate, setEditDate] = React.useState(new Date());
+    const [editTime, setEditTime] = React.useState(new Date());
 
     if (loading) {
         return <div className="detail-loading">LOADING CONNECTION...</div>;
@@ -45,7 +54,7 @@ const ConnectionDetail = () => {
         if (isEditing && existingReply) {
             updateReply(existingReply.id, replyText);
         } else {
-            addReply(Number(id), replyText);
+            addReply(id, replyText);
         }
         setShowReplyModal(false);
     };
@@ -68,6 +77,36 @@ const ConnectionDetail = () => {
             navigator.clipboard.writeText(window.location.href);
             alert("Link copied to clipboard!");
         }
+    };
+
+    const handleDelete = async () => {
+        if (window.confirm('ARE YOU SURE YOU WANT TO DELETE THIS POST FOREVER? THIS CANNOT BE UNDONE.')) {
+            await removePin(pin.id);
+            navigate('/map');
+        }
+    };
+
+    const handleEditClick = () => {
+        if (pin) {
+            setEditTitle(pin.title);
+            setEditDescription(pin.description);
+            setEditDate(pin.date ? new Date(pin.date) : new Date());
+            // Attempt to parse time string if possible, else use current time
+            setEditTime(new Date());
+            setShowEditModal(true);
+        }
+    };
+
+    const handleEditSubmit = async () => {
+        if (!editTitle.trim() || !editDescription.trim()) return;
+
+        await updatePin(pin.id, {
+            title: editTitle.toUpperCase(),
+            description: editDescription,
+            date: editDate.toISOString(),
+            time: editTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        setShowEditModal(false);
     };
 
     // Debugging
@@ -191,10 +230,18 @@ const ConnectionDetail = () => {
                     )}
 
                     <div className="detail-cta-group">
-                        {pin.ownerEmail === user?.email ? (
-                            <button className="btn-cyan-glow-reply" onClick={() => navigate('/messages')}>
-                                VIEW REPLIES
-                            </button>
+                        {(pin.ownerEmail === user?.email || user?.isAdmin) ? (
+                            <div className="owner-buttons-stack">
+                                <button className="btn-cyan-glow-reply" onClick={() => navigate('/messages')}>
+                                    VIEW REPLIES
+                                </button>
+                                <button className="btn-edit-post-detail" onClick={handleEditClick}>
+                                    EDIT POST
+                                </button>
+                                <button className="btn-delete-post-detail" onClick={handleDelete}>
+                                    DELETE POST
+                                </button>
+                            </div>
                         ) : (
                             <button className="btn-cyan-glow-reply" onClick={handleReplyClick}>
                                 {existingReply ? 'EDIT MY REPLY' : 'REPLY TO THIS POST'}
@@ -214,6 +261,64 @@ const ConnectionDetail = () => {
                     </div>
                 </div>
             </main>
+
+            {showEditModal && (
+                <div className="modal-overlay">
+                    <div className="modal-card edit-pin-modal">
+                        <h2 className="modal-title">EDIT YOUR POST</h2>
+                        <div className="edit-form">
+                            <div className="edit-input-group">
+                                <label>TITLE</label>
+                                <input
+                                    type="text"
+                                    className="edit-input"
+                                    value={editTitle}
+                                    onChange={(e) => setEditTitle(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="edit-row">
+                                <div className="edit-input-group">
+                                    <label>DATE</label>
+                                    <DatePicker
+                                        selected={editDate}
+                                        onChange={(date) => setEditDate(date)}
+                                        className="edit-input"
+                                        dateFormat="MM/dd/yyyy"
+                                        required
+                                    />
+                                </div>
+                                <div className="edit-input-group">
+                                    <label>TIME</label>
+                                    <DatePicker
+                                        selected={editTime}
+                                        onChange={(time) => setEditTime(time)}
+                                        showTimeSelect
+                                        showTimeSelectOnly
+                                        timeIntervals={15}
+                                        timeCaption="Time"
+                                        dateFormat="h:mm aa"
+                                        className="edit-input"
+                                    />
+                                </div>
+                            </div>
+                            <div className="edit-input-group">
+                                <label>DESCRIPTION</label>
+                                <textarea
+                                    className="edit-textarea"
+                                    value={editDescription}
+                                    onChange={(e) => setEditDescription(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-actions">
+                            <button className="modal-btn-cancel" onClick={() => setShowEditModal(false)}>CANCEL</button>
+                            <button className="modal-btn-confirm" onClick={handleEditSubmit}>SAVE CHANGES</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showReplyModal && (
                 <div className="modal-overlay">

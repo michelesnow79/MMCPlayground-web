@@ -26,7 +26,9 @@ const SideMenu = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className={`side-menu-overlay ${isOpen ? 'open' : ''}`}>
+        <div className={`side-menu-overlay ${isOpen ? 'open' : ''}`} onClick={(e) => {
+            if (e.target.className.includes('side-menu-overlay')) onClose();
+        }}>
             <div className="side-menu-container">
                 <button className="side-menu-close" onClick={onClose}>×</button>
 
@@ -57,11 +59,11 @@ const SideMenu = ({ isOpen, onClose }) => {
 
                     <div className="side-menu-footer">
                         <div className="side-menu-socials">
-                            <a href="#" className="social-icon">F</a>
-                            <a href="#" className="social-icon">I</a>
-                            <a href="#" className="social-icon">T</a>
-                            <a href="#" className="social-icon">X</a>
-                            <a href="#" className="social-icon">Y</a>
+                            <a href="#" className="social-icon">f</a>
+                            <a href="#" className="social-icon">i</a>
+                            <a href="#" className="social-icon">t</a>
+                            <a href="#" className="social-icon">x</a>
+                            <a href="#" className="social-icon">y</a>
                         </div>
                         <p className="side-menu-copyright">© 2025 Miss Me Connection LLC</p>
                     </div>

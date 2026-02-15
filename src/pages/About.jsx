@@ -1,37 +1,79 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './StaticPage.css';
+import SideMenu from '../components/SideMenu';
+import './About.css';
+
+// Assets
+import mapBg from '../assets/map-bg.svg';
+import micheleImg from '../assets/hero-woman-bluebg.svg';
+import paulinaImg from '../assets/paulina.svg';
 
 const About = () => {
     const navigate = useNavigate();
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
     return (
-        <div className="static-page-container">
-            <header className="static-header">
-                <button className="static-back-btn" onClick={() => navigate(-1)}>←</button>
-                <h1 className="static-title">ABOUT US</h1>
+        <div className="about-page">
+            <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+
+            {/* Hamburger Button */}
+            <button className="hamburger-btn-static" onClick={() => setIsMenuOpen(true)}>
+                <div className="hamburger-line"></div>
+                <div className="hamburger-line"></div>
+                <div className="hamburger-line"></div>
+            </button>
+
+            <button className="about-back-btn" onClick={() => navigate(-1)}>✕</button>
+
+            <header className="about-hero" style={{ backgroundImage: `url(${mapBg})` }}>
+                <div className="about-hero-halftone"></div>
+                <div className="about-hero-content">
+                    <h1 className="about-title">ABOUT US</h1>
+                    <p className="about-subtitle">
+                        Have you ever crossed paths with someone special but missed the chance to connect?
+                        We believe in second chances!
+                    </p>
+                </div>
             </header>
 
-            <div className="static-content">
-                <section className="static-section">
-                    <h2 className="mm-heading">Miss Me Connection: Where Seconds Become Stories</h2>
-                    <p>
-                        "Miss Me Connection is more than a website; it’s a heartbeat. It’s for the moments
-                        when time stood still, but life moved on. We’ve all been there: a glance on a
-                        crowded train, a shared smile at a coffee shop, or a brief conversation that
-                        felt like it could have been so much more. This platform was born from the
-                        belief that 'goodbye' shouldn't have to be the end of the story."
+            <div className="founders-section">
+                {/* Michele Nieves */}
+                <div className="founder-card">
+                    <div className="founder-image-wrap">
+                        <div className="speech-bubble bubble-left">HOWDY!</div>
+                        <img src={micheleImg} alt="Michele Nieves" className="founder-img" />
+                    </div>
+                    <div className="founder-name-wrap">
+                        <h2 className="founder-name">MICHELE NIEVES</h2>
+                    </div>
+                    <p className="founder-bio">
+                        Born and raised in Brooklyn, NY, Michele Nieves is an accomplished Audio Visual Technician, V1,
+                        Video Engineer, and Production Manager, with experience on major projects like the MTV VMAs,
+                        national comedy tours, and global music festivals. Also a graphic designer and entrepreneur,
+                        she's crafted campaigns for top fashion brands like Calvin Klein, DKNY to name a few,
+                        blending technical expertise with creativity. Inspired by her passion for connection,
+                        Michele created Miss Me Connection to bridge the gap between people who missed their moment.
                     </p>
-                </section>
+                </div>
 
-                <section className="static-section">
-                    <h2 className="mm-heading">The Mission</h2>
-                    <p>
-                        Our mission is simple: to bridge the gap between 'what if' and 'hello again.'
-                        We provide a safe, anonymous, and beautiful space for people to share their
-                        missed connections and, just maybe, find the person they’ve been thinking about.
+                {/* Paulina Kucharski */}
+                <div className="founder-card">
+                    <div className="founder-image-wrap">
+                        <div className="speech-bubble bubble-right">Follow us!</div>
+                        <img src={paulinaImg} alt="Paulina Kucharski" className="founder-img" />
+                    </div>
+                    <div className="founder-name-wrap">
+                        <h2 className="founder-name">PAULINA KUCHARSKI</h2>
+                    </div>
+                    <p className="founder-bio">
+                        A Chicago native, Paulina Kucharski is an accomplished Producer and documentary filmmaker
+                        with a rich background in the film and television industry. Her work spans a variety of
+                        acclaimed projects, blending creative storytelling with sharp production expertise.
+                        Passionate about exploring human connections and untold narratives, Paulina has brought
+                        powerful stories to life on screen. Now, as a producer of the Miss Me Connection platform,
+                        Paulina applies her talents to help others turn missed encounters into meaningful connections.
                     </p>
-                </section>
+                </div>
             </div>
         </div>
     );

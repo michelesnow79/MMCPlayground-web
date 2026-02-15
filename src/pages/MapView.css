@@ -59,17 +59,14 @@ div[role="button"] {
 }
 
 .map-logo-title-original {
-    font-family: 'Inter', sans-serif;
-    font-weight: 800;
-    font-style: italic;
-    font-size: 1.4rem;
+    font-family: 'Bangers', cursive;
+    font-size: 2rem;
     color: #ffffff;
-    letter-spacing: 0.5px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
     text-align: center;
     margin: 0;
-    transform: skewX(-5deg);
-    /* Subtle professional slant */
+    cursor: pointer;
 }
 
 .original-settings-btn {
@@ -529,20 +526,23 @@ div[role="button"] {
     gap: 4px;
 }
 
+.popup-hearts.readonly .popup-heart {
+    cursor: default;
+}
+
+.popup-hearts.readonly .popup-heart:hover {
+    transform: none;
+}
+
 .popup-heart {
     font-size: 0.9rem;
     cursor: pointer;
-    filter: grayscale(1) opacity(0.3);
+    filter: grayscale(1) opacity(0.2);
     transition: all 0.2s;
 }
 
 .popup-heart.filled {
     filter: grayscale(0) opacity(1);
-    transform: scale(1.1);
-}
-
-.popup-heart:hover {
-    transform: scale(1.3);
 }
 
 .popup-avg-text {
@@ -552,43 +552,18 @@ div[role="button"] {
     letter-spacing: 0.5px;
 }
 
-.avg-rating-badge-popup {
-    float: right;
-    background: rgba(254, 44, 85, 0.1);
-    color: #fe2c55;
-    font-size: 10px;
-    font-weight: 900;
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid rgba(254, 44, 85, 0.2);
-}
-
-.figma-popup .leaflet-popup-tip {
-    background: #1a1a1e !important;
-}
-
-.figma-popup .leaflet-popup-content {
-    margin: 0 !important;
-    width: 320px !important;
-}
-
-.popup-inner {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-}
-
 .popup-category-badge {
     align-self: flex-start;
     background: var(--missme-pink);
     color: white;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Nunito', sans-serif;
     font-size: 11px;
-    font-weight: 700;
-    padding: 5px 12px;
+    font-weight: 900;
+    padding: 5px 14px;
     border-radius: 20px;
     text-transform: uppercase;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    display: inline-block;
 }
 
 .popup-title {
@@ -596,12 +571,13 @@ div[role="button"] {
     font-weight: 900;
     font-size: 1.4rem;
     color: #FFFFFF !important;
-    margin: 0 0 15px 0;
+    margin: 0 0 10px 0;
     line-height: 1.2;
+    text-transform: uppercase;
 }
 
 .popup-location-details {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .location-name {
@@ -609,22 +585,23 @@ div[role="button"] {
     font-weight: 800;
     font-size: 1.1rem;
     color: white !important;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .location-address {
     font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #a0a0ab !important;
     font-weight: 500;
+    margin-bottom: 8px;
 }
 
 .popup-date-row {
     color: #8E8E93 !important;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .popup-description {
@@ -645,6 +622,14 @@ div[role="button"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.popup-footer-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
 .popup-details-link-btn {
@@ -653,34 +638,52 @@ div[role="button"] {
     color: var(--missme-cyan) !important;
     font-family: 'Nunito', sans-serif;
     font-weight: 800;
-    font-size: 1rem;
-    padding: 10px 0;
+    font-size: 0.9rem;
+    padding: 0;
     cursor: pointer;
     transition: all 0.2s;
-}
-
-.popup-its-not-me-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #8E8E93 !important;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.popup-its-not-me-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white !important;
-    border-color: rgba(255, 255, 255, 0.2);
+    white-space: nowrap;
 }
 
 .popup-details-link-btn:hover {
     filter: brightness(1.2);
     transform: translateX(3px);
+}
+
+.popup-its-not-me-btn {
+    background: var(--missme-pink);
+    border: none;
+    color: white !important;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.popup-its-not-me-btn:hover {
+    filter: brightness(1.2);
+    transform: scale(1.05);
+}
+
+.popup-delete-btn {
+    background: none;
+    border: none;
+    color: #FE2C55 !important;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    padding: 0;
+}
+
+.popup-delete-btn:hover {
+    text-decoration: underline;
 }
 
 /* POST MODAL OVERLAY (Full Screen Blurry Look) */
@@ -873,4 +876,66 @@ div[role="button"] {
 
 .post-modal-submit:hover {
     transform: translateY(-3px);
+}
+
+/* DARK THEME DATEPICKER OVERRIDES */
+.react-datepicker-wrapper {
+    width: 100%;
+}
+
+.react-datepicker {
+    background-color: #1a1a1e !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    font-family: 'Nunito', sans-serif !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    color: white !important;
+}
+
+.react-datepicker__header {
+    background-color: #121214 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+    color: #a0a0ab !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+}
+
+.react-datepicker__day {
+    color: white !important;
+}
+
+.react-datepicker__day:hover {
+    background-color: rgba(254, 44, 85, 0.2) !important;
+    border-radius: 50% !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+    background-color: var(--missme-pink) !important;
+    color: white !important;
+    border-radius: 50% !important;
+}
+
+.react-datepicker__day--outside-month {
+    color: #444 !important;
+}
+
+.react-datepicker__navigation-icon::before {
+    border-color: #8E8E93 !important;
+}
+
+.react-datepicker__triangle {
+    display: none !important;
+}
+
+.date-time-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
 }
