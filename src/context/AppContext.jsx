@@ -36,6 +36,7 @@ export const AppProvider = ({ children }) => {
     const [dateFormat, setDateFormat] = useState('mm/dd/yyyy');
     const [mapMode, setMapMode] = useState('dark');
     const [distanceUnit, setDistanceUnit] = useState('miles');
+    const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
     // 1. Auth Listener
     useEffect(() => {
@@ -117,13 +118,42 @@ export const AppProvider = ({ children }) => {
         return () => unsubscribe();
     }, []);
 
+    // 5. Notification Logic
+    useEffect(() => {
+        if (!user || replies.length === 0) {
+            setHasNewNotifications(false);
+            return;
+        }
+
+        const myPins = pins.filter(p => p.ownerEmail === user.email);
+        const receivedReplies = replies.filter(r => myPins.some(p => p.id === r.pinId));
+
+        // Simple logic: if count is higher than last seen, show bubble
+        const lastSeenCount = parseInt(localStorage.getItem(`mmc_last_replies_count_${user.uid}`) || '0');
+
+        if (receivedReplies.length > lastSeenCount) {
+            setHasNewNotifications(true);
+        } else {
+            setHasNewNotifications(false);
+        }
+    }, [replies, pins, user]);
+
+    const markNotificationsAsRead = () => {
+        if (!user) return;
+        const myPins = pins.filter(p => p.ownerEmail === user.email);
+        const receivedReplies = replies.filter(r => myPins.some(p => p.id === r.pinId));
+        localStorage.setItem(`mmc_last_replies_count_${user.uid}`, receivedReplies.length.toString());
+        setHasNewNotifications(false);
+    };
+
     // Actions
     const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
-    const signup = async (email, password, name) => {
+    const signup = async (email, password, name, postalCode) => {
         const res = await createUserWithEmailAndPassword(auth, email, password);
         await setDoc(doc(db, 'users', res.user.uid), {
             name,
             email,
+            postalCode: postalCode || '',
             createdAt: serverTimestamp(),
             isAdmin: email === 'MissMe@missmeconnection.com' // Set first admin
         });
@@ -157,6 +187,21 @@ export const AppProvider = ({ children }) => {
         } catch (err) {
             console.error("❌ PIN DELETE FAILED:", err);
         }
+    };
+
+    const reportPin = async (pinId, reason) => {
+        if (!user) return;
+        await addDoc(collection(db, 'reports'), {
+            pinId,
+            reporterUid: user.uid,
+            reporterEmail: user.email,
+            reason,
+            status: 'pending',
+            createdAt: serverTimestamp()
+        });
+        // Optionally mark the pin as reported locally or in the pin doc
+        const pinRef = doc(db, 'pins', pinId);
+        await updateDoc(pinRef, { isReported: true });
     };
 
     const updatePin = async (pinId, updatedData) => {
@@ -249,7 +294,9 @@ export const AppProvider = ({ children }) => {
             hiddenPins, hidePin, unhidePin, clearHiddenPins,
             formatDate, dateFormat, setDateFormat, mapMode, setMapMode,
             distanceUnit, setDistanceUnit,
-            replies, ratings
+            replies, ratings,
+            hasNewNotifications, markNotificationsAsRead,
+            reportPin
         }}>
             {children}
         </AppContext.Provider>

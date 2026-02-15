@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 import './BottomNav.css';
 
 // Importing assets
@@ -10,6 +11,8 @@ import logoIcon from '../assets/heart-logo.svg';
 import accountIcon from '../assets/account_icon.svg';
 
 const BottomNav = ({ onAddClick, showAddButton }) => {
+    const { hasNewNotifications } = useApp();
+
     return (
         <nav className="bottom-nav">
             <NavLink to="/map" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
@@ -40,9 +43,12 @@ const BottomNav = ({ onAddClick, showAddButton }) => {
             )}
 
             <NavLink to="/messages" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
-                </svg>
+                <div className="nav-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
+                    </svg>
+                    {hasNewNotifications && <div className="nav-notification">!</div>}
+                </div>
                 <span className="nav-label">Messages</span>
             </NavLink>
             <NavLink to="/account" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>

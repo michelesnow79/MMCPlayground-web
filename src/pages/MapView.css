@@ -1052,3 +1052,20 @@ div[role="button"] {
         gap: 15px;
     }
 }
+
+.popup-report-btn {
+    background: transparent;
+    border: 1px solid #ff3355;
+    color: #ff3355;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.popup-report-btn:hover {
+    background: #ff3355;
+    color: white;
+}

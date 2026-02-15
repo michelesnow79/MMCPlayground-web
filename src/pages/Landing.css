@@ -217,6 +217,10 @@
 }
 
 @media (max-width: 1024px) {
+    .hero-content {
+        margin-right: 0;
+    }
+
     .hero-illustration {
         width: 300px;
         height: auto;
@@ -224,16 +228,58 @@
 }
 
 @media (max-width: 768px) {
-    .figma-title {
-        font-size: 3.5rem;
+    .hero-section {
+        height: auto;
+        min-height: 85vh;
+        padding: 80px 20px 60px;
+        flex-direction: column;
     }
 
-    .features-grid {
-        grid-template-columns: 1fr;
+    .hero-content {
+        max-width: 100%;
+        margin-right: 0;
+    }
+
+    .figma-title {
+        font-size: 3.5rem;
+        text-shadow: 4px 4px 0px rgba(0, 0, 0, 1);
+    }
+
+    .figma-tagline {
+        font-size: 1.25rem;
+        margin-top: 10px;
+        line-height: 1.2;
+    }
+
+    .figma-actions {
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .figma-btn-pink {
+        width: 100%;
+        font-size: 1.6rem;
+        padding: 15px 20px;
+    }
+
+    .speech-bubble-asset-wrap {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        margin: 40px auto 0;
+        width: 240px;
     }
 
     .woman-layer {
         display: none;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
     }
 }
 

@@ -9,6 +9,7 @@ import deleteIcon from '../assets/delete_btn.svg';
 import logoAsset from '../assets/heart-logo.svg';
 import SideMenu from '../components/SideMenu';
 import { useApp } from '../context/AppContext';
+import AuthModal from '../components/AuthModal';
 
 const Account = () => {
     const { user, loading, logout, deleteAccount, dateFormat, setDateFormat, pins, hiddenPins, hidePin, unhidePin, clearHiddenPins, mapMode, setMapMode, distanceUnit, setDistanceUnit } = useApp();
@@ -37,18 +38,24 @@ const Account = () => {
         { icon: null, label: "About us", actionIcon: "❯" },
     ];
 
-    // Redirect to home if not logged in and not loading
+    // We no longer redirect automatically, we show the AuthModal instead
+    /* 
     React.useEffect(() => {
-        if (!loading && !user) {
-            navigate('/');
-        }
+        const checkAuth = setTimeout(() => {
+            if (!loading && !user) {
+                console.log("MMC AUTH: User missing after grace period, redirecting from Account to Home");
+                navigate('/');
+            }
+        }, 500);
+        return () => clearTimeout(checkAuth);
     }, [user, loading, navigate]);
+    */
 
     if (loading) {
         return <div className="loading-screen-missme">LOADING PROFILE...</div>;
     }
 
-    if (!user) return null; // Prevent crash before redirect
+    if (!user) return <AuthModal />;
 
     if (showHiddenList) {
         return (
@@ -170,7 +177,16 @@ const Account = () => {
                     </div>
 
                     {settingsItems.map((item, idx) => (
-                        <div key={idx} className="settings-row-item">
+                        <div
+                            key={idx}
+                            className="settings-row-item cursor-pointer"
+                            onClick={() => {
+                                if (item.label === "Support") navigate('/support');
+                                if (item.label === "Terms & conditions") navigate('/terms');
+                                if (item.label === "Privacy policy") navigate('/privacy');
+                                if (item.label === "About us") navigate('/about');
+                            }}
+                        >
                             <span className="row-label">{item.label}</span>
                             <span className="row-action-indicator">{item.actionIcon}</span>
                         </div>
@@ -178,7 +194,7 @@ const Account = () => {
                 </div>
 
                 <div className="profile-actions-footer">
-                    <button className="action-link-btn" onClick={() => navigate('/account/edit')}>Edit?</button>
+                    <button className="action-link-btn" onClick={() => alert('Profile editing coming soon!')}>Edit?</button>
                     {hiddenPins.length > 0 && (
                         <button className="action-link-btn unhide-btn" onClick={() => setShowHiddenList(true)}>Unhide({hiddenPins.length})</button>
                     )}

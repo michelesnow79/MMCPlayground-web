@@ -197,7 +197,11 @@ const fuzzAndProcessLocation = async (placeOrResult) => {
 
 const MapView = () => {
     const navigate = useNavigate();
-    const { pins, addPin, isLoggedIn, user, hiddenPins, hidePin, removePin, formatDate, getAverageRating, ratings, distanceUnit, mapMode } = useApp();
+    const {
+        user, pins, isLoggedIn, loading, signup, login,
+        addPin, removePin, hidePin, hiddenPins, formatDate, mapMode,
+        getAverageRating, reportPin, distanceUnit, ratings
+    } = useApp();
 
     // 1. ALL STATES AT THE TOP
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -585,6 +589,17 @@ const MapView = () => {
                                                 setSelectedPin(null);
                                             }}>
                                                 IT'S NOT ME.
+                                            </button>
+
+                                            <button className="popup-report-btn" onClick={() => {
+                                                const reason = window.prompt("REASON FOR REPORTING?");
+                                                if (reason) {
+                                                    reportPin(selectedPin.id, reason);
+                                                    alert("PIN REPORTED TO ADMIN.");
+                                                    setSelectedPin(null);
+                                                }
+                                            }}>
+                                                REPORT
                                             </button>
 
                                             {(selectedPin.ownerEmail === user?.email || user?.isAdmin) && (

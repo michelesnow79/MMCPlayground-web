@@ -9,6 +9,7 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
+    const [postalCode, setPostalCode] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -26,7 +27,7 @@ const Login = () => {
 
         try {
             if (isSignUp) {
-                await signup(email, password, name);
+                await signup(email, password, name, postalCode);
             } else {
                 await login(email, password);
             }
@@ -59,6 +60,20 @@ const Login = () => {
                                 className="login-input"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                                required={isSignUp}
+                            />
+                        </div>
+                    )}
+
+                    {isSignUp && (
+                        <div className="input-group">
+                            <label>POSTAL CODE</label>
+                            <input
+                                type="text"
+                                placeholder="90210"
+                                className="login-input"
+                                value={postalCode}
+                                onChange={(e) => setPostalCode(e.target.value)}
                                 required={isSignUp}
                             />
                         </div>

@@ -37,6 +37,7 @@ function App() {
             <Route path="/support" element={<Support />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={<Landing />} />
           </Routes>
         </div>
       </Router>

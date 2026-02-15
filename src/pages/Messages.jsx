@@ -2,25 +2,31 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
+import AuthModal from '../components/AuthModal';
 import './Messages.css';
 
 const Messages = () => {
-    const { user, loading, pins, replies, formatDate } = useApp();
+    const { user, loading, pins, replies, formatDate, markNotificationsAsRead } = useApp();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = React.useState('received');
-
-    // Redirect to home if not logged in and not loading
+    // We no longer redirect automatically, we show the AuthModal instead
+    /* 
     React.useEffect(() => {
-        if (!loading && !user) {
-            navigate('/');
-        }
+        const checkAuth = setTimeout(() => {
+            if (!loading && !user) {
+                console.log("MMC AUTH: User missing after grace period, redirecting from Messages");
+                navigate('/');
+            }
+        }, 500);
+        return () => clearTimeout(checkAuth);
     }, [user, loading, navigate]);
+    */
 
     if (loading) {
         return <div className="loading-screen-missme">LOADING MESSAGES...</div>;
     }
 
-    if (!user) return null; // Prevent crash before redirect
+    if (!user) return <AuthModal />;
 
     // Replies I received (to my pins)
     const myPins = pins.filter(p => p.ownerEmail === user.email);
@@ -28,6 +34,13 @@ const Messages = () => {
 
     // Replies I sent (to others' pins)
     const sentReplies = replies.filter(r => r.senderEmail === user.email);
+
+    // Clear notifications when viewing the messages page
+    React.useEffect(() => {
+        if (user && activeTab === 'received') {
+            markNotificationsAsRead();
+        }
+    }, [user, activeTab, markNotificationsAsRead, receivedReplies.length]);
 
     const renderReplyItem = (reply, isSent) => {
         const pin = pins.find(p => p.id === reply.pinId);

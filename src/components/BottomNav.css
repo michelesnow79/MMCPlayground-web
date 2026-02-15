@@ -76,3 +76,50 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+/* Notification Badge */
+.nav-icon-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.nav-notification {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background-color: #ff3355;
+    /* MissMe Vibrant Red */
+    color: white;
+    font-size: 10px;
+    font-weight: 900;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2.5px solid #1a1a1e;
+    box-shadow: 0 0 12px rgba(255, 51, 85, 0.5);
+    pointer-events: none;
+    animation: notification-pulse 2s infinite;
+    z-index: 10;
+}
+
+@keyframes notification-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 51, 85, 0.7);
+    }
+
+    70% {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 8px rgba(255, 51, 85, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 51, 85, 0);
+    }
+}

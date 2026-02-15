@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { collection, onSnapshot, query, orderBy, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import './Admin.css';
 
@@ -9,6 +9,8 @@ const Admin = () => {
     const navigate = useNavigate();
     const { user, pins, removePin, addPin } = useApp();
     const [allUsers, setAllUsers] = useState([]);
+    const [reports, setReports] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -22,9 +24,16 @@ const Admin = () => {
             const fetchUsers = async () => {
                 const snapshot = await getDocs(collection(db, 'users'));
                 setAllUsers(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-                setLoading(false);
             };
             fetchUsers();
+
+            // Listen for reports
+            const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                setReports(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+                setLoading(false);
+            });
+            return () => unsubscribe();
         }
     }, [user, navigate]);
 
@@ -110,6 +119,41 @@ const Admin = () => {
         }
     };
 
+    const handleToggleAdmin = async (uId, currentStatus, email) => {
+        const rootAdmin = 'missme@missmeconnection.com';
+        if (email.toLowerCase() === rootAdmin) {
+            alert('CRITICAL: ROOT ADMIN STATUS CANNOT BE REVOKED.');
+            return;
+        }
+
+        if (window.confirm(`GIVE ${currentStatus ? 'REMOVE' : 'GRANT'} ADMIN ACCESS TO THIS USER?`)) {
+            try {
+                const userRef = doc(db, 'users', uId);
+                await updateDoc(userRef, { isAdmin: !currentStatus });
+                // Update local state
+                setAllUsers(prev => prev.map(u => u.id === uId ? { ...u, isAdmin: !currentStatus } : u));
+            } catch (err) {
+                console.error("Admin toggle error:", err);
+                alert("ERROR UPDATING ADMIN STATUS. CHECK CONNECTION.");
+            }
+        }
+    };
+
+    const marketInsights = React.useMemo(() => {
+        const counts = {};
+        allUsers.forEach(u => {
+            const zip = u.postalCode || 'UNKNOWN';
+            counts[zip] = (counts[zip] || 0) + 1;
+        });
+        return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }, [allUsers]);
+
+    const filteredUsers = allUsers.filter(u =>
+        u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.postalCode?.includes(searchTerm)
+    );
+
     return (
         <div className="admin-container">
             <header className="admin-header">
@@ -140,15 +184,77 @@ const Admin = () => {
                 </section>
 
                 <section className="admin-section">
-                    <h2 className="section-title">REGISTERED USERS</h2>
-                    <div className="admin-list">
-                        {allUsers.map(u => (
+                    <div className="section-header">
+                        <h2 className="section-title">USERS ({allUsers.length})</h2>
+                        <input
+                            type="text"
+                            placeholder="SEARCH USERS/ZIPS..."
+                            className="admin-search"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <div className="admin-list users-scroll">
+                        {filteredUsers.map(u => (
                             <div key={u.id} className="admin-item">
                                 <div className="item-info">
-                                    <span className="item-label">{u.name}</span>
+                                    <span className="item-label">
+                                        {u.name}
+                                        {u.postalCode && <span className="zip-badge">{u.postalCode}</span>}
+                                    </span>
                                     <span className="item-sub-label">{u.email}</span>
                                 </div>
-                                {u.isAdmin && <span className="admin-badge">ADMIN</span>}
+                                <div className="user-actions">
+                                    {u.email?.toLowerCase() === 'missme@missmeconnection.com' ? (
+                                        <span className="root-admin-badge">ROOT ADMIN</span>
+                                    ) : (
+                                        <button
+                                            className={`admin-toggle-btn ${u.isAdmin ? 'is-admin' : ''}`}
+                                            onClick={() => handleToggleAdmin(u.id, u.isAdmin, u.email)}
+                                        >
+                                            {u.isAdmin ? 'REVOKE ADMIN' : 'MAKE ADMIN'}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="admin-section insights-section">
+                    <h2 className="section-title">MARKET INSIGHTS (ZIPS)</h2>
+                    <div className="admin-list">
+                        <div className="insight-header">
+                            <span>POSTAL CODE</span>
+                            <span>USER COUNT</span>
+                        </div>
+                        {marketInsights.map(([zip, count]) => (
+                            <div key={zip} className="insight-row">
+                                <span className="insight-zip">{zip}</span>
+                                <div className="insight-bar-wrap">
+                                    <div className="insight-bar" style={{ width: `${(count / allUsers.length) * 100}%` }}></div>
+                                    <span className="insight-count">{count}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="admin-section">
+                    <h2 className="section-title reported-title">REPORTED CONTENT ({reports.length})</h2>
+                    <div className="admin-list">
+                        {reports.length === 0 && <p className="no-data-text">No active reports</p>}
+                        {reports.map(report => (
+                            <div key={report.id} className="admin-item reported-item">
+                                <div className="item-info">
+                                    <span className="item-label">REASON: {report.reason}</span>
+                                    <span className="item-sub-label">BY: {report.reporterEmail}</span>
+                                    <button className="view-pin-btn" onClick={() => navigate(`/browse/${report.pinId}`)}>VIEW PIN</button>
+                                </div>
+                                <div className="report-actions">
+                                    <button className="item-approve-btn" onClick={() => handleResolveReport(report.id, report.pinId, 'keep')}>KEEP</button>
+                                    <button className="item-delete-btn" onClick={() => handleResolveReport(report.id, report.pinId, 'delete')}>DELETE PIN</button>
+                                </div>
                             </div>
                         ))}
                     </div>
