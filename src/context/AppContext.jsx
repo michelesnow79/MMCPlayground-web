@@ -35,6 +35,7 @@ export const AppProvider = ({ children }) => {
     });
     const [dateFormat, setDateFormat] = useState('mm/dd/yyyy');
     const [mapMode, setMapMode] = useState('dark');
+    const [distanceUnit, setDistanceUnit] = useState('miles');
 
     // 1. Auth Listener
     useEffect(() => {
@@ -247,6 +248,7 @@ export const AppProvider = ({ children }) => {
             addPin, removePin, updatePin, ratePin, getAverageRating, addReply, updateReply,
             hiddenPins, hidePin, unhidePin, clearHiddenPins,
             formatDate, dateFormat, setDateFormat, mapMode, setMapMode,
+            distanceUnit, setDistanceUnit,
             replies, ratings
         }}>
             {children}

@@ -131,3 +131,42 @@
     padding: 60px 20px;
     color: var(--text-muted);
 }
+
+/* =========================================================================
+   MOBILE RESPONSIVENESS (BREAKPOINTS)
+   ========================================================================= */
+
+@media (max-width: 600px) {
+    .browse-container {
+        padding: 15px;
+    }
+
+    .browse-header h1 {
+        font-size: 2rem;
+    }
+
+    .connection-card {
+        flex-direction: column;
+        padding: 20px;
+        gap: 15px;
+    }
+
+    .card-action-side {
+        align-self: flex-start;
+        margin-left: 0;
+    }
+
+    .card-title {
+        font-size: 1.3rem;
+    }
+
+    .card-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .avg-rating-badge-mini {
+        align-self: flex-start;
+    }
+}

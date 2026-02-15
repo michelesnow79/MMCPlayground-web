@@ -11,7 +11,7 @@ import SideMenu from '../components/SideMenu';
 import { useApp } from '../context/AppContext';
 
 const Account = () => {
-    const { user, loading, logout, deleteAccount, dateFormat, setDateFormat, pins, hiddenPins, hidePin, unhidePin, clearHiddenPins, mapMode, setMapMode } = useApp();
+    const { user, loading, logout, deleteAccount, dateFormat, setDateFormat, pins, hiddenPins, hidePin, unhidePin, clearHiddenPins, mapMode, setMapMode, distanceUnit, setDistanceUnit } = useApp();
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [showDeleteModal, setShowDeleteModal] = React.useState(false);
@@ -96,8 +96,8 @@ const Account = () => {
         <div className="account-page-premium">
             <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
             <header className="premium-account-header">
-                <button className="side-menu-btn" onClick={() => setIsMenuOpen(true)}>
-                    <img src={hamburgerIcon} alt="Menu" width="24" height="24" />
+                <button className="side-menu-btn" onClick={() => navigate('/map')}>
+                    <span className="close-x-icon">✕</span>
                 </button>
                 <h1 className="account-title-center">ACCOUNT & SETTINGS</h1>
                 <div className="header-spacer"></div>
@@ -118,7 +118,7 @@ const Account = () => {
                 <div className="profile-divider-small"></div>
 
                 <div className="zip-display-section">
-                    <span className="zip-label-text">Zip or Post Code</span>
+                    <span className="zip-label-text">Postal Code</span>
                     <span className="zip-value-text">{user.zipCode}</span>
                 </div>
 
@@ -149,6 +149,21 @@ const Account = () => {
                                     onClick={() => setMapMode(mode)}
                                 >
                                     {mode.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="preferences-row">
+                        <span className="row-label">Distance Units</span>
+                        <div className="format-pills-group-full">
+                            {['miles', 'km'].map(unit => (
+                                <button
+                                    key={unit}
+                                    className={`pref-pill-full ${distanceUnit === unit ? 'active' : ''}`}
+                                    onClick={() => setDistanceUnit(unit)}
+                                >
+                                    {unit === 'miles' ? 'MILES' : 'KILOMETERS'}
                                 </button>
                             ))}
                         </div>

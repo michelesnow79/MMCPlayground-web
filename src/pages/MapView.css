@@ -939,3 +939,116 @@ div[role="button"] {
     grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
+
+.filter-badge-dot {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    background-color: #00f0ff;
+    border-radius: 50%;
+    border: 2px solid #000;
+    box-shadow: 0 0 5px rgba(0, 240, 255, 0.6);
+}
+
+.original-settings-btn {
+    position: relative;
+}
+
+/* =========================================================================
+   MOBILE RESPONSIVENESS (BREAKPOINTS)
+   ========================================================================= */
+
+@media (max-width: 768px) {
+
+    /* 1. COMPACT HEADER */
+    .map-top-bar-original {
+        height: 60px;
+        padding: 0 10px;
+    }
+
+    .map-logo-title-original {
+        font-size: 1.5rem;
+        letter-spacing: 1px;
+    }
+
+    .map-hamburger-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .original-settings-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    /* 2. THUMB-FRIENDLY BOTTOM NAV */
+    .bottom-nav-container {
+        height: 75px;
+        /* Taller for fingers */
+        padding-bottom: env(safe-area-inset-bottom);
+        /* Fix for iPhone notches */
+        background: rgba(10, 10, 12, 0.95);
+    }
+
+    .bottom-nav-item {
+        gap: 4px;
+    }
+
+    .nav-label {
+        font-size: 0.65rem;
+    }
+
+    /* 3. FLOATING ADD BUTTON ADJUSTMENT */
+    .floating-add-btn {
+        width: 60px;
+        height: 60px;
+        bottom: 85px;
+        /* Lifted above the taller nav */
+    }
+
+    /* 4. PIN LABELS ON MOBILE */
+    .legacy-marker-label {
+        font-size: 11px !important;
+        padding: 2px 4px !important;
+        transform: translateY(-5px);
+    }
+
+    /* 5. POPUP (INFO WINDOW) MOBILE OPTIMIZATION */
+    .google-popup-content {
+        width: 290px;
+        padding: 20px 15px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .popup-title {
+        font-size: 1.4rem;
+    }
+
+    .popup-description {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .popup-it-s-not-me-btn,
+    .popup-delete-btn {
+        padding: 8px 12px;
+        font-size: 0.75rem;
+    }
+
+    /* 6. POSTING MODAL */
+    .post-modal-card {
+        width: 95%;
+        padding: 25px 20px;
+        margin: 10px;
+        max-height: 95vh;
+        overflow-y: auto;
+    }
+
+    .date-time-inputs {
+        flex-direction: column;
+        gap: 15px;
+    }
+}

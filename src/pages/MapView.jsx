@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { APIProvider, Map as GoogleMap, Marker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import BottomNav from '../components/BottomNav';
 import SideMenu from '../components/SideMenu';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './MapView.css';
 import { useApp } from '../context/AppContext';
+import FilterMenu from '../components/FilterMenu';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -195,29 +197,24 @@ const fuzzAndProcessLocation = async (placeOrResult) => {
 
 const MapView = () => {
     const navigate = useNavigate();
-    const { pins, addPin, isLoggedIn, user, hiddenPins, hidePin, removePin, formatDate, getAverageRating, ratings } = useApp();
+    const { pins, addPin, isLoggedIn, user, hiddenPins, hidePin, removePin, formatDate, getAverageRating, ratings, distanceUnit, mapMode } = useApp();
+
+    // 1. ALL STATES AT THE TOP
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-    useEffect(() => {
-        console.log("📍 MAP DEBUG: Total pins loaded from Firebase:", pins.length);
-    }, [pins]);
-
-    // Geolocation on mount
-    useEffect(() => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    console.log("📍 User location found:", latitude, longitude);
-                    isCenterManualRef.current = true;
-                    setMapCenter({ lat: latitude, lng: longitude });
-                },
-                (error) => {
-                    console.warn("📍 Geolocation error:", error.message);
-                }
-            );
-        }
-    }, []);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [mapCenter, setMapCenter] = useState({ lat: 40.7128, lng: -74.006 });
+    const [currentZoom, setCurrentZoom] = useState(13);
+    const [selectedPin, setSelectedPin] = useState(null);
+    const [mapInstance, setMapInstance] = useState(null);
+    const [activeFilters, setActiveFilters] = useState({
+        location: '',
+        radius: 10,
+        unit: distanceUnit,
+        type: '',
+        date: null,
+        keyword: ''
+    });
+    const [filterCenter, setFilterCenter] = useState(null);
 
     const [isPosting, setIsPosting] = useState(false);
     const [tempCoords, setTempCoords] = useState(null);
@@ -227,14 +224,136 @@ const MapView = () => {
     const [newDate, setNewDate] = useState(new Date());
     const [newTime, setNewTime] = useState(new Date());
     const [newDescription, setNewDescription] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedPin, setSelectedPin] = useState(null);
-    const [mapCenter, setMapCenter] = useState({ lat: 40.7128, lng: -74.006 });
-    const [currentZoom, setCurrentZoom] = useState(13);
 
+    // 2. ALL REFS
     const isDragging = useRef(false);
     const isCenterManualRef = useRef(false);
-    const [mapInstance, setMapInstance] = useState(null);
+    const clustererRef = useRef(null);
+    const markerInstances = useRef(new Map());
+
+    // 3. MEMOIZED CALLBACKS
+    const setMarkerRef = useCallback((marker, id) => {
+        if (marker) {
+            markerInstances.current.set(id, marker);
+        } else {
+            markerInstances.current.delete(id);
+        }
+    }, []);
+
+    // 4. MEMOIZED DATA
+    const filteredPins = useMemo(() => {
+        let result = pins.filter(p => !hiddenPins.includes(p.id));
+
+        if (filterCenter) {
+            result = result.filter(pin => {
+                const distanceMeters = haversineMeters(filterCenter.lat, filterCenter.lng, pin.lat, pin.lng);
+                const distanceConverted = activeFilters.unit === 'km' ? distanceMeters / 1000 : distanceMeters / 1609.34;
+                return distanceConverted <= activeFilters.radius;
+            });
+        }
+
+        if (activeFilters.type) {
+            result = result.filter(pin => pin.type === activeFilters.type);
+        }
+
+        if (activeFilters.date) {
+            const filterDateStr = activeFilters.date.toISOString().split('T')[0];
+            result = result.filter(pin => {
+                const pinDateStr = new Date(pin.date).toISOString().split('T')[0];
+                return pinDateStr === filterDateStr;
+            });
+        }
+
+        if (activeFilters.keyword) {
+            const kw = activeFilters.keyword.toLowerCase();
+            result = result.filter(pin =>
+                pin.title?.toLowerCase().includes(kw) ||
+                pin.description?.toLowerCase().includes(kw)
+            );
+        }
+        return result;
+    }, [pins, filterCenter, activeFilters, hiddenPins]);
+
+    // 5. EFFECTS
+    useEffect(() => {
+        console.log("📍 MAP DEBUG: Total pins loaded from Firebase:", pins.length);
+    }, [pins]);
+
+    // Sync global distance unit
+    useEffect(() => {
+        setActiveFilters(prev => ({ ...prev, unit: distanceUnit }));
+    }, [distanceUnit]);
+
+    // Initial Geolocation
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    isCenterManualRef.current = true;
+                    setMapCenter({ lat: latitude, lng: longitude });
+                },
+                (error) => console.warn("📍 Geolocation error:", error.message)
+            );
+        }
+    }, []);
+
+    // Clustering Sync
+    useEffect(() => {
+        if (!mapInstance || !window.google) return;
+
+        if (!clustererRef.current) {
+            clustererRef.current = new MarkerClusterer({
+                map: mapInstance,
+                renderer: {
+                    render: ({ count, position }) => {
+                        return new google.maps.Marker({
+                            position,
+                            icon: {
+                                url: `data:image/svg+xml;base64,${btoa(`
+                                    <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="20" cy="20" r="18" fill="#fe2c55" stroke="white" stroke-width="2"/>
+                                        <text x="20" y="24" font-family="Arial" font-size="14" font-weight="bold" fill="white" text-anchor="middle">${count}</text>
+                                    </svg>
+                                `)}`,
+                                scaledSize: new google.maps.Size(40, 40),
+                                anchor: new google.maps.Point(20, 20)
+                            },
+                        });
+                    }
+                }
+            });
+        }
+
+        const syncMarkers = () => {
+            if (clustererRef.current) {
+                clustererRef.current.clearMarkers();
+                clustererRef.current.addMarkers(Array.from(markerInstances.current.values()));
+            }
+        };
+
+        const timeout = setTimeout(syncMarkers, 150);
+        return () => clearTimeout(timeout);
+    }, [mapInstance, filteredPins]);
+
+
+    // Geocode Filter Center
+    useEffect(() => {
+        if (!activeFilters.location || !window.google) {
+            setFilterCenter(null);
+            return;
+        }
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: activeFilters.location }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                const loc = results[0].geometry.location;
+                const newCenter = { lat: loc.lat(), lng: loc.lng() };
+                setFilterCenter(newCenter);
+                isCenterManualRef.current = true;
+                setMapCenter(newCenter);
+            }
+        });
+    }, [activeFilters.location]);
 
     const MapHandler = ({ center }) => {
         const map = useMap();
@@ -350,22 +469,6 @@ const MapView = () => {
         setNewTime(new Date());
     };
 
-    const handleSearch = (e) => {
-        if (e) e.preventDefault();
-        if (!searchQuery || !window.google) return;
-
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ address: searchQuery }, (results, status) => {
-            if (status === "OK" && results[0]) {
-                const loc = results[0].geometry.location;
-                isCenterManualRef.current = true;
-                setMapCenter({
-                    lat: loc.lat(),
-                    lng: loc.lng()
-                });
-            }
-        });
-    };
 
     return (
         <APIProvider apiKey={API_KEY} libraries={['places', 'marker']}>
@@ -378,26 +481,24 @@ const MapView = () => {
                             <div className="hamburger-line-small"></div>
                             <div className="hamburger-line-small"></div>
                         </button>
-                        <form className="original-search-form" onSubmit={handleSearch}>
-                            <input
-                                type="text"
-                                className="original-search-input"
-                                placeholder="Search city..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            <button type="submit" className="original-search-btn">🔍</button>
-                        </form>
                     </div>
                     <h1 className="map-logo-title-original" onClick={() => navigate('/')}>MISS ME CONNECTIONS</h1>
                     <div className="top-bar-side-right">
-                        <button className="original-settings-btn" onClick={() => navigate('/account')}>
+                        <button className={`original-settings-btn ${!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword) ? 'filter-active' : ''}`} onClick={() => setIsFilterOpen(true)}>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                                 <path d="M3 17h18v2H3v-2zm0-7h18v2H3v-2zm0-7h18v2H3V3zM5 5v2h2V5H5zm0 7v2h2v-2H5zm12 7v2h2v-2h-2z" />
                             </svg>
+                            {!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword) && <span className="filter-badge-dot" />}
                         </button>
                     </div>
                 </header>
+
+                <FilterMenu
+                    isOpen={isFilterOpen}
+                    onClose={() => setIsFilterOpen(false)}
+                    filters={activeFilters}
+                    onFilterChange={setActiveFilters}
+                />
 
                 <div className="map-canvas">
                     <GoogleMap
@@ -410,7 +511,7 @@ const MapView = () => {
                         streetViewControl={false}
                         mapTypeControl={false}
                         fullscreenControl={false}
-                        styles={mapThemeDark}
+                        styles={mapMode === 'dark' ? mapThemeDark : []}
                         onClick={handleMapClick}
                         onDragStart={() => isDragging.current = true}
                         onDragEnd={() => setTimeout(() => isDragging.current = false, 50)}
@@ -423,17 +524,18 @@ const MapView = () => {
                         onLoad={(map) => setMapInstance(map)}
                     >
                         <MapHandler center={mapCenter} />
-                        {pins.filter(p => !hiddenPins.includes(p.id)).map(pin => (
+                        {filteredPins.map(pin => (
                             <Marker
                                 key={pin.id}
                                 position={{ lat: pin.lat, lng: pin.lng }}
+                                ref={m => setMarkerRef(m, pin.id)}
                                 onClick={() => setSelectedPin(pin)}
                                 icon={{
                                     url: '/assets/heart-logo.svg',
                                     scaledSize: { width: 44, height: 44 },
                                     anchor: { x: 22, y: 44 }
                                 }}
-                                label={currentZoom >= 15 ? {
+                                label={currentZoom >= 12 ? {
                                     text: pin.title,
                                     color: 'white',
                                     className: 'legacy-marker-label'

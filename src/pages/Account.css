@@ -430,4 +430,66 @@
     padding: 12px;
     border-radius: 10px;
     cursor: pointer;
-}.admin-link-text { color: var(--missme-cyan) !important; }
+}
+
+.admin-link-text {
+    color: var(--missme-cyan) !important;
+}
+
+.close-x-icon {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #8e8e93;
+    transition: color 0.2s;
+}
+
+.side-menu-btn:hover .close-x-icon {
+    color: white;
+}
+
+/* =========================================================================
+   MOBILE RESPONSIVENESS (BREAKPOINTS)
+   ========================================================================= */
+
+@media (max-width: 600px) {
+    .profile-hero-name {
+        font-size: 2rem;
+        /* Downsized for mobile screens */
+    }
+
+    .premium-profile-card {
+        padding: 30px 15px;
+    }
+
+    .settings-rows-container {
+        padding: 0 10px;
+    }
+
+    .preferences-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 20px 0;
+    }
+
+    .format-pills-group-full {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .pill-btn {
+        flex: 1;
+        padding: 10px 5px;
+        font-size: 0.7rem;
+    }
+
+    .zip-display-section {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+
+    .zip-value-text {
+        font-size: 1.2rem;
+    }
+}
