@@ -9,6 +9,8 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './MapView.css';
 import { useApp } from '../context/AppContext';
 import FilterMenu from '../components/FilterMenu';
+import ConfirmModal from '../components/ConfirmModal';
+import { fuzzAndProcessLocation, haversineMeters } from '../utils/locationHelper';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -26,189 +28,24 @@ const mapThemeDark = [
     { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#0e1a1a" }] }
 ];
 
-// ===============================
-// INTERSECTION PRIVACY HELPERS
-// (No Roads API required)
-// ===============================
-
-// Haversine distance in meters
-const haversineMeters = (lat1, lon1, lat2, lon2) => {
-    const R = 6371000;
-    const toRad = (d) => (d * Math.PI) / 180;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) ** 2;
-    return 2 * R * Math.asin(Math.sqrt(a));
-};
-
-// Find nearest node shared by 2+ named roads (practical "intersection")
-const getNearestCrossStreetsOSM = async (lat, lng, radiusMeters = 200) => {
-    const overpassUrl = "https://overpass-api.de/api/interpreter";
-
-    const query = `
-    [out:json][timeout:25];
-    (
-      way(around:${radiusMeters},${lat},${lng})["highway"]["name"];
-    );
-    (._;>;);
-    out body;
-  `;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4500);
-
-    try {
-        const resp = await fetch(overpassUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-            body: "data=" + encodeURIComponent(query),
-            signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!resp.ok) return null;
-        const data = await resp.json();
-
-        const ways = data.elements.filter((e) => e.type === "way" && e.tags?.name);
-        const nodes = data.elements.filter((e) => e.type === "node");
-
-        const nodeMap = new Map(nodes.map((n) => [n.id, { lat: n.lat, lng: n.lon }]));
-        const nodeToStreetNames = new Map();
-
-        for (const w of ways) {
-            const streetName = (w.tags.name || "").trim();
-            if (!streetName) continue;
-            for (const nodeId of w.nodes || []) {
-                if (!nodeToStreetNames.has(nodeId)) nodeToStreetNames.set(nodeId, new Set());
-                nodeToStreetNames.get(nodeId).add(streetName);
-            }
-        }
-
-        const intersectionCandidates = [];
-        for (const [nodeId, streetSet] of nodeToStreetNames.entries()) {
-            if (streetSet.size >= 2 && nodeMap.has(nodeId)) {
-                intersectionCandidates.push({
-                    nodeId,
-                    streets: Array.from(streetSet),
-                    ...nodeMap.get(nodeId),
-                });
-            }
-        }
-
-        if (intersectionCandidates.length === 0) return null;
-
-        return intersectionCandidates
-            .map((c) => ({ ...c, dist: haversineMeters(lat, lng, c.lat, c.lng) }))
-            .sort((a, b) => a.dist - b.dist)[0];
-    } catch (err) {
-        console.error("OSM Fetch failed:", err);
-        return null;
-    }
-};
-
-// Try multiple radii so it works even where intersections are sparse
-const findIntersectionWithFallback = async (lat, lng) => {
-    return (
-        (await getNearestCrossStreetsOSM(lat, lng, 200)) ||
-        (await getNearestCrossStreetsOSM(lat, lng, 350)) ||
-        (await getNearestCrossStreetsOSM(lat, lng, 500))
-    );
-};
-
-// Unified privacy logic for both geocoder results and Autocomplete place objects
-const fuzzAndProcessLocation = async (placeOrResult) => {
-    if (!placeOrResult || !placeOrResult.geometry || !placeOrResult.geometry.location) return null;
-
-    const types = placeOrResult.types || [];
-    const comps = placeOrResult.address_components || [];
-    const loc = placeOrResult.geometry.location;
-    const lat = typeof loc.lat === 'function' ? loc.lat() : loc.lat;
-    const lng = typeof loc.lng === 'function' ? loc.lng() : loc.lng;
-
-    console.log("📍 PRIVACY DEBUG: Processing location types:", types);
-    console.log("📍 PRIVACY DEBUG: Address components:", comps);
-
-    // 1) VENUE/POI: keep exact
-    const isVenue = (
-        types.includes("point_of_interest") ||
-        types.includes("establishment") ||
-        types.includes("stadium") ||
-        types.includes("park") ||
-        types.includes("airport") ||
-        types.includes("natural_feature")
-    ) && !types.includes("subpremise") && !types.includes("premise");
-
-    if (isVenue) {
-        console.log("📍 PRIVACY: Detected as VENUE. Keeping exact coordinates.");
-        return {
-            coords: { lat, lng },
-            label: placeOrResult.formatted_address || placeOrResult.name || "Public Venue"
-        };
-    }
-
-    // 2) RESIDENTIAL DETECTION
-    const hasStreetNumber = comps.some((c) => c.types.includes("street_number"));
-    const isStreetAddressType =
-        types.includes("street_address") ||
-        types.includes("premise") ||
-        types.includes("subpremise") ||
-        types.includes("home_goods_store"); // Sometimes Google tags misc things as residential
-
-    const isResidential = hasStreetNumber || isStreetAddressType;
-    console.log("📍 PRIVACY: Is Residential?", isResidential);
-
-    // 3) Privacy jitter in meters (always calculate for fallback)
-    const jitterMeters = 100 + Math.random() * 100; // 100–200m
-    const angle = Math.random() * Math.PI * 2;
-    const latJitter = (Math.sin(angle) * jitterMeters) / 111111;
-    const lngJitter = (Math.cos(angle) * jitterMeters) / (111111 * Math.cos(lat * Math.PI / 180));
-
-    const fuzzedCoords = {
-        lat: lat + latJitter,
-        lng: lng + lngJitter,
-    };
-
-    // 4) If residential → snap to intersection
-    if (isResidential) {
-        const intersection = await findIntersectionWithFallback(fuzzedCoords.lat, fuzzedCoords.lng);
-        if (intersection) {
-            const label = (intersection.streets?.length >= 2)
-                ? `Near ${intersection.streets[0]} & ${intersection.streets[1]}`
-                : "Near a cross street";
-
-            return {
-                coords: { lat: intersection.lat, lng: intersection.lng },
-                label
-            };
-        }
-    }
-
-    // Fallback for residential (failed snap) or generic non-venue location
-    return {
-        coords: fuzzedCoords,
-        label: "Public Area"
-    };
-};
-
 const MapView = () => {
     const navigate = useNavigate();
     const {
         user, pins, isLoggedIn, loading, signup, login,
         addPin, removePin, hidePin, hiddenPins, formatDate, mapMode,
-        getAverageRating, reportPin, distanceUnit, ratings
+        getAverageRating, reportPin, distanceUnit, ratings,
+        isSuspended, hasProbation
     } = useApp();
 
     // 1. ALL STATES AT THE TOP
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [mapCenter, setMapCenter] = useState({ lat: 40.7128, lng: -74.006 });
+    const [mapCenter, setMapCenter] = useState(null);
+    const [isLocating, setIsLocating] = useState(true);
     const [currentZoom, setCurrentZoom] = useState(13);
     const [selectedPin, setSelectedPin] = useState(null);
+    const [selectedPins, setSelectedPins] = useState([]);
+    const [selectedPinIndex, setSelectedPinIndex] = useState(0);
     const [mapInstance, setMapInstance] = useState(null);
     const [activeFilters, setActiveFilters] = useState({
         location: '',
@@ -218,6 +55,8 @@ const MapView = () => {
         date: null,
         keyword: ''
     });
+
+    const GROUP_RADIUS_METERS = 250;
     const [filterCenter, setFilterCenter] = useState(null);
 
     const [isPosting, setIsPosting] = useState(false);
@@ -225,9 +64,13 @@ const MapView = () => {
     const [newType, setNewType] = useState('');
     const [newTitle, setNewTitle] = useState('');
     const [newLocation, setNewLocation] = useState('');
+    const [newAddress, setNewAddress] = useState('');
     const [newDate, setNewDate] = useState(new Date());
-    const [newTime, setNewTime] = useState(new Date());
+    const [newTime, setNewTime] = useState(null);
     const [newDescription, setNewDescription] = useState('');
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportReason, setReportReason] = useState('');
+    const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => { }, type: 'info' });
 
     // 2. ALL REFS
     const isDragging = useRef(false);
@@ -246,7 +89,21 @@ const MapView = () => {
 
     // 4. MEMOIZED DATA
     const filteredPins = useMemo(() => {
-        let result = pins.filter(p => !hiddenPins.includes(p.id));
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        let result = (pins || []).filter(p => {
+            // Basic filters
+            if (hiddenPins.includes(p.id) || p.isReported) return false;
+
+            // 30-day Archiving logic
+            if (p.createdAt) {
+                const createdAt = p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+                if (createdAt < thirtyDaysAgo) return false;
+            }
+
+            return true;
+        });
 
         if (filterCenter) {
             result = result.filter(pin => {
@@ -275,8 +132,40 @@ const MapView = () => {
                 pin.description?.toLowerCase().includes(kw)
             );
         }
+        console.log(`📍 MAP DEBUG: filteredPins count: ${result.length} (total pins: ${pins.length})`);
         return result;
     }, [pins, filterCenter, activeFilters, hiddenPins]);
+
+    const locationsGrouped = useMemo(() => {
+        const groups = []; // { key, lat, lng, pins: [] }
+
+        (filteredPins || []).forEach(pin => {
+            if (typeof pin.lat !== 'number' || typeof pin.lng !== 'number') return;
+
+            // find a group within radius
+            let g = null;
+            for (const candidate of groups) {
+                const d = haversineMeters(pin.lat, pin.lng, candidate.lat, candidate.lng);
+                if (d <= GROUP_RADIUS_METERS) { g = candidate; break; }
+            }
+
+            if (!g) {
+                groups.push({
+                    key: `${pin.lat}_${pin.lng}_${groups.length}`,
+                    lat: pin.lat,   // keep first pin as anchor (stable marker)
+                    lng: pin.lng,
+                    pins: [pin],
+                });
+            } else {
+                g.pins.push(pin);
+            }
+        });
+
+        // convert to same shape the JSX expects
+        const groupedMap = Object.fromEntries(groups.map(g => [g.key, g.pins]));
+        console.log("📍 MAP DEBUG: Venue groups:", Object.keys(groupedMap).length);
+        return groupedMap;
+    }, [filteredPins]);
 
     // 5. EFFECTS
     useEffect(() => {
@@ -288,40 +177,80 @@ const MapView = () => {
         setActiveFilters(prev => ({ ...prev, unit: distanceUnit }));
     }, [distanceUnit]);
 
-    // Initial Geolocation
+    // Initial Geolocation (Browser GPS)
     useEffect(() => {
+        let fallbackTimeout;
+
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
                     isCenterManualRef.current = true;
                     setMapCenter({ lat: latitude, lng: longitude });
+                    setIsLocating(false);
+                    console.log("📍 Centered map via GPS");
                 },
-                (error) => console.warn("📍 Geolocation error:", error.message)
+                (error) => {
+                    console.warn("📍 GPS Geolocation error:", error.message);
+                    // If GPS fails and no postal code exists, center on Charlotte (more likely than NY for user)
+                    if (!user?.postalCode) {
+                        setMapCenter({ lat: 35.2271, lng: -80.8431 }); // Charlotte
+                        setIsLocating(false);
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 5000 }
             );
+        } else {
+            // No geolocation support
+            if (!user?.postalCode) {
+                setMapCenter({ lat: 40.7128, lng: -74.006 });
+                setIsLocating(false);
+            }
         }
-    }, []);
+
+        return () => clearTimeout(fallbackTimeout);
+    }, [user?.postalCode]);
+
+    // Initial Geolocation (User Postal Code fallback)
+    useEffect(() => {
+        if (!user?.postalCode || typeof window.google?.maps?.Geocoder !== 'function' || isCenterManualRef.current) return;
+
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: user.postalCode }, (results, status) => {
+            if (status === "OK" && results?.[0] && !isCenterManualRef.current) {
+                const loc = results[0].geometry.location;
+                setMapCenter({ lat: loc.lat(), lng: loc.lng() });
+                setIsLocating(false);
+                isCenterManualRef.current = true;
+                console.log("📍 Centered map based on user postal code:", user.postalCode);
+            } else {
+                // If geocoding zip fails, fallback to NYC
+                setMapCenter({ lat: 40.7128, lng: -74.006 });
+                setIsLocating(false);
+            }
+        });
+    }, [user?.postalCode, window.google, mapInstance]); // mapInstance ensures we have a map context
 
     // Clustering Sync
     useEffect(() => {
-        if (!mapInstance || !window.google) return;
+        if (!mapInstance || !window.google?.maps?.Marker || !window.google?.maps?.Size) return;
 
         if (!clustererRef.current) {
             clustererRef.current = new MarkerClusterer({
                 map: mapInstance,
                 renderer: {
                     render: ({ count, position }) => {
-                        return new google.maps.Marker({
+                        return new window.google.maps.Marker({
                             position,
                             icon: {
                                 url: `data:image/svg+xml;base64,${btoa(`
                                     <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
                                         <circle cx="20" cy="20" r="18" fill="#fe2c55" stroke="white" stroke-width="2"/>
-                                        <text x="20" y="24" font-family="Arial" font-size="14" font-weight="bold" fill="white" text-anchor="middle">${count}</text>
+                                        <text x="20" y="24" font-family="Arial" font-size="14" font-weight="bold" fill="white" text-anchor="middle">${count || '!'}</text>
                                     </svg>
                                 `)}`,
-                                scaledSize: new google.maps.Size(40, 40),
-                                anchor: new google.maps.Point(20, 20)
+                                scaledSize: new window.google.maps.Size(40, 40),
+                                anchor: new window.google.maps.Point(20, 20)
                             },
                         });
                     }
@@ -343,21 +272,26 @@ const MapView = () => {
 
     // Geocode Filter Center
     useEffect(() => {
-        if (!activeFilters.location || !window.google) {
+        if (!activeFilters.location || !window.google?.maps?.Geocoder) {
             setFilterCenter(null);
             return;
         }
+
+        console.log("🔍 FILTER: Geocoding location:", activeFilters.location);
         const geocoder = new window.google.maps.Geocoder();
         geocoder.geocode({ address: activeFilters.location }, (results, status) => {
             if (status === "OK" && results[0]) {
                 const loc = results[0].geometry.location;
                 const newCenter = { lat: loc.lat(), lng: loc.lng() };
+                console.log("🔍 FILTER: Center found:", newCenter);
                 setFilterCenter(newCenter);
                 isCenterManualRef.current = true;
                 setMapCenter(newCenter);
+            } else {
+                console.error("🔍 FILTER: Geocoding failed:", status);
             }
         });
-    }, [activeFilters.location]);
+    }, [activeFilters.location, window.google?.maps?.Geocoder]);
 
     const MapHandler = ({ center }) => {
         const map = useMap();
@@ -376,9 +310,9 @@ const MapView = () => {
         return null;
     };
 
-    // Google Places Autocomplete Effect
+    // Google Places Autocomplete (Post connection)
     useEffect(() => {
-        if (!isPosting || !window.google || !window.google.maps || !window.google.maps.places) return;
+        if (!isPosting || !window.google?.maps?.places) return;
 
         const input = document.getElementById('post-location-input');
         if (!input) return;
@@ -395,10 +329,11 @@ const MapView = () => {
                 if (processed) {
                     setTempCoords(processed.coords);
                     setNewLocation(processed.label);
+                    setNewAddress(processed.secondaryLabel || "");
                 }
             }
         });
-    }, [isPosting]);
+    }, [isPosting, window.google?.maps?.places]);
 
     const sanitizeLocation = (loc) => {
         if (!loc) return "";
@@ -406,11 +341,66 @@ const MapView = () => {
         return sanitized || "Public Area";
     };
 
+    const handleMarkerClick = (groupPins, clickedId) => {
+        const anchor = groupPins?.[0];
+        if (!anchor) return;
+
+        // Expand from ALL pins so "same venue" shows all missed connections, 
+        // even those slightly outside the current map distance filter.
+        const venuePins = (pins || []).filter(p => {
+            if (typeof p.lat !== "number" || typeof p.lng !== "number") return false;
+            // Also respect hidden/reported status even in "expanded" view
+            if (hiddenPins.includes(p.id) || p.isReported) return false;
+
+            return haversineMeters(anchor.lat, anchor.lng, p.lat, p.lng) <= GROUP_RADIUS_METERS;
+        });
+
+        // stable ordering
+        const sortedVenuePins = [...venuePins].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+        setSelectedPins(sortedVenuePins);
+        const startIdx = Math.max(0, sortedVenuePins.findIndex(p => p.id === clickedId));
+        setSelectedPinIndex(startIdx);
+        setSelectedPin(sortedVenuePins[startIdx]);
+
+        console.log(`📍 Marker Click: venuePins length = ${sortedVenuePins.length} (expanded from ${groupPins.length})`);
+    };
+
+    const nextPin = () => {
+        const nextIdx = (selectedPinIndex + 1) % selectedPins.length;
+        setSelectedPinIndex(nextIdx);
+        setSelectedPin(selectedPins[nextIdx]);
+    };
+
+    const prevPin = () => {
+        const prevIdx = (selectedPinIndex - 1 + selectedPins.length) % selectedPins.length;
+        setSelectedPinIndex(prevIdx);
+        setSelectedPin(selectedPins[prevIdx]);
+    };
+
+
     const handleMapClick = () => {
         setSelectedPin(null);
     };
 
     const handleAddClick = async () => {
+        if (!isLoggedIn) {
+            navigate('/login');
+            return;
+        }
+
+        if (isSuspended()) {
+            setConfirmConfig({
+                isOpen: true,
+                title: 'ACCOUNT ON HOLD',
+                message: 'Your account is currently on hold. You cannot post new pins during this time.',
+                onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false })),
+                confirmText: 'OK',
+                type: 'info'
+            });
+            return;
+        }
+
         if (!mapInstance) return;
 
         const center = mapInstance.getCenter();
@@ -418,6 +408,11 @@ const MapView = () => {
 
         setIsPosting(true);
         setNewLocation("Identifying location...");
+
+        if (!window.google?.maps?.Geocoder) {
+            setNewLocation("Public Area");
+            return;
+        }
 
         const geocoder = new window.google.maps.Geocoder();
 
@@ -437,6 +432,7 @@ const MapView = () => {
             if (processed) {
                 setTempCoords(processed.coords);
                 setNewLocation(processed.label);
+                setNewAddress(processed.secondaryLabel || "");
             }
         });
     };
@@ -451,9 +447,10 @@ const MapView = () => {
             title: newTitle.toUpperCase(),
             location: sanitizeLocation(newLocation),
             date: newDate.toISOString(),
-            time: newTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            time: newTime ? newTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
             description: newDescription,
-            ownerEmail: user?.email
+            ownerEmail: user?.email,
+            address: newAddress
         };
         addPin(newPin);
         setIsPosting(false);
@@ -461,8 +458,9 @@ const MapView = () => {
         setNewType('');
         setNewTitle('');
         setNewLocation('');
+        setNewAddress('');
         setNewDate(new Date());
-        setNewTime(new Date());
+        setNewTime(null);
         setNewDescription('');
     };
 
@@ -470,12 +468,41 @@ const MapView = () => {
         setIsPosting(false);
         setTempCoords(null);
         setNewDate(new Date());
-        setNewTime(new Date());
+        setNewTime(null);
+    };
+
+    const handleReportSubmit = () => {
+        if (!reportReason.trim() || !selectedPin) return;
+        reportPin(selectedPin.id, reportReason);
+        setShowReportModal(false);
+        setReportReason('');
+        setSelectedPin(null);
+        setConfirmConfig({
+            isOpen: true,
+            title: 'REPORT SUBMITTED',
+            message: 'PIN REPORTED TO ADMIN AND TEMPORARILY HIDDEN FROM YOUR VIEW.',
+            onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false })),
+            confirmText: 'OK',
+            type: 'info'
+        });
     };
 
 
+    if (isLocating && !mapCenter) {
+        return (
+            <div className="map-loading-screen">
+                <div className="loading-content">
+                    <span className="loading-heart">❤️</span>
+                    <p>LOCATING CONNECTIONS...</p>
+                </div>
+            </div>
+        );
+    }
+
+    const defaultCenter = mapCenter || { lat: 35.2271, lng: -80.8431 }; // Charlotte Fallback
+
     return (
-        <APIProvider apiKey={API_KEY} libraries={['places', 'marker']}>
+        <APIProvider apiKey={API_KEY} libraries={['places', 'geometry']}>
             <div className="map-view-container">
                 <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
                 <header className="map-top-bar-original">
@@ -506,7 +533,7 @@ const MapView = () => {
 
                 <div className="map-canvas">
                     <GoogleMap
-                        defaultCenter={mapCenter}
+                        defaultCenter={defaultCenter}
                         defaultZoom={13}
                         gestureHandling={'greedy'}
                         disableDefaultUI={false}
@@ -528,38 +555,61 @@ const MapView = () => {
                         onLoad={(map) => setMapInstance(map)}
                     >
                         <MapHandler center={mapCenter} />
-                        {filteredPins.map(pin => (
-                            <Marker
-                                key={pin.id}
-                                position={{ lat: pin.lat, lng: pin.lng }}
-                                ref={m => setMarkerRef(m, pin.id)}
-                                onClick={() => setSelectedPin(pin)}
-                                icon={{
-                                    url: '/assets/heart-logo.svg',
-                                    scaledSize: { width: 44, height: 44 },
-                                    anchor: { x: 22, y: 44 }
-                                }}
-                                label={currentZoom >= 12 ? {
-                                    text: pin.title,
-                                    color: 'white',
-                                    className: 'legacy-marker-label'
-                                } : null}
-                            />
-                        ))}
+                        {/* Render markers grouped by location to handle overlaps */}
+                        {Object.entries(locationsGrouped).map(([locKey, groupPins]) => {
+                            const firstPin = groupPins[0];
+                            return (
+                                <Marker
+                                    key={locKey}
+                                    position={{ lat: firstPin.lat, lng: firstPin.lng }}
+                                    ref={m => setMarkerRef(m, locKey)}
+                                    onClick={() => handleMarkerClick(groupPins, firstPin.id)}
+                                    icon={{
+                                        url: '/assets/heart-logo.svg',
+                                        scaledSize: { width: 44, height: 44 },
+                                        anchor: { x: 22, y: 44 }
+                                    }}
+                                    label={groupPins.length > 1 ? {
+                                        text: String(groupPins.length),
+                                        color: 'white',
+                                        className: 'marker-count-label'
+                                    } : (currentZoom >= 12 && firstPin.title ? {
+                                        text: firstPin.title.toString().toUpperCase(),
+                                        color: 'white',
+                                        className: 'legacy-marker-label'
+                                    } : null)}
+                                />
+                            );
+                        })}
 
-                        {selectedPin && (
+                        {selectedPin && typeof selectedPin.lat === 'number' && typeof selectedPin.lng === 'number' && (
                             <InfoWindow
                                 position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
-                                onCloseClick={() => setSelectedPin(null)}
+                                onCloseClick={() => {
+                                    setSelectedPin(null);
+                                    setSelectedPins([]);
+                                }}
                                 headerDisabled={true}
                             >
                                 <div className="google-popup-content">
-                                    <button
-                                        className="popup-close-btn-custom"
-                                        onClick={() => setSelectedPin(null)}
-                                    >
-                                        ✕
-                                    </button>
+                                    <div className="popup-carousel-controls">
+                                        {selectedPins.length > 1 && (
+                                            <div className="carousel-nav-group">
+                                                <button className="carousel-arrow" onClick={prevPin}>❮</button>
+                                                <span className="carousel-counter">{selectedPinIndex + 1} of {selectedPins.length}</span>
+                                                <button className="carousel-arrow" onClick={nextPin}>❯</button>
+                                            </div>
+                                        )}
+                                        <button
+                                            className="popup-close-btn-custom"
+                                            onClick={() => {
+                                                setSelectedPin(null);
+                                                setSelectedPins([]);
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
                                     <span className="popup-category-badge">{selectedPin.type || 'Man for Woman'}</span>
                                     <div className="popup-rating-row">
                                         <div className="popup-hearts readonly">
@@ -570,12 +620,14 @@ const MapView = () => {
                                         <span className="popup-avg-text">AVG: {getAverageRating(selectedPin.id)}</span>
                                     </div>
 
-                                    <h3 className="popup-title">{selectedPin.title}</h3>
-                                    <div className="popup-location-details">
-                                        <div className="location-name">{sanitizeLocation(selectedPin.location).split(',')[0]}</div>
-                                        <div className="location-address">{sanitizeLocation(selectedPin.location)}</div>
+                                    <h2 className="popup-title">{selectedPin.title}</h2>
+                                    <div className="popup-location-stack">
+                                        <p className="popup-location-main">{selectedPin.location}</p>
+                                        {selectedPin.address && (
+                                            <p className="popup-location-sub">{selectedPin.address}</p>
+                                        )}
                                     </div>
-                                    <div className="popup-date-row">{formatDate(selectedPin.date)}</div>
+                                    <p className="popup-meta">{formatDate(selectedPin.date)}</p>
                                     <p className="popup-description">{selectedPin.description}</p>
 
                                     <div className="popup-footer">
@@ -587,26 +639,21 @@ const MapView = () => {
                                             <button className="popup-its-not-me-btn" onClick={() => {
                                                 hidePin(selectedPin.id);
                                                 setSelectedPin(null);
+                                                setSelectedPins([]);
                                             }}>
                                                 IT'S NOT ME.
                                             </button>
 
-                                            <button className="popup-report-btn" onClick={() => {
-                                                const reason = window.prompt("REASON FOR REPORTING?");
-                                                if (reason) {
-                                                    reportPin(selectedPin.id, reason);
-                                                    alert("PIN REPORTED TO ADMIN.");
-                                                    setSelectedPin(null);
-                                                }
-                                            }}>
+                                            <button className="popup-report-btn" onClick={() => setShowReportModal(true)}>
                                                 REPORT
                                             </button>
 
-                                            {(selectedPin.ownerEmail === user?.email || user?.isAdmin) && (
+                                            {(selectedPin.ownerUid === user?.uid || selectedPin.ownerEmail === user?.email || user?.isAdmin) && (
                                                 <button className="popup-delete-btn" onClick={() => {
                                                     console.log("🗑️ Deleting pin ID:", selectedPin.id);
                                                     removePin(selectedPin.id);
                                                     setSelectedPin(null);
+                                                    setSelectedPins([]);
                                                 }}>
                                                     Delete
                                                 </button>
@@ -689,6 +736,8 @@ const MapView = () => {
                                                 timeCaption="Time"
                                                 dateFormat="h:mm aa"
                                                 className="post-input"
+                                                placeholderText="Time (Optional)"
+                                                isClearable
                                             />
                                         </div>
                                     </div>
@@ -705,6 +754,43 @@ const MapView = () => {
                         </div>
                     </div>
                 )}
+
+                {showReportModal && (
+                    <div className="post-modal-overlay">
+                        <div className="post-modal-card report-modal">
+                            <div className="report-warning-box">
+                                <span className="warning-emoji">🛑</span>
+                                <h2 className="post-modal-title">REPORT PIN</h2>
+                                <p className="warning-text">
+                                    If you falsely claim what we deem a <strong>Good Pin</strong> your account will be suspended for 48 hours your first strike.
+                                </p>
+                            </div>
+                            <div className="post-input-group">
+                                <label>REASON FOR REPORTING</label>
+                                <textarea
+                                    className="post-textarea"
+                                    placeholder="Example: Offensive language, fake location, etc."
+                                    value={reportReason}
+                                    onChange={(e) => setReportReason(e.target.value)}
+                                />
+                            </div>
+                            <div className="post-modal-actions">
+                                <button type="button" className="btn-cancel" onClick={() => setShowReportModal(false)}>CANCEL</button>
+                                <button type="button" className="btn-submit report-submit" onClick={handleReportSubmit}>SUBMIT REPORT</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                <ConfirmModal
+                    isOpen={confirmConfig.isOpen}
+                    title={confirmConfig.title}
+                    message={confirmConfig.message}
+                    onConfirm={confirmConfig.onConfirm}
+                    onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                    confirmText={confirmConfig.confirmText}
+                    cancelText={confirmConfig.cancelText}
+                    type={confirmConfig.type}
+                />
                 <BottomNav onAddClick={handleAddClick} showAddButton={true} />
             </div>
         </APIProvider>

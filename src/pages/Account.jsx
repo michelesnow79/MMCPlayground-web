@@ -10,13 +10,24 @@ import logoAsset from '../assets/heart-logo.svg';
 import SideMenu from '../components/SideMenu';
 import { useApp } from '../context/AppContext';
 import AuthModal from '../components/AuthModal';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Account = () => {
-    const { user, loading, logout, deleteAccount, dateFormat, setDateFormat, pins, hiddenPins, hidePin, unhidePin, clearHiddenPins, mapMode, setMapMode, distanceUnit, setDistanceUnit } = useApp();
+    const { user, loading, logout, deleteAccount, updateUserProfile, dateFormat, setDateFormat, pins, hiddenPins, hidePin, unhidePin, clearHiddenPins, mapMode, setMapMode, distanceUnit, setDistanceUnit } = useApp();
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [showDeleteModal, setShowDeleteModal] = React.useState(false);
     const [showHiddenList, setShowHiddenList] = React.useState(false);
+    const [showProfileModal, setShowProfileModal] = React.useState(false);
+    const [newName, setNewName] = React.useState('');
+    const [newPostalCode, setNewPostalCode] = React.useState('');
+    const [confirmConfig, setConfirmConfig] = React.useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'danger'
+    });
 
     const handleLogout = () => {
         logout();
@@ -26,6 +37,21 @@ const Account = () => {
     const confirmDelete = () => {
         deleteAccount();
         navigate('/');
+    };
+
+    const handleEditProfileClick = () => {
+        setNewName(user.name || '');
+        setNewPostalCode(user.postalCode || '');
+        setShowProfileModal(true);
+    };
+
+    const handleProfileUpdate = async () => {
+        if (!newName.trim()) return;
+        await updateUserProfile(user.uid, {
+            name: newName.toUpperCase(),
+            postalCode: newPostalCode
+        });
+        setShowProfileModal(false);
     };
 
     // Filter pins that are currently hidden
@@ -126,7 +152,7 @@ const Account = () => {
 
                 <div className="zip-display-section">
                     <span className="zip-label-text">Postal Code</span>
-                    <span className="zip-value-text">{user.zipCode}</span>
+                    <span className="zip-value-text">{user.postalCode || 'NOT SET'}</span>
                 </div>
 
                 <div className="settings-rows-container">
@@ -194,7 +220,7 @@ const Account = () => {
                 </div>
 
                 <div className="profile-actions-footer">
-                    <button className="action-link-btn" onClick={() => alert('Profile editing coming soon!')}>Edit?</button>
+                    <button className="action-link-btn" onClick={handleEditProfileClick}>Edit?</button>
                     {hiddenPins.length > 0 && (
                         <button className="action-link-btn unhide-btn" onClick={() => setShowHiddenList(true)}>Unhide({hiddenPins.length})</button>
                     )}
@@ -205,26 +231,66 @@ const Account = () => {
                 </div>
 
                 <div className="danger-zone-minimal">
-                    <button className="delete-acc-link" onClick={() => setShowDeleteModal(true)}>
+                    <button className="delete-acc-link" onClick={() => setConfirmConfig({
+                        isOpen: true,
+                        title: 'DELETE ACCOUNT?',
+                        message: 'THIS ACTION IS PERMANENT. YOU WILL LOSE ALL YOUR CONNECTIONS AND PROFILE DATA.',
+                        onConfirm: confirmDelete,
+                        confirmText: 'DELETE FOREVER',
+                        cancelText: 'NOT TODAY',
+                        type: 'danger'
+                    })}>
                         Delete Account?
                     </button>
                 </div>
             </div>
 
-            {/* Delete Confirmation Modal */}
-            {showDeleteModal && (
+            {showProfileModal && (
                 <div className="modal-overlay">
-                    <div className="modal-card">
-                        <h2 className="modal-title">DELETE ACCOUNT?</h2>
-                        <p className="modal-text">THIS ACTION IS PERMANENT. YOU WILL LOSE ALL YOUR CONNECTIONS AND PROFILE DATA.</p>
+                    <div className="modal-card profile-edit-modal">
+                        <header className="modal-header">
+                            <h2 className="modal-title">EDIT PROFILE</h2>
+                        </header>
+                        <div className="modal-body">
+                            <div className="edit-input-group">
+                                <label>DISPLAY NAME</label>
+                                <input
+                                    type="text"
+                                    className="edit-input"
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    placeholder="Your Name"
+                                />
+                            </div>
+                            <div className="edit-input-group">
+                                <label>POSTAL CODE (FOR MAP HOME)</label>
+                                <input
+                                    type="text"
+                                    className="edit-input"
+                                    value={newPostalCode}
+                                    onChange={(e) => setNewPostalCode(e.target.value)}
+                                    placeholder="Zip Code"
+                                />
+                            </div>
+                        </div>
                         <div className="modal-actions">
-                            <button className="modal-btn-cancel" onClick={() => setShowDeleteModal(false)}>CANCEL</button>
-                            <button className="modal-btn-confirm" onClick={confirmDelete}>DELETE FOREVER</button>
+                            <button className="modal-btn-cancel" onClick={() => setShowProfileModal(false)}>CANCEL</button>
+                            <button className="modal-btn-confirm" onClick={handleProfileUpdate}>SAVE CHANGES</button>
                         </div>
                     </div>
                 </div>
             )}
 
+            <ConfirmModal
+                isOpen={confirmConfig.isOpen}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                confirmText={confirmConfig.confirmText}
+                cancelText={confirmConfig.cancelText}
+                type={confirmConfig.type}
+            />
             <BottomNav />
         </div>
     );

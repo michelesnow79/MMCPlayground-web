@@ -524,6 +524,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
+
 .btn-delete-post-detail {
     background: transparent;
     color: rgba(255, 255, 255, 0.4);
@@ -542,4 +543,124 @@
     color: #fe2c55;
     border-color: #fe2c55;
     background: rgba(254, 44, 85, 0.05);
+}
+
+/* Reported Pin Lockdown UI */
+.reported-lockdown {
+    border: 2px solid #fe2c55 !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.lockdown-notice {
+    background: #fe2c55;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 20px;
+    margin: -24px -24px 24px -24px;
+    border-radius: 14px 14px 0 0;
+}
+
+.lockdown-icon {
+    font-size: 1.5rem;
+}
+
+.lockdown-text h3 {
+    margin: 0;
+    font-family: 'Bangers', cursive;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+}
+
+.lockdown-text p {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    opacity: 0.9;
+}
+
+.disabled-controls {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(1);
+}
+
+.report-modal {
+    border: 2px solid #fe2c55;
+    box-shadow: 0 0 50px rgba(254, 44, 85, 0.3);
+}
+
+.report-warning-box {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: rgba(254, 44, 85, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(254, 44, 85, 0.2);
+}
+
+.warning-emoji {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.warning-text {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #ff8c00;
+    font-weight: 800;
+}
+
+.warning-text strong {
+    color: #00f0ff;
+    text-decoration: underline;
+}
+
+.report-submit {
+    background: #fe2c55 !important;
+    box-shadow: 0 0 15px rgba(254, 44, 85, 0.4) !important;
+}
+
+.suspension-banner {
+    background: #ff4d4d;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
+    position: sticky;
+    top: 60px;
+    z-index: 10;
+}
+
+/* Location Preview in Edit Modal */
+.location-preview-mini {
+    margin-top: 10px;
+    padding: 12px;
+    background: rgba(0, 240, 255, 0.05);
+    border: 1px dashed rgba(0, 240, 255, 0.3);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-label {
+    display: block;
+    color: #00f0ff;
+    font-weight: 800;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.preview-address {
+    display: block;
+    color: #8e8e93;
+    font-size: 0.75rem;
+    margin-top: 2px;
 }

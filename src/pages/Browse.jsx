@@ -21,7 +21,17 @@ const Browse = () => {
             </div>
 
             <div className="connections-list">
-                {pins.filter(p => !hiddenPins.includes(p.id)).map(conn => (
+                {pins.filter(p => {
+                    const isHidden = hiddenPins.includes(p.id);
+                    const isReported = p.isReported;
+                    const isOwner = p.ownerEmail === user?.email;
+                    const isAdmin = user?.isAdmin;
+
+                    if (isHidden && !isAdmin) return false;
+                    if (isReported && !isOwner && !isAdmin) return false;
+
+                    return true;
+                }).map(conn => (
                     <div
                         key={conn.id}
                         className="connection-card"
@@ -35,6 +45,9 @@ const Browse = () => {
                         <div className="card-content-main">
                             <div className="card-header-row">
                                 <span className="card-type-label">{conn.type}</span>
+                                {conn.isReported && (
+                                    <span className="reported-badge-mini">UNDER REVIEW</span>
+                                )}
                                 {getAverageRating(conn.id) > 0 && (
                                     <span className="avg-rating-badge-mini">❤️ {getAverageRating(conn.id)}</span>
                                 )}

@@ -151,3 +151,105 @@
 .empty-messages p {
     font-weight: 700;
 }
+
+.messages-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.user-status-badges {
+    display: flex;
+    gap: 8px;
+}
+
+.status-badge {
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.review {
+    background: #ffd700;
+    color: #000;
+}
+
+.status-badge.suspended {
+    background: #ff4d4d;
+    color: #fff;
+}
+
+.moderation-notice-item {
+    border-left: 4px solid #fe2c55;
+}
+
+.notice-avatar {
+    background: rgba(254, 44, 85, 0.1) !important;
+}
+
+.notice-body {
+    color: #fff !important;
+    font-weight: 600 !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+}
+
+.deleted-tag {
+    color: #fe2c55;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-top: 5px;
+    letter-spacing: 0.5px;
+}
+
+.pin-meta-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    align-items: center;
+}
+
+.reply-count-badge {
+    background: rgba(0, 240, 255, 0.1);
+    color: #00f0ff;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 800;
+}
+
+.reported-badge-mini {
+    background: #fe2c55;
+    color: #fff;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 800;
+}
+
+.pin-avatar {
+    background: rgba(0, 240, 255, 0.1) !important;
+}
+
+.pin-delete-btn-mini {
+    background: transparent;
+    border: 1px solid rgba(254, 44, 85, 0.4);
+    color: #fe2c55;
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: auto;
+    /* Push to the right */
+}
+
+.pin-delete-btn-mini:hover {
+    background: #fe2c55;
+    color: #fff;
+}

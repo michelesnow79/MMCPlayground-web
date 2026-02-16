@@ -493,3 +493,51 @@
         font-size: 1.2rem;
     }
 }
+
+/* Profile Edit Modal */
+.profile-edit-modal {
+    border-color: #00f0ff !important;
+}
+
+.profile-edit-modal .modal-title {
+    color: #00f0ff !important;
+}
+
+.modal-body {
+    text-align: left;
+    margin-bottom: 25px;
+    width: 100%;
+}
+
+.edit-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.edit-input-group label {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.75rem;
+    color: #8e8e93;
+    letter-spacing: 0.5px;
+}
+
+.edit-input {
+    background: #1a1a1e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px 15px;
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.edit-input:focus {
+    border-color: #00f0ff;
+    background: #252529;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}

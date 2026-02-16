@@ -68,3 +68,63 @@ h3,
   border-radius: 2px;
   box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
 }
+
+/* Google Places Autocomplete - Dark Theme Fix */
+.pac-container {
+  background-color: #1a1a1e !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  margin-top: 8px !important;
+  font-family: 'Nunito', sans-serif !important;
+  z-index: 99999 !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+.pac-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #c0c0c0 !important;
+  padding: 12px 16px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 0.9rem !important;
+}
+
+/* Hover state - Force visibility */
+.pac-item:hover,
+.pac-item.pac-item-selected {
+  background-color: #00f0ff !important;
+  color: #000000 !important;
+}
+
+.pac-item:hover .pac-item-query,
+.pac-item.pac-item-selected .pac-item-query {
+  color: #000000 !important;
+}
+
+.pac-item:hover .pac-matched,
+.pac-item.pac-item-selected .pac-matched {
+  color: #000000 !important;
+}
+
+.pac-item-query {
+  color: #ffffff !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  margin-right: 5px !important;
+}
+
+.pac-matched {
+  color: #00f0ff !important;
+  font-weight: 900 !important;
+}
+
+.pac-icon {
+  filter: invert(1) brightness(2) !important;
+  /* Make the icons white */
+  margin-right: 12px !important;
+}
+
+.hdpi .pac-icon {
+  background-image: url(https://maps.gstatic.com/mapfiles/api-3/images/autocomplete-icons_hdpi.png) !important;
+}

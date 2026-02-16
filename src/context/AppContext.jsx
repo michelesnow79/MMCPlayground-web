@@ -16,9 +16,11 @@ import {
     updateDoc,
     getDoc,
     orderBy,
+    where,
     serverTimestamp
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { getStateAndCountryFromZip } from '../utils/locationHelper';
 
 const AppContext = createContext();
 
@@ -28,6 +30,7 @@ export const AppProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [pins, setPins] = useState([]);
     const [replies, setReplies] = useState([]);
+    const [notifications, setNotifications] = useState([]);
     const [ratings, setRatings] = useState({});
     const [hiddenPins, setHiddenPins] = useState(() => {
         const savedHidden = localStorage.getItem('mmc_hiddenPins');
@@ -71,6 +74,15 @@ export const AppProvider = ({ children }) => {
         return () => unsubscribe();
     }, []);
 
+    // Helper: Refresh user data when needed
+    const refreshUserData = async () => {
+        if (!auth?.currentUser) return;
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+        if (userDoc.exists()) {
+            setUser(prev => ({ ...prev, ...userDoc.data() }));
+        }
+    };
+
     // 2. Pins Real-time Listener
     useEffect(() => {
         if (!db) return;
@@ -102,6 +114,29 @@ export const AppProvider = ({ children }) => {
         });
         return () => unsubscribe();
     }, []);
+
+    // 3.5 Notifications Listener
+    useEffect(() => {
+        if (!user || !db) return;
+        try {
+            // Removed orderBy('createdAt', 'desc') to avoid missing index errors in dev. 
+            // We'll sort in-memory below.
+            const q = query(collection(db, 'notifications'), where('targetUid', '==', user.uid));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const notifs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                // In-memory sort
+                notifs.sort((a, b) => {
+                    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : (a.createdAt || 0);
+                    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : (b.createdAt || 0);
+                    return dateB - dateA;
+                });
+                setNotifications(notifs);
+            });
+            return () => unsubscribe();
+        } catch (err) {
+            console.error("Notif listener error:", err);
+        }
+    }, [user]);
 
     // 4. Ratings Global Listener (for average calculation)
     useEffect(() => {
@@ -150,15 +185,38 @@ export const AppProvider = ({ children }) => {
     const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
     const signup = async (email, password, name, postalCode) => {
         const res = await createUserWithEmailAndPassword(auth, email, password);
+
+        // Smarts: Geocode state/country from zip
+        const locInfo = await getStateAndCountryFromZip(postalCode);
+        const state = locInfo?.state || '';
+        const country = locInfo?.country || '';
+
         await setDoc(doc(db, 'users', res.user.uid), {
             name,
             email,
             postalCode: postalCode || '',
+            state,
+            country,
             createdAt: serverTimestamp(),
             isAdmin: email === 'MissMe@missmeconnection.com' // Set first admin
         });
     };
     const logout = () => signOut(auth);
+
+    const updateUserProfile = async (uid, data) => {
+        const userRef = doc(db, 'users', uid);
+
+        let extraData = {};
+        if (data.postalCode) {
+            const locInfo = await getStateAndCountryFromZip(data.postalCode);
+            if (locInfo) {
+                extraData = { state: locInfo.state, country: locInfo.country };
+            }
+        }
+
+        await updateDoc(userRef, { ...data, ...extraData });
+        await refreshUserData();
+    };
 
     const addPin = async (newPin) => {
         if (!newPin) return;
@@ -180,12 +238,21 @@ export const AppProvider = ({ children }) => {
     };
 
     const removePin = async (pinId) => {
-        console.log("🗑️ PIN DELETE ATTEMPT: Targeting doc ID:", pinId);
+        if (!pinId) {
+            console.error("❌ removePin called without an ID");
+            return;
+        }
+
+        const stringId = String(pinId);
+        console.log("🗑️ FIREBASE DELETE INITIATED: Targeting ID:", stringId);
+
         try {
-            await deleteDoc(doc(db, 'pins', pinId));
-            console.log("✅ PIN DELETE SUCCESS");
+            const docRef = doc(db, 'pins', stringId);
+            await deleteDoc(docRef);
+            console.log("✅ FIREBASE DELETE SUCCESS for ID:", stringId);
         } catch (err) {
-            console.error("❌ PIN DELETE FAILED:", err);
+            console.error("❌ FIREBASE DELETE FAILED for ID:", stringId, err);
+            alert("Delete failed in database. Status: " + err.message);
         }
     };
 
@@ -230,6 +297,42 @@ export const AppProvider = ({ children }) => {
         if (pinRatings.length === 0) return "0.0";
         const sum = pinRatings.reduce((a, b) => a + b, 0);
         return (sum / pinRatings.length).toFixed(1);
+    };
+
+    const isSuspended = () => {
+        if (!user) return false;
+        if (!user.isSuspended) return false;
+        if (!user.suspendedUntil) return false;
+        const now = new Date();
+        const until = user.suspendedUntil.toDate ? user.suspendedUntil.toDate() : new Date(user.suspendedUntil);
+        return now < until;
+    };
+
+    const hasProbation = () => {
+        if (!user) return false;
+        if (!user.reviewStatus) return false;
+        if (!user.reviewExpiresAt) return false;
+        const now = new Date();
+        const until = user.reviewExpiresAt.toDate ? user.reviewExpiresAt.toDate() : new Date(user.reviewExpiresAt);
+        return now < until;
+    };
+
+    const canStartNewThread = async (pinId) => {
+        if (!user) return false;
+        if (!isSuspended()) return true;
+        // If suspended, check if there are existing replies from this user for this pin
+        const existingReplies = replies.filter(r => r.pinId === pinId && r.senderUid === user.uid);
+        return existingReplies.length > 0;
+    };
+
+    const addNotification = async (targetUid, message, type = 'moderation') => {
+        await addDoc(collection(db, 'notifications'), {
+            targetUid,
+            message,
+            type,
+            read: false,
+            createdAt: serverTimestamp()
+        });
     };
 
     const addReply = async (pinId, content) => {
@@ -290,13 +393,13 @@ export const AppProvider = ({ children }) => {
     return (
         <AppContext.Provider value={{
             user, pins, isLoggedIn, loading, signup, login, logout,
-            addPin, removePin, updatePin, ratePin, getAverageRating, addReply, updateReply,
+            addPin, removePin, updatePin, updateUserProfile, ratePin, getAverageRating, addReply, updateReply,
             hiddenPins, hidePin, unhidePin, clearHiddenPins,
             formatDate, dateFormat, setDateFormat, mapMode, setMapMode,
             distanceUnit, setDistanceUnit,
-            replies, ratings,
+            replies, ratings, notifications,
             hasNewNotifications, markNotificationsAsRead,
-            reportPin
+            reportPin, isSuspended, hasProbation, canStartNewThread, addNotification, refreshUserData
         }}>
             {children}
         </AppContext.Provider>

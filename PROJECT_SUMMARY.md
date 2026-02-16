@@ -1,5 +1,10 @@
 # MissMeConnection Website Replica
 
+## ⚠️ Core Interaction Rules
+1. **No Unmanaged Deploy/Git**: Never run `git push`, `vercel`, or `save` commands without explicit instructions.
+2. **3-Minute Limit**: Never start a task taking > 3 minutes without explicit permission.
+3. **Wait for GO**: Always describe the plan and wait for the user to say "GO" before execution.
+
 ## Overview
 A pixel-perfect, premium replica of the MissMeConnection website built with React, Vite, and Leaflet. 
 The project leverages detailed design specifications extracted directly from Figma to ensure high fidelity.

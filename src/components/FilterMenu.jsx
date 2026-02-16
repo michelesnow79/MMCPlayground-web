@@ -25,6 +25,27 @@ const FilterMenu = ({ isOpen, onClose, filters, onFilterChange, onApply, onReset
         onClose();
     };
 
+    // Attach Autocomplete to location input
+    React.useEffect(() => {
+        if (!isOpen || !window.google?.maps?.places) return;
+
+        const tid = setTimeout(() => {
+            const input = document.getElementById('filter-location-input');
+            if (input) {
+                const autocomplete = new window.google.maps.places.Autocomplete(input, {
+                    types: ['(regions)']
+                });
+                autocomplete.addListener('place_changed', () => {
+                    const place = autocomplete.getPlace();
+                    if (place && place.formatted_address) {
+                        handleChange('location', place.formatted_address);
+                    }
+                });
+            }
+        }, 100);
+        return () => clearTimeout(tid);
+    }, [isOpen]);
+
     const handleReset = () => {
         const defaultFilters = {
             location: '',
@@ -55,6 +76,7 @@ const FilterMenu = ({ isOpen, onClose, filters, onFilterChange, onApply, onReset
                     <div className="filter-group">
                         <label>Location (City or Postal Code)</label>
                         <input
+                            id="filter-location-input"
                             type="text"
                             className="filter-input"
                             placeholder="Enter location..."
@@ -102,10 +124,10 @@ const FilterMenu = ({ isOpen, onClose, filters, onFilterChange, onApply, onReset
                             onChange={(e) => handleChange('type', e.target.value)}
                         >
                             <option value="">All Types</option>
-                            <option value="Woman → Man">Woman → Man</option>
-                            <option value="Man → Woman">Man → Woman</option>
-                            <option value="Woman → Woman">Woman → Woman</option>
-                            <option value="Man → Man">Man → Man</option>
+                            <option value="Woman for Man">Woman for Man</option>
+                            <option value="Man for Woman">Man for Woman</option>
+                            <option value="Woman for Woman">Woman for Woman</option>
+                            <option value="Man for Man">Man for Man</option>
                             <option value="Other">Other</option>
                         </select>
                     </div>

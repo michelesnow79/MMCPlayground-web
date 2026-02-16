@@ -4,23 +4,26 @@ import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 import AuthModal from '../components/AuthModal';
 import './Messages.css';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Messages = () => {
-    const { user, loading, pins, replies, formatDate, markNotificationsAsRead } = useApp();
+    const { user, loading, pins, replies, notifications, formatDate, markNotificationsAsRead, isSuspended, hasProbation } = useApp();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = React.useState('received');
-    // We no longer redirect automatically, we show the AuthModal instead
-    /* 
+    const [confirmConfig, setConfirmConfig] = React.useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'danger'
+    });
+
+    // Clear notifications when viewing the messages page
     React.useEffect(() => {
-        const checkAuth = setTimeout(() => {
-            if (!loading && !user) {
-                console.log("MMC AUTH: User missing after grace period, redirecting from Messages");
-                navigate('/');
-            }
-        }, 500);
-        return () => clearTimeout(checkAuth);
-    }, [user, loading, navigate]);
-    */
+        if (user && activeTab === 'notices') {
+            markNotificationsAsRead();
+        }
+    }, [user, activeTab, markNotificationsAsRead]);
 
     if (loading) {
         return <div className="loading-screen-missme">LOADING MESSAGES...</div>;
@@ -35,47 +38,117 @@ const Messages = () => {
     // Replies I sent (to others' pins)
     const sentReplies = replies.filter(r => r.senderEmail === user.email);
 
-    // Clear notifications when viewing the messages page
-    React.useEffect(() => {
-        if (user && activeTab === 'received') {
-            markNotificationsAsRead();
-        }
-    }, [user, activeTab, markNotificationsAsRead, receivedReplies.length]);
+    // Filtered notifications
+    const myNotifs = notifications || [];
 
     const renderReplyItem = (reply, isSent) => {
         const pin = pins.find(p => p.id === reply.pinId);
-        if (!pin) return null;
 
         return (
             <div
                 key={reply.id}
                 className="thread-item-premium"
-                onClick={() => navigate(`/browse/${pin.id}`)}
+                onClick={() => pin ? navigate(`/browse/${pin.id}`) : null}
+                style={{ opacity: pin ? 1 : 0.7 }}
             >
                 <div className="thread-avatar-circle">
-                    <span className="thread-logo-mini">❤️</span>
+                    <span className="thread-logo-mini">{pin ? '❤️' : '🚫'}</span>
                 </div>
                 <div className="thread-content-block">
                     <div className="thread-top-line">
-                        <h3 className="thread-title-text">{pin.title}</h3>
-                        <span className="thread-time-meta">{reply.timestamp ? formatDate(reply.timestamp) : 'Recent'}</span>
+                        <h3 className="thread-title-text">{pin ? pin.title : 'DELETED CONNECTION'}</h3>
+                        <span className="thread-time-meta">{reply.createdAt ? formatDate(reply.createdAt.toDate()) : 'Recent'}</span>
                     </div>
                     <p className="thread-preview-text">
                         <span className="sender-label">{isSent ? 'You: ' : 'Reply: '}</span>
                         {reply.content}
                     </p>
+                    {!pin && <p className="deleted-tag">This post was removed by a moderator</p>}
                 </div>
-                <div className="thread-indicator">
-                    <span className="chevron-right">❯</span>
-                </div>
+                {pin && (
+                    <div className="thread-indicator">
+                        <span className="chevron-right">❯</span>
+                    </div>
+                )}
             </div>
         );
     };
+
+    const renderNotifItem = (notif) => (
+        <div key={notif.id} className="thread-item-premium moderation-notice-item">
+            <div className="thread-avatar-circle notice-avatar">
+                <span className="thread-logo-mini">{notif.type === 'moderation' ? '⚠️' : '🔔'}</span>
+            </div>
+            <div className="thread-content-block">
+                <div className="thread-top-line">
+                    <h3 className="thread-title-text">{notif.type === 'moderation' ? 'MODERATION NOTICE' : 'SYSTEM NOTIFICATION'}</h3>
+                    <span className="thread-time-meta">{notif.createdAt ? formatDate(notif.createdAt.toDate()) : 'Recent'}</span>
+                </div>
+                <p className="thread-preview-text notice-body">
+                    {notif.message}
+                </p>
+            </div>
+        </div>
+    );
+
+    const renderPinItem = (pin) => (
+        <div
+            key={pin.id}
+            className="thread-item-premium my-pin-item"
+            onClick={() => navigate(`/browse/${pin.id}`)}
+        >
+            <div className="thread-avatar-circle pin-avatar">
+                <span className="thread-logo-mini">📍</span>
+            </div>
+            <div className="thread-content-block">
+                <div className="thread-top-line">
+                    <h3 className="thread-title-text">{pin.title}</h3>
+                    <span className="thread-time-meta">{pin.date ? formatDate(pin.date) : 'Active'}</span>
+                </div>
+                <p className="thread-preview-text">
+                    {pin.description.substring(0, 60)}...
+                </p>
+                <div className="pin-meta-row">
+                    <span className="reply-count-badge">
+                        {replies.filter(r => r.pinId === pin.id).length} REPLIES
+                    </span>
+                    {pin.isReported && <span className="reported-badge-mini">UNDER REVIEW</span>}
+                    <button
+                        className="pin-delete-btn-mini"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmConfig({
+                                isOpen: true,
+                                title: 'DELETE POST?',
+                                message: 'ARE YOU SURE YOU WANT TO DELETE THIS POST FOREVER?',
+                                onConfirm: () => {
+                                    removePin(pin.id);
+                                    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                                },
+                                confirmText: 'DELETE',
+                                cancelText: 'CANCEL',
+                                type: 'danger'
+                            });
+                        }}
+                    >
+                        DELETE
+                    </button>
+                </div>
+            </div>
+            <div className="thread-indicator">
+                <span className="chevron-right">❯</span>
+            </div>
+        </div>
+    );
 
     return (
         <div className="messages-page-pro">
             <header className="messages-top-bar">
                 <h1 className="messages-main-title">MESSAGES</h1>
+                <div className="user-status-badges">
+                    {hasProbation() && <span className="status-badge review">⚠️ UNDER 30-DAY REVIEW</span>}
+                    {isSuspended() && <span className="status-badge suspended">🛑 ACCOUNT ON HOLD</span>}
+                </div>
             </header>
 
             <div className="tab-control-group">
@@ -83,29 +156,35 @@ const Messages = () => {
                     className={`tab-btn ${activeTab === 'received' ? 'active' : ''}`}
                     onClick={() => setActiveTab('received')}
                 >
-                    POST REPLIES ({receivedReplies.length})
+                    POSTS ({myPins.length})
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'sent' ? 'active' : ''}`}
                     onClick={() => setActiveTab('sent')}
                 >
-                    MY REPLIES ({sentReplies.length})
+                    REPLIES ({sentReplies.length})
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'notices' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('notices')}
+                >
+                    NOTICES ({myNotifs.length})
                 </button>
             </div>
 
             <main className="messages-list-scroll">
                 {activeTab === 'received' ? (
                     <div className="thread-stack">
-                        {receivedReplies.length > 0 ? (
-                            receivedReplies.map(r => renderReplyItem(r, false))
+                        {myPins.length > 0 ? (
+                            myPins.map(p => renderPinItem(p))
                         ) : (
                             <div className="empty-messages">
-                                <span className="empty-icon">✉️</span>
-                                <p>No replies to your posts yet.</p>
+                                <span className="empty-icon">📍</span>
+                                <p>You haven't posted any connections yet.</p>
                             </div>
                         )}
                     </div>
-                ) : (
+                ) : activeTab === 'sent' ? (
                     <div className="thread-stack">
                         {sentReplies.length > 0 ? (
                             sentReplies.map(r => renderReplyItem(r, true))
@@ -116,9 +195,30 @@ const Messages = () => {
                             </div>
                         )}
                     </div>
+                ) : (
+                    <div className="thread-stack">
+                        {myNotifs.length > 0 ? (
+                            myNotifs.map(n => renderNotifItem(n))
+                        ) : (
+                            <div className="empty-messages">
+                                <span className="empty-icon">🔔</span>
+                                <p>No system notifications.</p>
+                            </div>
+                        )}
+                    </div>
                 )}
             </main>
 
+            <ConfirmModal
+                isOpen={confirmConfig.isOpen}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                confirmText={confirmConfig.confirmText}
+                cancelText={confirmConfig.cancelText}
+                type={confirmConfig.type}
+            />
             <BottomNav />
         </div>
     );

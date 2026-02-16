@@ -170,3 +170,13 @@
         align-self: flex-start;
     }
 }
+
+.reported-badge-mini {
+    background: #fe2c55;
+    color: white;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
