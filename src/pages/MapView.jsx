@@ -172,64 +172,77 @@ const MapView = () => {
         console.log("📍 MAP DEBUG: Total pins loaded from Firebase:", pins.length);
     }, [pins]);
 
-    // Sync global distance unit
-    useEffect(() => {
-        setActiveFilters(prev => ({ ...prev, unit: distanceUnit }));
-    }, [distanceUnit]);
-
     // Initial Geolocation (Browser GPS)
     useEffect(() => {
-        let fallbackTimeout;
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    isCenterManualRef.current = true;
-                    setMapCenter({ lat: latitude, lng: longitude });
-                    setIsLocating(false);
-                    console.log("📍 Centered map via GPS");
-                },
-                (error) => {
-                    console.warn("📍 GPS Geolocation error:", error.message);
-                    // If GPS fails and no postal code exists, center on Charlotte (more likely than NY for user)
-                    if (!user?.postalCode) {
-                        setMapCenter({ lat: 35.2271, lng: -80.8431 }); // Charlotte
-                        setIsLocating(false);
-                    }
-                },
-                { enableHighAccuracy: true, timeout: 5000 }
-            );
-        } else {
-            // No geolocation support
+        if (!navigator.geolocation) {
             if (!user?.postalCode) {
-                setMapCenter({ lat: 40.7128, lng: -74.006 });
+                setMapCenter({ lat: 35.2271, lng: -80.8431 });
                 setIsLocating(false);
             }
+            return;
         }
 
-        return () => clearTimeout(fallbackTimeout);
-    }, [user?.postalCode]);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setMapCenter({ lat: latitude, lng: longitude });
+                setIsLocating(false);
+                isCenterManualRef.current = true;
+                console.log("📍 Centered map via GPS");
+            },
+            (error) => {
+                console.warn("📍 GPS Geolocation error:", error.message);
+                // If GPS fails, and we haven't found a center yet (e.g. from zip), 
+                // we'll let the user.postalCode effect handle it OR fallback later.
+                if (!user?.postalCode) {
+                    setMapCenter({ lat: 35.2271, lng: -80.8431 });
+                    setIsLocating(false);
+                }
+            },
+            { enableHighAccuracy: true, timeout: 6000 }
+        );
+    }, [user?.uid]); // Run once on auth load
 
     // Initial Geolocation (User Postal Code fallback)
     useEffect(() => {
-        if (!user?.postalCode || typeof window.google?.maps?.Geocoder !== 'function' || isCenterManualRef.current) return;
+        if (!user?.postalCode || isCenterManualRef.current) return;
 
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ address: user.postalCode }, (results, status) => {
-            if (status === "OK" && results?.[0] && !isCenterManualRef.current) {
-                const loc = results[0].geometry.location;
-                setMapCenter({ lat: loc.lat(), lng: loc.lng() });
-                setIsLocating(false);
-                isCenterManualRef.current = true;
-                console.log("📍 Centered map based on user postal code:", user.postalCode);
-            } else {
-                // If geocoding zip fails, fallback to NYC
-                setMapCenter({ lat: 40.7128, lng: -74.006 });
+        let geocodeInterval = setInterval(() => {
+            if (typeof window.google?.maps?.Geocoder === 'function') {
+                clearInterval(geocodeInterval);
+                const geocoder = new window.google.maps.Geocoder();
+                geocoder.geocode({ address: user.postalCode }, (results, status) => {
+                    if (status === "OK" && results?.[0] && !isCenterManualRef.current) {
+                        const loc = results[0].geometry.location;
+                        setMapCenter({ lat: loc.lat(), lng: loc.lng() });
+                        setIsLocating(false);
+                        isCenterManualRef.current = true;
+                        console.log("📍 Centered map based on user postal code:", user.postalCode);
+                    } else {
+                        // Hard fallback if geocode fails
+                        if (!mapCenter) {
+                            setMapCenter({ lat: 35.2271, lng: -80.8431 });
+                            setIsLocating(false);
+                        }
+                    }
+                });
+            }
+        }, 500);
+
+        return () => clearInterval(geocodeInterval);
+    }, [user?.postalCode, mapCenter]);
+
+    // Total Safety Fallback: If still locating after 8 seconds, just force open it
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (isLocating) {
+                console.log("📍 Forced map activation after timeout");
+                if (!mapCenter) setMapCenter({ lat: 35.2271, lng: -80.8431 });
                 setIsLocating(false);
             }
-        });
-    }, [user?.postalCode, window.google, mapInstance]); // mapInstance ensures we have a map context
+        }, 8000);
+        return () => clearTimeout(timer);
+    }, [isLocating, mapCenter]);
 
     // Clustering Sync
     useEffect(() => {
