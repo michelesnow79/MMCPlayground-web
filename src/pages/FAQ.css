@@ -56,6 +56,26 @@
     max-width: 900px;
 }
 
+.faq-logo-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.faq-logo-group:hover {
+    transform: scale(1.02);
+}
+
+.faq-heart-logo {
+    width: 100px;
+    height: auto;
+    filter: drop-shadow(0 0 20px rgba(254, 44, 85, 0.6));
+}
+
 .faq-title {
     font-family: 'Bangers', cursive;
     font-size: 5.5rem;
@@ -66,7 +86,7 @@
         -3px 3px 0 #000,
         3px 3px 0 #000,
         6px 6px 0 rgba(254, 44, 85, 0.8);
-    margin: 0 0 -5px 0;
+    margin: 0;
     letter-spacing: 4px;
     text-transform: uppercase;
 }

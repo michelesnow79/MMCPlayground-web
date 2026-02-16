@@ -132,7 +132,10 @@ const Account = () => {
                 <button className="side-menu-btn" onClick={() => navigate('/map')}>
                     <span className="close-x-icon">✕</span>
                 </button>
-                <h1 className="account-title-center">ACCOUNT & SETTINGS</h1>
+                <div className="account-logo-group" onClick={() => navigate('/')}>
+                    <img src={logoAsset} alt="Logo" className="header-heart-logo-account" />
+                    <h1 className="account-title-center">ACCOUNT & SETTINGS</h1>
+                </div>
                 <div className="header-spacer"></div>
             </header>
 

@@ -19,9 +19,25 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
+.login-logo-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    cursor: pointer;
+}
+
+.login-heart-logo {
+    width: 60px;
+    height: auto;
+    filter: drop-shadow(0 0 15px rgba(254, 44, 85, 0.5));
+}
+
 .login-title {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+    font-size: 2.2rem;
+    margin: 0;
+    line-height: 1;
 }
 
 .login-subtitle {

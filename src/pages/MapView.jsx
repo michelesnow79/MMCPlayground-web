@@ -11,6 +11,8 @@ import { useApp } from '../context/AppContext';
 import FilterMenu from '../components/FilterMenu';
 import ConfirmModal from '../components/ConfirmModal';
 import { fuzzAndProcessLocation, haversineMeters } from '../utils/locationHelper';
+import { logPinDebug } from '../utils/logger';
+import logoAsset from '../assets/heart-logo.svg';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -32,7 +34,7 @@ const MapView = () => {
     const navigate = useNavigate();
     const {
         user, pins, isLoggedIn, loading, signup, login,
-        addPin, removePin, hidePin, hiddenPins, formatDate, mapMode,
+        addPin, removePin, hidePin, hiddenPins, formatDate, formatRelativeTime, mapMode,
         getAverageRating, reportPin, distanceUnit, ratings,
         isSuspended, hasProbation, setVisiblePinIds,
         activeFilters, setActiveFilters
@@ -50,7 +52,7 @@ const MapView = () => {
     const [mapInstance, setMapInstance] = useState(null);
 
 
-    const GROUP_RADIUS_METERS = 250;
+    const GROUP_RADIUS_METERS = 75;
     const [filterCenter, setFilterCenter] = useState(null);
 
     const [isPosting, setIsPosting] = useState(false);
@@ -58,6 +60,7 @@ const MapView = () => {
     const [newType, setNewType] = useState('');
     const [newTitle, setNewTitle] = useState('');
     const [newLocation, setNewLocation] = useState('');
+    const [newPlaceId, setNewPlaceId] = useState(null);
     const [newAddress, setNewAddress] = useState('');
     const [newDate, setNewDate] = useState(new Date());
     const [newTime, setNewTime] = useState(null);
@@ -89,6 +92,9 @@ const MapView = () => {
         let result = (pins || []).filter(p => {
             // Basic filters
             if (hiddenPins.includes(p.id) || p.isReported) return false;
+
+            // Global Hide (Owner/Admin controlled)
+            if (p.status === 'hidden' && p.ownerUid !== user?.uid && !user?.isAdmin) return false;
 
             // 30-day Archiving logic
             if (p.createdAt) {
@@ -131,24 +137,44 @@ const MapView = () => {
     }, [pins, filterCenter, activeFilters, hiddenPins]);
 
     const locationsGrouped = useMemo(() => {
-        const groups = []; // { key, lat, lng, pins: [] }
+        const groups = []; // { key, lat, lng, pins: [], placeId: string|null }
 
         (filteredPins || []).forEach(pin => {
             if (typeof pin.lat !== 'number' || typeof pin.lng !== 'number') return;
 
-            // find a group within radius
             let g = null;
-            for (const candidate of groups) {
-                const d = haversineMeters(pin.lat, pin.lng, candidate.lat, candidate.lng);
-                if (d <= GROUP_RADIUS_METERS) { g = candidate; break; }
+
+            // 1. Strict PlaceID Match
+            if (pin.placeId) {
+                g = groups.find(group => group.placeId === pin.placeId);
+            }
+
+            // 2. Fallback: Distance Match (only if no existing placeId match and we want to group purely by proximity)
+            // But we should be careful not to merge a placeId pin into a non-placeId group too aggressively.
+            if (!g) {
+                // If the pin has a placeId, prefer creating a new group unless we find a group with same placeId (handled above).
+                // If the pin DOES NOT have a placeId, maybe group it with neighbors?
+                // For now, let's allow merging if distance is very close, BUT if candidate has a different placeId, skip it.
+
+                for (const candidate of groups) {
+                    // Strict barrier: don't merge distinct place ID venues
+                    if (pin.placeId && candidate.placeId && pin.placeId !== candidate.placeId) continue;
+
+                    const d = haversineMeters(pin.lat, pin.lng, candidate.lat, candidate.lng);
+                    if (d <= GROUP_RADIUS_METERS) { g = candidate; break; }
+                }
             }
 
             if (!g) {
+                // Create new group
+                const key = pin.placeId ? `place:${pin.placeId}` : `${pin.lat.toFixed(5)}_${pin.lng.toFixed(5)}_${groups.length}`;
+
                 groups.push({
-                    key: `${pin.lat}_${pin.lng}_${groups.length}`,
-                    lat: pin.lat,   // keep first pin as anchor (stable marker)
+                    key,
+                    lat: pin.lat,
                     lng: pin.lng,
                     pins: [pin],
+                    placeId: pin.placeId || null
                 });
             } else {
                 g.pins.push(pin);
@@ -157,13 +183,13 @@ const MapView = () => {
 
         // convert to same shape the JSX expects
         const groupedMap = Object.fromEntries(groups.map(g => [g.key, g.pins]));
-        console.log("📍 MAP DEBUG: Venue groups:", Object.keys(groupedMap).length);
+        logPinDebug("📍 MAP DEBUG: Venue groups:", Object.keys(groupedMap).length);
         return groupedMap;
     }, [filteredPins]);
 
     // 5. EFFECTS
     useEffect(() => {
-        console.log("📍 MAP DEBUG: Total pins loaded from Firebase:", pins.length);
+        logPinDebug("📍 MAP DEBUG: Total pins loaded from Firebase:", pins.length);
     }, [pins]);
 
     // Sync global distance unit
@@ -334,9 +360,16 @@ const MapView = () => {
         const input = document.getElementById('post-location-input');
         if (!input) return;
 
-        const autocomplete = new window.google.maps.places.Autocomplete(input, {
+        const options = {
             types: ['geocode', 'establishment']
-        });
+        };
+
+        const autocomplete = new window.google.maps.places.Autocomplete(input, options);
+
+        if (mapInstance) {
+            // This is the "magic" that ensures search results follow the map's view exactly
+            autocomplete.bindTo('bounds', mapInstance);
+        }
 
         autocomplete.addListener('place_changed', async () => {
             const place = autocomplete.getPlace();
@@ -347,10 +380,38 @@ const MapView = () => {
                     setTempCoords(processed.coords);
                     setNewLocation(processed.label);
                     setNewAddress(processed.secondaryLabel || "");
+                    setNewPlaceId(processed.placeId || null);
                 }
             }
         });
     }, [isPosting, window.google?.maps?.places]);
+
+    // Google Places Autocomplete (Jump to Area)
+    useEffect(() => {
+        if (!mapInstance || !window.google?.maps?.places) return;
+
+        const input = document.getElementById('map-jump-search');
+        if (!input) return;
+
+        const autocomplete = new window.google.maps.places.Autocomplete(input, {
+            types: ['(regions)']
+        });
+
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place.geometry && place.geometry.location) {
+                mapInstance.panTo(place.geometry.location);
+                mapInstance.setZoom(12);
+                isCenterManualRef.current = true;
+                setMapCenter({
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng()
+                });
+                // Clear the input after jumping
+                input.value = "";
+            }
+        });
+    }, [mapInstance]);
 
     const sanitizeLocation = (loc) => {
         if (!loc) return "";
@@ -369,6 +430,12 @@ const MapView = () => {
             // Also respect hidden/reported status even in "expanded" view
             if (hiddenPins.includes(p.id) || p.isReported) return false;
 
+            // Strict PlaceID expansion
+            if (anchor.placeId && p.placeId) {
+                return anchor.placeId === p.placeId;
+            }
+
+            // Fallback: Distance
             return haversineMeters(anchor.lat, anchor.lng, p.lat, p.lng) <= GROUP_RADIUS_METERS;
         });
 
@@ -380,7 +447,9 @@ const MapView = () => {
         setSelectedPinIndex(startIdx);
         setSelectedPin(sortedVenuePins[startIdx]);
 
-        console.log(`📍 Marker Click: venuePins length = ${sortedVenuePins.length} (expanded from ${groupPins.length})`);
+        setSelectedPin(sortedVenuePins[startIdx]);
+
+        logPinDebug(`📍 Marker Click: venuePins length = ${sortedVenuePins.length} (expanded from ${groupPins.length})`);
     };
 
     const nextPin = () => {
@@ -450,24 +519,36 @@ const MapView = () => {
                 setTempCoords(processed.coords);
                 setNewLocation(processed.label);
                 setNewAddress(processed.secondaryLabel || "");
+                setNewPlaceId(processed.placeId || null);
             }
         });
     };
 
     const handleSavePin = (e) => {
         e.preventDefault();
+        logPinDebug("SAVE newDate state:", newDate);
+        logPinDebug("SAVE newDate local:", newDate?.toString?.());
+        logPinDebug("SAVE newDate iso:", newDate?.toISOString?.());
+
+        const safe = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
+        const encounterDate = `${safe.getFullYear()}-${String(safe.getMonth() + 1).padStart(2, '0')}-${String(safe.getDate()).padStart(2, '0')}`;
+
+        logPinDebug("SAVE encounterDate:", encounterDate);
+
         const newPin = {
-            id: Date.now().toString(), // Use string ID
+            id: Date.now().toString(),
             lat: tempCoords.lat,
             lng: tempCoords.lng,
             type: newType,
             title: newTitle.toUpperCase(),
             location: sanitizeLocation(newLocation),
-            date: newDate.toISOString(),
+            date: encounterDate, // Keep for now, but rely on encounterDate
+            encounterDate: encounterDate, // New explicit field
             time: newTime ? newTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
             description: newDescription,
             ownerEmail: user?.email,
-            address: newAddress
+            address: newAddress,
+            placeId: newPlaceId
         };
         addPin(newPin);
         setIsPosting(false);
@@ -476,6 +557,7 @@ const MapView = () => {
         setNewTitle('');
         setNewLocation('');
         setNewAddress('');
+        setNewPlaceId(null);
         setNewDate(new Date());
         setNewTime(null);
         setNewDescription('');
@@ -486,6 +568,7 @@ const MapView = () => {
         setTempCoords(null);
         setNewDate(new Date());
         setNewTime(null);
+        setNewPlaceId(null);
     };
 
     const handleReportSubmit = () => {
@@ -526,8 +609,20 @@ const MapView = () => {
                                 <div className="hamburger-line-small"></div>
                                 <div className="hamburger-line-small"></div>
                             </button>
+                            <div className="map-search-wrap">
+                                <input
+                                    id="map-jump-search"
+                                    type="text"
+                                    className="map-jump-input"
+                                    placeholder="Jump to city/state..."
+                                />
+                                <span className="search-icon-mini">🔍</span>
+                            </div>
                         </div>
-                        <h1 className="map-logo-title-original" onClick={() => navigate('/')}>MISS ME CONNECTIONS</h1>
+                        <div className="map-logo-group" onClick={() => navigate('/')}>
+                            <img src={logoAsset} alt="Logo" className="header-heart-logo" />
+                            <h1 className="map-logo-title-original">MISS ME CONNECTIONS</h1>
+                        </div>
                         <div className="top-bar-side-right">
                             <button className={`original-settings-btn ${!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword) ? 'filter-active' : ''}`} onClick={() => setIsFilterOpen(true)}>
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
@@ -543,6 +638,7 @@ const MapView = () => {
                         onClose={() => setIsFilterOpen(false)}
                         filters={activeFilters}
                         onFilterChange={setActiveFilters}
+                        mapInstance={mapInstance}
                     />
 
                     <div className="map-canvas">
@@ -653,7 +749,9 @@ const MapView = () => {
                                                 <p className="popup-location-sub">{selectedPin.address}</p>
                                             )}
                                         </div>
-                                        <p className="popup-meta">{formatDate(selectedPin.date)}</p>
+                                        <div className="popup-meta-row">
+                                            <p className="popup-meta">ENCOUNTER: {formatDate(selectedPin.encounterDate || selectedPin.date)}</p>
+                                        </div>
                                         <p className="popup-description">{selectedPin.description}</p>
 
                                         <div className="popup-footer">
@@ -675,14 +773,27 @@ const MapView = () => {
                                                 </button>
 
                                                 {(selectedPin.ownerUid === user?.uid || selectedPin.ownerEmail === user?.email || user?.isAdmin) && (
-                                                    <button className="popup-delete-btn" onClick={() => {
-                                                        console.log("🗑️ Deleting pin ID:", selectedPin.id);
-                                                        removePin(selectedPin.id);
-                                                        setSelectedPin(null);
-                                                        setSelectedPins([]);
-                                                    }}>
-                                                        Delete
-                                                    </button>
+                                                    <div className="owner-actions-row">
+                                                        <button
+                                                            className={`popup-hide-btn ${selectedPin.status === 'hidden' ? 'is-hidden' : ''}`}
+                                                            onClick={async () => {
+                                                                const newStatus = selectedPin.status === 'hidden' ? 'public' : 'hidden';
+                                                                await updatePin(selectedPin.id, { status: newStatus });
+                                                                // Update local state if needed (selectedPin is a snapshot)
+                                                                setSelectedPin(prev => ({ ...prev, status: newStatus }));
+                                                            }}
+                                                        >
+                                                            {selectedPin.status === 'hidden' ? 'Unhide' : 'Hide'}
+                                                        </button>
+                                                        <button className="popup-delete-btn" onClick={() => {
+                                                            console.log("🗑️ Deleting pin ID:", selectedPin.id);
+                                                            removePin(selectedPin.id);
+                                                            setSelectedPin(null);
+                                                            setSelectedPins([]);
+                                                        }}>
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -744,7 +855,20 @@ const MapView = () => {
                                                 <label>Date</label>
                                                 <DatePicker
                                                     selected={newDate}
-                                                    onChange={(date) => setNewDate(date)}
+                                                    onChange={(date) => {
+                                                        if (!date) return;
+                                                        logPinDebug("DATEPICKER onChange raw:", date);
+
+                                                        // CHITTY'S FIX: Normalize immediately
+                                                        const normalized = new Date(
+                                                            date.getFullYear(),
+                                                            date.getMonth(),
+                                                            date.getDate()
+                                                        );
+
+                                                        logPinDebug("DATEPICKER normalized:", normalized);
+                                                        setNewDate(normalized);
+                                                    }}
                                                     className="post-input"
                                                     placeholderText="When?"
                                                     dateFormat="MM/dd/yyyy"

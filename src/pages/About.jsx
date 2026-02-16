@@ -7,6 +7,7 @@ import './About.css';
 import mapBg from '../assets/map-bg.svg';
 import micheleImg from '../assets/hero-woman-bluebg.svg';
 import paulinaImg from '../assets/paulina.svg';
+import logoAsset from '../assets/heart-logo.svg';
 
 const About = () => {
     const navigate = useNavigate();
@@ -28,7 +29,10 @@ const About = () => {
             <header className="about-hero" style={{ backgroundImage: `url(${mapBg})` }}>
                 <div className="about-hero-halftone"></div>
                 <div className="about-hero-content">
-                    <h1 className="about-title">ABOUT US</h1>
+                    <div className="about-logo-group" onClick={() => navigate('/')}>
+                        <img src={logoAsset} alt="Logo" className="about-heart-logo" />
+                        <h1 className="about-title">ABOUT US</h1>
+                    </div>
                     <p className="about-subtitle">
                         Have you ever crossed paths with someone special but missed the chance to connect?
                         We believe in second chances!

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import logoAsset from '../assets/heart-logo.svg';
 import './StaticPage.css';
 
 const Privacy = () => {
@@ -9,7 +10,10 @@ const Privacy = () => {
         <div className="static-page-container">
             <header className="static-header">
                 <button className="static-back-btn" onClick={() => navigate(-1)}>←</button>
-                <h1 className="static-title">PRIVACY POLICY</h1>
+                <div className="static-logo-group" onClick={() => navigate('/')}>
+                    <img src={logoAsset} alt="Logo" className="static-heart-logo" />
+                    <h1 className="static-title">PRIVACY POLICY</h1>
+                </div>
             </header>
 
             <div className="static-content">

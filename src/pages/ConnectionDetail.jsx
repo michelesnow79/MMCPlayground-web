@@ -8,13 +8,14 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './ConnectionDetail.css';
 import ConfirmModal from '../components/ConfirmModal';
 import { fuzzAndProcessLocation } from '../utils/locationHelper';
+import logoAsset from '../assets/heart-logo.svg';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const ConnectionDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, pins, replies, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, updatePin, removePin, formatDate, hiddenPins, loading, isSuspended, canStartNewThread } = useApp();
+    const { user, pins, replies, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, updatePin, removePin, formatDate, formatRelativeTime, hiddenPins, loading, isSuspended, canStartNewThread } = useApp();
 
     const pin = pins.find(p => String(p.id) === String(id));
     const currentRating = ratings[pin?.id] || 0;
@@ -43,42 +44,6 @@ const ConnectionDetail = () => {
         type: 'danger'
     });
 
-    // Google Places Autocomplete for Edit Modal
-    React.useEffect(() => {
-        if (!showEditModal || !window.google || !window.google.maps || !window.google.maps.places) return;
-
-        // Small delay to ensure the element is in the DOM
-        const timeout = setTimeout(() => {
-            const input = document.getElementById('edit-location-input');
-            if (!input) return;
-
-            const autocomplete = new window.google.maps.places.Autocomplete(input, {
-                types: ['geocode', 'establishment'],
-                locationBias: { lat: pin.lat, lng: pin.lng },
-                radius: 5000 // 5km bias
-            });
-
-            autocomplete.addListener('place_changed', async () => {
-                const place = autocomplete.getPlace();
-                if (place && place.geometry) {
-                    setEditLocation("Processing privacy...");
-                    const processed = await fuzzAndProcessLocation(place);
-                    if (processed) {
-                        setEditCoords(processed.coords);
-                        setEditLocation(processed.label);
-                        setEditAddress(processed.secondaryLabel || "");
-                    }
-                }
-            });
-        }, 300);
-
-        return () => clearTimeout(timeout);
-    }, [showEditModal]);
-
-    if (loading) {
-        return <div className="detail-loading">LOADING CONNECTION...</div>;
-    }
-
     const handleRate = (val) => {
         if (!user) {
             navigate('/login');
@@ -100,7 +65,7 @@ const ConnectionDetail = () => {
     };
 
     // Find if current user already replied to this pin
-    const existingReply = replies.find(r => String(r.pinId) === String(id) && r.senderEmail === user?.email);
+    const existingReply = (pin && user) ? replies.find(r => String(r.pinId) === String(pin.id) && r.senderEmail === user.email) : null;
 
     const handleReplyClick = async () => {
         if (!user) {
@@ -166,7 +131,8 @@ const ConnectionDetail = () => {
     };
 
     const handleDelete = async () => {
-        console.log("🔴 DELETE BUTTON CLICKED for pin:", pin?.id);
+        if (!pin) return;
+        console.log("🔴 DELETE BUTTON CLICKED for pin:", pin.id);
 
         if (pin.isReported && !user?.isAdmin) {
             setConfirmConfig({
@@ -199,6 +165,7 @@ const ConnectionDetail = () => {
     };
 
     const handleEditClick = () => {
+        if (!pin) return;
         if (pin.isReported && !user?.isAdmin) {
             setConfirmConfig({
                 isOpen: true,
@@ -210,36 +177,37 @@ const ConnectionDetail = () => {
             });
             return;
         }
-        if (pin) {
-            setEditTitle(pin.title);
-            setEditDescription(pin.description);
-            setEditDate(pin.date ? new Date(pin.date) : new Date());
-            // Attempt to parse time string back to Date object for the picker
-            if (pin.time) {
-                try {
-                    const [time, modifier] = pin.time.split(' ');
-                    let [hours, minutes] = time.split(':');
-                    if (hours === '12') hours = '00';
-                    if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
-                    const dummyDate = new Date();
-                    dummyDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-                    setEditTime(dummyDate);
-                } catch (e) {
-                    console.error("Time parse error:", e);
-                    setEditTime(null);
-                }
-            } else {
+
+        setEditTitle(pin.title);
+        setEditDescription(pin.description);
+        setEditDate(pin.date ? new Date(pin.date) : new Date());
+        // Attempt to parse time string back to Date object for the picker
+        if (pin.time) {
+            try {
+                const [time, modifier] = pin.time.split(' ');
+                let [hours, minutes] = time.split(':');
+                if (hours === '12' && modifier === 'AM') hours = '00';
+                else if (hours !== '12' && modifier === 'PM') hours = parseInt(hours, 10) + 12;
+                else if (hours === '12' && modifier === 'PM') hours = '12';
+
+                const dummyDate = new Date();
+                dummyDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+                setEditTime(dummyDate);
+            } catch (e) {
+                console.error("Time parse error:", e);
                 setEditTime(null);
             }
-            setEditLocation(pin.location || '');
-            setEditAddress(pin.address || '');
-            setEditCoords({ lat: pin.lat, lng: pin.lng });
-            setShowEditModal(true);
+        } else {
+            setEditTime(null);
         }
+        setEditLocation(pin.location || '');
+        setEditAddress(pin.address || '');
+        setEditCoords({ lat: pin.lat, lng: pin.lng });
+        setShowEditModal(true);
     };
 
     const handleEditSubmit = async () => {
-        if (!editTitle.trim() || !editDescription.trim()) return;
+        if (!pin || !editTitle.trim() || !editDescription.trim()) return;
 
         await updatePin(pin.id, {
             title: editTitle.toUpperCase(),
@@ -248,14 +216,14 @@ const ConnectionDetail = () => {
             address: editAddress,
             lat: editCoords?.lat || pin.lat,
             lng: editCoords?.lng || pin.lng,
-            date: editDate.toISOString(),
+            date: `${editDate.getFullYear()}-${String(editDate.getMonth() + 1).padStart(2, '0')}-${String(editDate.getDate()).padStart(2, '0')}`,
             time: editTime ? editTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
         });
         setShowEditModal(false);
     };
 
     const handleReportSubmit = () => {
-        if (!reportReason.trim()) return;
+        if (!pin || !reportReason.trim()) return;
         reportPin(pin.id, reportReason);
         setShowReportModal(false);
         setConfirmConfig({
@@ -274,13 +242,46 @@ const ConnectionDetail = () => {
     // Debugging
     useEffect(() => {
         console.log(`MMC DEBUG: ConnectionDetail active. ID from params: "${id}"`);
-        if (pins.length > 0) {
+        if (pins && pins.length > 0) {
             console.log("MMC DEBUG: Available Pin IDs:", pins.map(p => p.id));
         }
     }, [id, pins]);
 
-    // Find the pin. We use String comparison to be safe with param types.
-    // (Moved to top of component)
+    // Google Places Autocomplete for Edit Modal
+    React.useEffect(() => {
+        if (!showEditModal || !window.google || !window.google.maps || !window.google.maps.places || !pin) return;
+
+        // Small delay to ensure the element is in the DOM
+        const timeout = setTimeout(() => {
+            const input = document.getElementById('edit-location-input');
+            if (!input) return;
+
+            const autocomplete = new window.google.maps.places.Autocomplete(input, {
+                types: ['geocode', 'establishment'],
+                locationBias: { lat: pin.lat, lng: pin.lng },
+                radius: 5000 // 5km bias
+            });
+
+            autocomplete.addListener('place_changed', async () => {
+                const place = autocomplete.getPlace();
+                if (place && place.geometry) {
+                    setEditLocation("Processing privacy...");
+                    const processed = await fuzzAndProcessLocation(place);
+                    if (processed) {
+                        setEditCoords(processed.coords);
+                        setEditLocation(processed.label);
+                        setEditAddress(processed.secondaryLabel || "");
+                    }
+                }
+            });
+        }, 300);
+
+        return () => clearTimeout(timeout);
+    }, [showEditModal, pin]);
+
+    if (loading) {
+        return <div className="detail-loading">LOADING CONNECTION...</div>;
+    }
 
     if (!pin || (hiddenPins.includes(pin.id) && !user?.isAdmin)) {
         return (
@@ -305,10 +306,16 @@ const ConnectionDetail = () => {
                     <button className="nav-back-arrow" onClick={() => navigate(-1)}>
                         <span className="arrow-icon">←</span> BACK
                     </button>
-                    <div className="detail-logo-center">
-                        <span className="logo-text-bangers" onClick={() => navigate('/')}>MISS ME CONNECTION</span>
+                    <div className="detail-logo-group" onClick={() => navigate('/')}>
+                        <img src={logoAsset} alt="Logo" className="header-heart-logo-detail" />
+                        <span className="logo-text-bangers">MISS ME CONNECTION</span>
                     </div>
-                    <div className="detail-nav-placeholder"></div>
+                    <button className="nav-close-x" onClick={() => navigate('/browse')}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </header>
 
                 {isSuspended() && (
@@ -339,12 +346,12 @@ const ConnectionDetail = () => {
 
                         <div className="detail-meta-grid">
                             <div className="meta-block">
-                                <span className="meta-label">DATE</span>
-                                <span className="meta-value">{formatDate(pin.date) || 'Wednesday, Feb 11, 2026'}</span>
+                                <span className="meta-label">DATE OF ENCOUNTER</span>
+                                <span className="meta-value">{formatDate(pin.date) || 'Unknown'}</span>
                             </div>
                             <div className="meta-block">
                                 <span className="meta-label">TIME</span>
-                                <span className="meta-value">{pin.time || '07:34 PM'}</span>
+                                <span className="meta-value">{pin.time || 'Not specified'}</span>
                             </div>
                         </div>
 
@@ -413,6 +420,15 @@ const ConnectionDetail = () => {
                                     <button className="btn-cyan-glow-reply" onClick={() => navigate('/messages')}>
                                         VIEW REPLIES
                                     </button>
+                                    <button
+                                        className={`btn-hide-post-detail ${pin.status === 'hidden' ? 'is-private' : ''}`}
+                                        onClick={async () => {
+                                            const newStatus = pin.status === 'hidden' ? 'public' : 'hidden';
+                                            await updatePin(pin.id, { status: newStatus });
+                                        }}
+                                    >
+                                        {pin.status === 'hidden' ? 'UNHIDE FROM PUBLIC MAP' : 'HIDE FROM PUBLIC MAP'}
+                                    </button>
                                     <button className="btn-edit-post-detail" onClick={handleEditClick}>
                                         EDIT POST
                                     </button>
@@ -434,7 +450,7 @@ const ConnectionDetail = () => {
                         </div>
 
                         <div className="detail-footer-meta">
-                            <span className="posted-time">POSTED {pin.time_display || '2H AGO'}</span>
+                            <span className="posted-time">POSTED {formatDate(pin.createdAt)} ({formatRelativeTime(pin.createdAt)})</span>
                             {!pin.isReported && <button className="report-link" onClick={() => setShowReportModal(true)}>REPORT POST</button>}
                         </div>
                     </div>
@@ -461,7 +477,15 @@ const ConnectionDetail = () => {
                                             <label>DATE</label>
                                             <DatePicker
                                                 selected={editDate}
-                                                onChange={(date) => setEditDate(date)}
+                                                onChange={(date) => {
+                                                    if (!date) return;
+                                                    const normalized = new Date(
+                                                        date.getFullYear(),
+                                                        date.getMonth(),
+                                                        date.getDate()
+                                                    );
+                                                    setEditDate(normalized);
+                                                }}
                                                 className="edit-input"
                                                 dateFormat="MM/dd/yyyy"
                                                 required

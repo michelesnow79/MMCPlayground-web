@@ -38,14 +38,46 @@
     font-size: 1.2rem;
 }
 
+.detail-logo-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.detail-logo-group:hover {
+    transform: scale(1.02);
+}
+
+.header-heart-logo-detail {
+    width: 28px;
+    height: auto;
+    filter: drop-shadow(0 0 8px rgba(254, 44, 85, 0.6));
+}
+
 .logo-text-bangers {
     font-family: 'Bangers', cursive;
     font-size: 1.5rem;
     letter-spacing: 1px;
 }
 
-.detail-nav-placeholder {
-    width: 60px;
+.nav-close-x {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    transition: all 0.2s;
+    opacity: 0.6;
+}
+
+.nav-close-x:hover {
+    opacity: 1;
+    transform: rotate(90deg);
 }
 
 .detail-content-area {
@@ -459,6 +491,37 @@
     transform: translateY(-2px);
 }
 
+.btn-hide-post-detail {
+    background: rgba(0, 240, 255, 0.05);
+    color: #00f0ff;
+    border: 1px solid #00f0ff;
+    padding: 16px;
+    border-radius: 12px;
+    font-family: 'Bangers', cursive;
+    font-size: 1.5rem;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+
+.btn-hide-post-detail.is-private {
+    background: rgba(254, 44, 85, 0.05);
+    color: #fe2c55;
+    border-color: #fe2c55;
+}
+
+.btn-hide-post-detail:hover {
+    background: #00f0ff;
+    color: black;
+    transform: translateY(-2px);
+}
+
+.btn-hide-post-detail.is-private:hover {
+    background: #fe2c55;
+    color: white;
+}
+
 /* Edit Pin Modal */
 .edit-pin-modal {
     max-width: 550px;
@@ -639,7 +702,7 @@
     z-index: 10;
 }
 
-/* Location Preview in Edit Modal */
+/* Restored: Location Preview in Edit Modal */
 .location-preview-mini {
     margin-top: 10px;
     padding: 12px;

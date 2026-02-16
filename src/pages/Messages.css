@@ -14,11 +14,30 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.messages-logo-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.messages-logo-group:hover {
+    transform: scale(1.02);
+}
+
+.header-heart-logo-messages {
+    width: 28px;
+    height: auto;
+    filter: drop-shadow(0 0 8px rgba(254, 44, 85, 0.6));
+}
+
 .messages-main-title {
     font-family: 'Bangers', cursive;
     font-size: 1.8rem;
     color: white;
     letter-spacing: 1px;
+    margin: 0;
 }
 
 .tab-control-group {

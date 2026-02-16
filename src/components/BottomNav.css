@@ -20,9 +20,11 @@
     flex-direction: column;
     align-items: center;
     color: #ffffff;
-    /* Brighter white for icons */
     transition: all 0.2s;
     opacity: 0.6;
+    flex: 1;
+    /* Ensure equal width for perfect centering */
+    min-width: 0;
 }
 
 .nav-item.active {

@@ -5,6 +5,7 @@ import './FAQ.css';
 
 // Assets
 import mapBg from '../assets/map-bg.svg';
+import logoAsset from '../assets/heart-logo.svg';
 
 const FAQ = () => {
     const navigate = useNavigate();
@@ -74,7 +75,10 @@ const FAQ = () => {
             <header className="faq-hero" style={{ backgroundImage: `url(${mapBg})` }}>
                 <div className="faq-hero-halftone"></div>
                 <div className="faq-hero-content">
-                    <h1 className="faq-title">FAQS</h1>
+                    <div className="faq-logo-group" onClick={() => navigate('/')}>
+                        <img src={logoAsset} alt="Logo" className="faq-heart-logo" />
+                        <h1 className="faq-title">FAQS</h1>
+                    </div>
                     <p className="faq-subtitle">
                         Some common questions and answers below.
                     </p>

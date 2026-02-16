@@ -20,6 +20,7 @@ import {
     serverTimestamp
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { logPinDebug } from '../utils/logger';
 import { getStateAndCountryFromZip } from '../utils/locationHelper';
 
 const AppContext = createContext();
@@ -104,11 +105,14 @@ export const AppProvider = ({ children }) => {
         try {
             const q = query(collection(db, 'pins'), orderBy('createdAt', 'desc'));
             const unsubscribe = onSnapshot(q, (snapshot) => {
-                const pinsData = snapshot.docs.map(doc => ({
-                    ...doc.data(),
-                    id: doc.id,
-                    date: doc.data().createdAt?.toDate()?.toISOString() || doc.data().date
-                }));
+                const pinsData = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    logPinDebug("FIRESTORE READ BACK:", { id: doc.id, title: data.title, date: data.date, createdAt: data.createdAt });
+                    return {
+                        ...data,
+                        id: doc.id
+                    };
+                });
                 setPins(pinsData);
             });
             return () => unsubscribe();
@@ -242,6 +246,9 @@ export const AppProvider = ({ children }) => {
             ownerUid: user?.uid || 'seeder-bot',
             createdAt: serverTimestamp()
         };
+
+        logPinDebug("FIRESTORE WRITE pinData.date:", pinData.date);
+        logPinDebug("FIRESTORE WRITE createdAt:", pinData.createdAt);
 
         if (newPin.id) {
             // If ID is provided, use setDoc to ensure we don't duplicate or to use a specific ID
@@ -391,10 +398,88 @@ export const AppProvider = ({ children }) => {
         localStorage.removeItem('mmc_hiddenPins');
     };
 
+    const formatRelativeTime = (timestamp) => {
+        if (!timestamp) return 'JUST NOW';
+
+        let date;
+        if (timestamp.toDate) {
+            date = timestamp.toDate();
+        } else if (timestamp.seconds !== undefined) {
+            date = new Date(timestamp.seconds * 1000);
+        } else {
+            date = new Date(timestamp);
+        }
+
+        if (!date || isNaN(date.getTime())) return 'JUST NOW';
+
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+
+        if (diffInSeconds < 60) return 'JUST NOW';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}M AGO`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}H AGO`;
+
+        // Return relative day if within a few days
+        const days = Math.floor(diffInSeconds / 86400);
+        if (days < 5) return `${days}D AGO`;
+
+        return formatDate(date);
+    };
+
     const formatDate = (dateInput) => {
         if (!dateInput) return '';
-        const date = new Date(dateInput);
-        if (isNaN(date.getTime())) return dateInput;
+
+        // CHITTY'S FIX: Strict YYYY-MM-DD Handling
+        // If it contains "T" or "Z", it's likely a timestamp/ISO string that has been corrupted with time info.
+        // We do NOT want to parse that as an encounter date.
+        if (typeof dateInput === 'string') {
+            if (dateInput.includes('T') || dateInput.includes('Z')) {
+                // Try to rescue only the date part if it starts with YYYY-MM-DD
+                if (/^\d{4}-\d{2}-\d{2}/.test(dateInput)) {
+                    const cleanPart = dateInput.split('T')[0];
+                    const [y, m, d] = cleanPart.split('-').map(v => parseInt(v, 10));
+                    const mm = String(m).padStart(2, "0");
+                    const dd = String(d).padStart(2, "0");
+                    if (dateFormat === 'dd/mm/yyyy') return `${dd}/${mm}/${y}`;
+                    if (dateFormat === 'yyyy/mm/dd') return `${y}/${mm}/${dd}`;
+                    return `${mm}/${dd}/${y}`;
+                }
+                return ''; // Reject bad date
+            }
+
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+                const [y, m, d] = dateInput.split('-').map(v => parseInt(v, 10));
+                if (y && m && d) {
+                    const mm = String(m).padStart(2, "0");
+                    const dd = String(d).padStart(2, "0");
+
+                    if (dateFormat === 'dd/mm/yyyy') return `${dd}/${mm}/${y}`;
+                    if (dateFormat === 'yyyy/mm/dd') return `${y}/${mm}/${dd}`;
+                    return `${mm}/${dd}/${y}`;
+                }
+            }
+        }
+
+        let date;
+        // 1. Handle Firestore Timestamps (Instance or plain object)
+        if (dateInput.toDate) {
+            date = dateInput.toDate();
+        } else if (dateInput.seconds !== undefined) {
+            date = new Date(dateInput.seconds * 1000);
+        }
+        // 2. Handle ISO strings (T)
+        else if (typeof dateInput === 'string' && dateInput.includes('T')) {
+            const [year, month, day] = dateInput.split('T')[0].split('-');
+            date = new Date(year, month - 1, day); // Use local constructor
+        } else {
+            date = new Date(dateInput);
+        }
+
+        if (!date || isNaN(date.getTime())) {
+            // If it's the Firestore serverTimestamp placeholder (no seconds yet)
+            if (typeof dateInput === 'object') return 'RECENT';
+            return String(dateInput);
+        }
 
         const dd = String(date.getDate()).padStart(2, '0');
         const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -410,7 +495,7 @@ export const AppProvider = ({ children }) => {
             user, pins, isLoggedIn, loading, signup, login, logout,
             addPin, removePin, updatePin, updateUserProfile, ratePin, getAverageRating, addReply, updateReply,
             hiddenPins, hidePin, unhidePin, clearHiddenPins,
-            formatDate, dateFormat, setDateFormat, mapMode, setMapMode,
+            formatDate, formatRelativeTime, dateFormat, setDateFormat, mapMode, setMapMode,
             distanceUnit, setDistanceUnit,
             replies, ratings, notifications,
             hasNewNotifications, markNotificationsAsRead,

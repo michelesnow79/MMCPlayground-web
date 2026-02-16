@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 import AuthModal from '../components/AuthModal';
+import logoAsset from '../assets/heart-logo.svg';
 import './Messages.css';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -57,7 +58,7 @@ const Messages = () => {
                 <div className="thread-content-block">
                     <div className="thread-top-line">
                         <h3 className="thread-title-text">{pin ? pin.title : 'DELETED CONNECTION'}</h3>
-                        <span className="thread-time-meta">{reply.createdAt ? formatDate(reply.createdAt.toDate()) : 'Recent'}</span>
+                        <span className="thread-time-meta">{formatDate(reply.createdAt) || 'Recent'}</span>
                     </div>
                     <p className="thread-preview-text">
                         <span className="sender-label">{isSent ? 'You: ' : 'Reply: '}</span>
@@ -82,7 +83,7 @@ const Messages = () => {
             <div className="thread-content-block">
                 <div className="thread-top-line">
                     <h3 className="thread-title-text">{notif.type === 'moderation' ? 'MODERATION NOTICE' : 'SYSTEM NOTIFICATION'}</h3>
-                    <span className="thread-time-meta">{notif.createdAt ? formatDate(notif.createdAt.toDate()) : 'Recent'}</span>
+                    <span className="thread-time-meta">{formatDate(notif.createdAt) || 'Recent'}</span>
                 </div>
                 <p className="thread-preview-text notice-body">
                     {notif.message}
@@ -144,7 +145,10 @@ const Messages = () => {
     return (
         <div className="messages-page-pro">
             <header className="messages-top-bar">
-                <h1 className="messages-main-title">MESSAGES</h1>
+                <div className="messages-logo-group" onClick={() => navigate('/')}>
+                    <img src={logoAsset} alt="Logo" className="header-heart-logo-messages" />
+                    <h1 className="messages-main-title">MESSAGES</h1>
+                </div>
                 <div className="user-status-badges">
                     {hasProbation() && <span className="status-badge review">⚠️ UNDER 30-DAY REVIEW</span>}
                     {isSuspended() && <span className="status-badge suspended">🛑 ACCOUNT ON HOLD</span>}

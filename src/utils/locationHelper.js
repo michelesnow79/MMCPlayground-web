@@ -114,7 +114,8 @@ export const fuzzAndProcessLocation = async (placeOrResult) => {
         return {
             coords: { lat, lng },
             label: poiName,
-            secondaryLabel: fullAddress
+            secondaryLabel: fullAddress,
+            placeId: placeOrResult.place_id || null
         };
     }
 

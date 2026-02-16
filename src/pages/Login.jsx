@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import logoAsset from '../assets/heart-logo.svg';
 import './Login.css';
 
 const Login = () => {
@@ -43,7 +44,10 @@ const Login = () => {
     return (
         <div className="login-page">
             <div className="login-card">
-                <h1 className="login-title">MISS ME CONNECTION</h1>
+                <div className="login-logo-group" onClick={() => navigate('/')}>
+                    <img src={logoAsset} alt="Logo" className="login-heart-logo" />
+                    <h1 className="login-title">MISS ME CONNECTION</h1>
+                </div>
                 <p className="login-subtitle">
                     {isSignUp ? 'CREATE YOUR ACCOUNT' : 'ENTER YOUR DETAILS TO SIGN IN'}
                 </p>

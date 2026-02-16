@@ -4,7 +4,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './FilterMenu.css';
 import { useApp } from '../context/AppContext';
 
-const FilterMenu = ({ isOpen, onClose, filters, onFilterChange, onApply, onReset }) => {
+const FilterMenu = ({ isOpen, onClose, filters, onFilterChange, onApply, onReset, mapInstance }) => {
     const { distanceUnit } = useApp();
     const [localFilters, setLocalFilters] = useState(filters);
 
@@ -32,9 +32,16 @@ const FilterMenu = ({ isOpen, onClose, filters, onFilterChange, onApply, onReset
         const tid = setTimeout(() => {
             const input = document.getElementById('filter-location-input');
             if (input) {
-                const autocomplete = new window.google.maps.places.Autocomplete(input, {
+                const options = {
                     types: ['(regions)']
-                });
+                };
+
+                const autocomplete = new window.google.maps.places.Autocomplete(input, options);
+
+                if (mapInstance) {
+                    autocomplete.bindTo('bounds', mapInstance);
+                }
+
                 autocomplete.addListener('place_changed', () => {
                     const place = autocomplete.getPlace();
                     if (place && place.formatted_address) {
@@ -44,7 +51,7 @@ const FilterMenu = ({ isOpen, onClose, filters, onFilterChange, onApply, onReset
             }
         }, 100);
         return () => clearTimeout(tid);
-    }, [isOpen]);
+    }, [isOpen, mapInstance]);
 
     const handleReset = () => {
         const defaultFilters = {

@@ -19,6 +19,24 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.account-logo-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.account-logo-group:hover {
+    transform: scale(1.02);
+}
+
+.header-heart-logo-account {
+    width: 24px;
+    height: auto;
+    filter: drop-shadow(0 0 6px rgba(254, 44, 85, 0.6));
+}
+
 .account-title-center {
     font-family: 'Bangers', cursive;
     font-size: 1.5rem;

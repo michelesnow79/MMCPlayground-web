@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import logoAsset from '../assets/heart-logo.svg';
 import SideMenu from '../components/SideMenu';
 import FilterMenu from '../components/FilterMenu';
 import './Browse.css';
@@ -12,7 +13,8 @@ const Browse = () => {
     const navigate = useNavigate();
     const {
         pins, user, hiddenPins, getAverageRating, isLoggedIn,
-        visiblePinIds, activeFilters, setActiveFilters
+        visiblePinIds, activeFilters, setActiveFilters,
+        formatDate, formatRelativeTime
     } = useApp();
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,6 +24,20 @@ const Browse = () => {
     // but the results will be affected by global activeFilters
     const [nearMeOnly, setNearMeOnly] = useState(false);
     const [mapAreaOnly, setMapAreaOnly] = useState(!!visiblePinIds);
+    const scrollRef = React.useRef(null);
+
+    const scroll = (direction) => {
+        if (scrollRef.current) {
+            const { current } = scrollRef;
+            // Scroll by roughly one card width (50% of container)
+            const scrollAmount = current.offsetWidth / 2;
+            if (direction === 'left') {
+                current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            } else {
+                current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
+        }
+    };
 
     const sanitizeLocation = (loc) => {
         if (!loc) return "";
@@ -38,6 +54,7 @@ const Browse = () => {
 
             if (isHidden && !isAdmin) return false;
             if (isReported && !isOwner && !isAdmin) return false;
+            if (p.status === 'hidden' && !isOwner && !isAdmin) return false;
 
             return true;
         });
@@ -102,7 +119,10 @@ const Browse = () => {
                         </button>
                     </div>
 
-                    <h1 className="browse-logo-text" onClick={() => navigate('/')}>MISS ME CONNECTIONS</h1>
+                    <div className="browse-logo-group" onClick={() => navigate('/')}>
+                        <img src={logoAsset} alt="Logo" className="header-heart-logo-browse" />
+                        <h1 className="browse-logo-text">MISS ME CONNECTIONS</h1>
+                    </div>
 
                     <div className="top-bar-right">
                         <button
@@ -124,17 +144,30 @@ const Browse = () => {
 
                 <div className="my-connections-section">
                     <h2 className="section-heading">MY MISSED CONNECTIONS</h2>
-                    <div className="horizontal-scroll-wrap">
-                        {myPins.length === 0 ? (
-                            <div className="no-my-pins">No posts from you yet.</div>
-                        ) : (
-                            myPins.map(p => (
-                                <div key={p.id} className="mini-card" onClick={() => navigate(`/browse/${p.id}`)}>
-                                    <h3 className="mini-card-title">{p.title}</h3>
-                                    <p className="mini-card-location">{sanitizeLocation(p.location)}</p>
-                                </div>
-                            ))
-                        )}
+                    <div className="horizontal-scroll-container">
+                        <button className="scroll-btn left" onClick={() => scroll('left')}>
+                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                        <div className="horizontal-scroll-wrap" ref={scrollRef}>
+                            {myPins.length === 0 ? (
+                                <div className="no-my-pins">No posts from you yet.</div>
+                            ) : (
+                                myPins.map(p => (
+                                    <div key={p.id} className={`mini-card ${p.status === 'hidden' ? 'is-private' : ''}`} onClick={() => navigate(`/browse/${p.id}`)}>
+                                        <h3 className="mini-card-title">{p.title}</h3>
+                                        <p className="mini-card-location">{sanitizeLocation(p.location)}</p>
+                                        {p.status === 'hidden' && <span className="mini-private-badge">PRIVATE</span>}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <button className="scroll-btn right" onClick={() => scroll('right')}>
+                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </header>
@@ -160,21 +193,15 @@ const Browse = () => {
                 <div className="filter-options-row">
                     <div className="toggle-group">
                         <label className="switch">
-                            <input type="checkbox" checked={nearMeOnly} onChange={() => setNearMeOnly(!nearMeOnly)} />
+                            <input
+                                type="checkbox"
+                                checked={mapAreaOnly}
+                                onChange={() => setMapAreaOnly(!mapAreaOnly)}
+                            />
                             <span className="slider round"></span>
                         </label>
-                        <span className="toggle-label text-white">Near me only</span>
+                        <span className="toggle-label text-white">Map Area only</span>
                     </div>
-
-                    {visiblePinIds && (
-                        <div className="toggle-group">
-                            <label className="switch">
-                                <input type="checkbox" checked={mapAreaOnly} onChange={() => setMapAreaOnly(!mapAreaOnly)} />
-                                <span className="slider round"></span>
-                            </label>
-                            <span className="toggle-label text-white">Map Area only</span>
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -208,16 +235,25 @@ const Browse = () => {
                             <div className="p-card-content">
                                 <h3 className="p-card-title">{conn.title}</h3>
                                 <div className="p-card-loc-date">
-                                    <span className="p-card-loc">{sanitizeLocation(conn.location)}</span>
+                                    <span className="p-card-loc">
+                                        {sanitizeLocation(conn.location)}
+                                        {conn.address && conn.address !== conn.location && <span style={{ opacity: 0.7, marginLeft: '8px', fontWeight: 400 }}>• {conn.address.replace(', USA', '')}</span>}
+                                    </span>
                                     {conn.date && <span className="p-card-date">
-                                        {typeof conn.date === 'string' ? conn.date : new Date(conn.date).toLocaleDateString()}
+                                        {formatDate(conn.date)}
                                     </span>}
                                 </div>
                                 <p className="p-card-desc">{conn.description}</p>
 
-                                {conn.isReported && (
-                                    <span className="reported-badge-mini">UNDER REVIEW</span>
-                                )}
+                                <div className="p-card-footer-badges">
+                                    {conn.isReported && (
+                                        <span className="reported-badge-mini">UNDER REVIEW</span>
+                                    )}
+                                    {conn.status === 'hidden' && (
+                                        <span className="private-badge-mini">HIDDEN FROM MAP</span>
+                                    )}
+                                    <span className="p-card-posted-time">{formatRelativeTime(conn.createdAt)}</span>
+                                </div>
                             </div>
                         </div>
                     ))
