@@ -488,311 +488,309 @@ const MapView = () => {
     };
 
 
-    if (isLocating && !mapCenter) {
-        return (
-            <div className="map-loading-screen">
-                <div className="loading-content">
-                    <span className="loading-heart">❤️</span>
-                    <p>LOCATING CONNECTIONS...</p>
-                </div>
-            </div>
-        );
-    }
-
-    const defaultCenter = mapCenter || { lat: 35.2271, lng: -80.8431 }; // Charlotte Fallback
+    const defaultCenter = mapCenter || { lat: 35.2271, lng: -80.8431 };
 
     return (
         <APIProvider apiKey={API_KEY} libraries={['places', 'geometry']}>
-            <div className="map-view-container">
-                <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-                <header className="map-top-bar-original">
-                    <div className="top-bar-side-left">
-                        <button className="map-hamburger-btn" onClick={() => setIsMenuOpen(true)}>
-                            <div className="hamburger-line-small"></div>
-                            <div className="hamburger-line-small"></div>
-                            <div className="hamburger-line-small"></div>
-                        </button>
+            {isLocating && !mapCenter ? (
+                <div className="map-loading-screen">
+                    <div className="loading-content">
+                        <span className="loading-heart">❤️</span>
+                        <p>LOCATING CONNECTIONS...</p>
                     </div>
-                    <h1 className="map-logo-title-original" onClick={() => navigate('/')}>MISS ME CONNECTIONS</h1>
-                    <div className="top-bar-side-right">
-                        <button className={`original-settings-btn ${!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword) ? 'filter-active' : ''}`} onClick={() => setIsFilterOpen(true)}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                                <path d="M3 17h18v2H3v-2zm0-7h18v2H3v-2zm0-7h18v2H3V3zM5 5v2h2V5H5zm0 7v2h2v-2H5zm12 7v2h2v-2h-2z" />
-                            </svg>
-                            {!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword) && <span className="filter-badge-dot" />}
-                        </button>
-                    </div>
-                </header>
+                </div>
+            ) : (
+                <div className="map-view-container">
+                    <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+                    <header className="map-top-bar-original">
+                        <div className="top-bar-side-left">
+                            <button className="map-hamburger-btn" onClick={() => setIsMenuOpen(true)}>
+                                <div className="hamburger-line-small"></div>
+                                <div className="hamburger-line-small"></div>
+                                <div className="hamburger-line-small"></div>
+                            </button>
+                        </div>
+                        <h1 className="map-logo-title-original" onClick={() => navigate('/')}>MISS ME CONNECTIONS</h1>
+                        <div className="top-bar-side-right">
+                            <button className={`original-settings-btn ${!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword) ? 'filter-active' : ''}`} onClick={() => setIsFilterOpen(true)}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                    <path d="M3 17h18v2H3v-2zm0-7h18v2H3v-2zm0-7h18v2H3V3zM5 5v2h2V5H5zm0 7v2h2v-2H5zm12 7v2h2v-2h-2z" />
+                                </svg>
+                                {!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword) && <span className="filter-badge-dot" />}
+                            </button>
+                        </div>
+                    </header>
 
-                <FilterMenu
-                    isOpen={isFilterOpen}
-                    onClose={() => setIsFilterOpen(false)}
-                    filters={activeFilters}
-                    onFilterChange={setActiveFilters}
-                />
+                    <FilterMenu
+                        isOpen={isFilterOpen}
+                        onClose={() => setIsFilterOpen(false)}
+                        filters={activeFilters}
+                        onFilterChange={setActiveFilters}
+                    />
 
-                <div className="map-canvas">
-                    <GoogleMap
-                        defaultCenter={defaultCenter}
-                        defaultZoom={13}
-                        gestureHandling={'greedy'}
-                        disableDefaultUI={false}
-                        zoomControl={true}
-                        zoomControlOptions={{ position: 8 }} // RIGHT_CENTER
-                        streetViewControl={false}
-                        mapTypeControl={false}
-                        fullscreenControl={false}
-                        styles={mapMode === 'dark' ? mapThemeDark : []}
-                        onClick={handleMapClick}
-                        onDragStart={() => isDragging.current = true}
-                        onDragEnd={() => setTimeout(() => isDragging.current = false, 50)}
-                        onCameraChanged={(ev) => {
-                            setCurrentZoom(ev.detail.zoom);
-                            if (isCenterManualRef.current) {
-                                isCenterManualRef.current = false;
-                            }
-                        }}
-                        onLoad={(map) => setMapInstance(map)}
-                    >
-                        <MapHandler center={mapCenter} />
-                        {/* Render markers grouped by location to handle overlaps */}
-                        {Object.entries(locationsGrouped).map(([locKey, groupPins]) => {
-                            const firstPin = groupPins[0];
-                            return (
-                                <Marker
-                                    key={locKey}
-                                    position={{ lat: firstPin.lat, lng: firstPin.lng }}
-                                    ref={m => setMarkerRef(m, locKey)}
-                                    onClick={() => handleMarkerClick(groupPins, firstPin.id)}
-                                    icon={{
-                                        url: '/assets/heart-logo.svg',
-                                        scaledSize: { width: 44, height: 44 },
-                                        anchor: { x: 22, y: 44 }
+                    <div className="map-canvas">
+                        <GoogleMap
+                            defaultCenter={defaultCenter}
+                            defaultZoom={13}
+                            gestureHandling={'greedy'}
+                            disableDefaultUI={false}
+                            zoomControl={true}
+                            zoomControlOptions={{ position: 8 }} // RIGHT_CENTER
+                            streetViewControl={false}
+                            mapTypeControl={false}
+                            fullscreenControl={false}
+                            styles={mapMode === 'dark' ? mapThemeDark : []}
+                            onClick={handleMapClick}
+                            onDragStart={() => isDragging.current = true}
+                            onDragEnd={() => setTimeout(() => isDragging.current = false, 50)}
+                            onCameraChanged={(ev) => {
+                                setCurrentZoom(ev.detail.zoom);
+                                if (isCenterManualRef.current) {
+                                    isCenterManualRef.current = false;
+                                }
+                            }}
+                            onLoad={(map) => setMapInstance(map)}
+                        >
+                            <MapHandler center={mapCenter} />
+                            {/* Render markers grouped by location to handle overlaps */}
+                            {Object.entries(locationsGrouped).map(([locKey, groupPins]) => {
+                                const firstPin = groupPins[0];
+                                return (
+                                    <Marker
+                                        key={locKey}
+                                        position={{ lat: firstPin.lat, lng: firstPin.lng }}
+                                        ref={m => setMarkerRef(m, locKey)}
+                                        onClick={() => handleMarkerClick(groupPins, firstPin.id)}
+                                        icon={{
+                                            url: '/assets/heart-logo.svg',
+                                            scaledSize: { width: 44, height: 44 },
+                                            anchor: { x: 22, y: 44 }
+                                        }}
+                                        label={groupPins.length > 1 ? {
+                                            text: String(groupPins.length),
+                                            color: 'white',
+                                            className: 'marker-count-label'
+                                        } : (currentZoom >= 12 && firstPin.title ? {
+                                            text: firstPin.title.toString().toUpperCase(),
+                                            color: 'white',
+                                            className: 'legacy-marker-label'
+                                        } : null)}
+                                    />
+                                );
+                            })}
+
+                            {selectedPin && typeof selectedPin.lat === 'number' && typeof selectedPin.lng === 'number' && (
+                                <InfoWindow
+                                    position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
+                                    onCloseClick={() => {
+                                        setSelectedPin(null);
+                                        setSelectedPins([]);
                                     }}
-                                    label={groupPins.length > 1 ? {
-                                        text: String(groupPins.length),
-                                        color: 'white',
-                                        className: 'marker-count-label'
-                                    } : (currentZoom >= 12 && firstPin.title ? {
-                                        text: firstPin.title.toString().toUpperCase(),
-                                        color: 'white',
-                                        className: 'legacy-marker-label'
-                                    } : null)}
-                                />
-                            );
-                        })}
-
-                        {selectedPin && typeof selectedPin.lat === 'number' && typeof selectedPin.lng === 'number' && (
-                            <InfoWindow
-                                position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
-                                onCloseClick={() => {
-                                    setSelectedPin(null);
-                                    setSelectedPins([]);
-                                }}
-                                headerDisabled={true}
-                            >
-                                <div className="google-popup-content">
-                                    <div className="popup-carousel-controls">
-                                        {selectedPins.length > 1 && (
-                                            <div className="carousel-nav-group">
-                                                <button className="carousel-arrow" onClick={prevPin}>❮</button>
-                                                <span className="carousel-counter">{selectedPinIndex + 1} of {selectedPins.length}</span>
-                                                <button className="carousel-arrow" onClick={nextPin}>❯</button>
-                                            </div>
-                                        )}
-                                        <button
-                                            className="popup-close-btn-custom"
-                                            onClick={() => {
-                                                setSelectedPin(null);
-                                                setSelectedPins([]);
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                    <span className="popup-category-badge">{selectedPin.type || 'Man for Woman'}</span>
-                                    <div className="popup-rating-row">
-                                        <div className="popup-hearts readonly">
-                                            {[1, 2, 3, 4, 5].map(val => (
-                                                <span key={val} className={`popup-heart ${val <= Math.round(getAverageRating(selectedPin.id)) ? 'filled' : ''}`}>❤️</span>
-                                            ))}
+                                    headerDisabled={true}
+                                >
+                                    <div className="google-popup-content">
+                                        <div className="popup-carousel-controls">
+                                            {selectedPins.length > 1 && (
+                                                <div className="carousel-nav-group">
+                                                    <button className="carousel-arrow" onClick={prevPin}>❮</button>
+                                                    <span className="carousel-counter">{selectedPinIndex + 1} of {selectedPins.length}</span>
+                                                    <button className="carousel-arrow" onClick={nextPin}>❯</button>
+                                                </div>
+                                            )}
+                                            <button
+                                                className="popup-close-btn-custom"
+                                                onClick={() => {
+                                                    setSelectedPin(null);
+                                                    setSelectedPins([]);
+                                                }}
+                                            >
+                                                ✕
+                                            </button>
                                         </div>
-                                        <span className="popup-avg-text">AVG: {getAverageRating(selectedPin.id)}</span>
-                                    </div>
+                                        <span className="popup-category-badge">{selectedPin.type || 'Man for Woman'}</span>
+                                        <div className="popup-rating-row">
+                                            <div className="popup-hearts readonly">
+                                                {[1, 2, 3, 4, 5].map(val => (
+                                                    <span key={val} className={`popup-heart ${val <= Math.round(getAverageRating(selectedPin.id)) ? 'filled' : ''}`}>❤️</span>
+                                                ))}
+                                            </div>
+                                            <span className="popup-avg-text">AVG: {getAverageRating(selectedPin.id)}</span>
+                                        </div>
 
-                                    <h2 className="popup-title">{selectedPin.title}</h2>
-                                    <div className="popup-location-stack">
-                                        <p className="popup-location-main">{selectedPin.location}</p>
-                                        {selectedPin.address && (
-                                            <p className="popup-location-sub">{selectedPin.address}</p>
-                                        )}
-                                    </div>
-                                    <p className="popup-meta">{formatDate(selectedPin.date)}</p>
-                                    <p className="popup-description">{selectedPin.description}</p>
+                                        <h2 className="popup-title">{selectedPin.title}</h2>
+                                        <div className="popup-location-stack">
+                                            <p className="popup-location-main">{selectedPin.location}</p>
+                                            {selectedPin.address && (
+                                                <p className="popup-location-sub">{selectedPin.address}</p>
+                                            )}
+                                        </div>
+                                        <p className="popup-meta">{formatDate(selectedPin.date)}</p>
+                                        <p className="popup-description">{selectedPin.description}</p>
 
-                                    <div className="popup-footer">
-                                        <button className="popup-details-link-btn" onClick={() => navigate(`/browse/${selectedPin.id}`)}>
-                                            View Details —
-                                        </button>
-
-                                        <div className="popup-footer-right">
-                                            <button className="popup-its-not-me-btn" onClick={() => {
-                                                hidePin(selectedPin.id);
-                                                setSelectedPin(null);
-                                                setSelectedPins([]);
-                                            }}>
-                                                IT'S NOT ME.
+                                        <div className="popup-footer">
+                                            <button className="popup-details-link-btn" onClick={() => navigate(`/browse/${selectedPin.id}`)}>
+                                                View Details —
                                             </button>
 
-                                            <button className="popup-report-btn" onClick={() => setShowReportModal(true)}>
-                                                REPORT
-                                            </button>
-
-                                            {(selectedPin.ownerUid === user?.uid || selectedPin.ownerEmail === user?.email || user?.isAdmin) && (
-                                                <button className="popup-delete-btn" onClick={() => {
-                                                    console.log("🗑️ Deleting pin ID:", selectedPin.id);
-                                                    removePin(selectedPin.id);
+                                            <div className="popup-footer-right">
+                                                <button className="popup-its-not-me-btn" onClick={() => {
+                                                    hidePin(selectedPin.id);
                                                     setSelectedPin(null);
                                                     setSelectedPins([]);
                                                 }}>
-                                                    Delete
+                                                    IT'S NOT ME.
                                                 </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </InfoWindow>
-                        )}
 
-                        {tempCoords && (
-                            <Marker
-                                position={tempCoords}
-                                icon={{
-                                    url: '/assets/heart-logo.svg',
-                                    scaledSize: { width: 44, height: 44 },
-                                    anchor: { x: 22, y: 44 },
-                                    opacity: 0.6
-                                }}
-                            />
-                        )}
-                    </GoogleMap>
-                </div>
+                                                <button className="popup-report-btn" onClick={() => setShowReportModal(true)}>
+                                                    REPORT
+                                                </button>
 
-                {isPosting && (
-                    <div className="post-modal-overlay">
-                        <div className="post-modal-card">
-                            <button className="post-modal-close" onClick={cancelPost}>✕</button>
-                            {!isLoggedIn ? (
-                                <div className="post-login-prompt">
-                                    <h2 className="post-modal-title">WAIT A MINUTE!</h2>
-                                    <p className="post-modal-text">YOU NEED TO BE SIGNED IN TO POST A CONNECTION.</p>
-                                    <button className="post-modal-submit" onClick={() => navigate('/login')}>SIGN IN TO POST</button>
-                                </div>
-                            ) : (
-                                <form className="post-form" onSubmit={handleSavePin}>
-                                    <div className="safety-badge">🛡️ PRIVACY PROTECTED</div>
-                                    <h2 className="post-modal-title">ADD MISSED CONNECTION</h2>
-                                    <div className="post-input-group">
-                                        <label>Type</label>
-                                        <select className="post-select" value={newType} onChange={(e) => setNewType(e.target.value)} required>
-                                            <option value="">Select option</option>
-                                            <option value="Man for Woman">Man for Woman</option>
-                                            <option value="Man for Man">Man for Man</option>
-                                            <option value="Woman for Man">Woman for Man</option>
-                                            <option value="Woman for Woman">Woman for Woman</option>
-                                        </select>
-                                    </div>
-                                    <div className="post-input-group">
-                                        <label>Title</label>
-                                        <input type="text" className="post-input" placeholder="Enter title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required />
-                                    </div>
-                                    <div className="post-input-group">
-                                        <label>Location</label>
-                                        <div className="location-input-wrapper">
-                                            <input id="post-location-input" type="text" className="post-input" placeholder="Venue or street" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} required />
-                                            <button type="button" className="location-refresh-btn" onClick={handleAddClick}>📍</button>
+                                                {(selectedPin.ownerUid === user?.uid || selectedPin.ownerEmail === user?.email || user?.isAdmin) && (
+                                                    <button className="popup-delete-btn" onClick={() => {
+                                                        console.log("🗑️ Deleting pin ID:", selectedPin.id);
+                                                        removePin(selectedPin.id);
+                                                        setSelectedPin(null);
+                                                        setSelectedPins([]);
+                                                    }}>
+                                                        Delete
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="date-time-inputs">
-                                        <div className="post-input-group">
-                                            <label>Date</label>
-                                            <DatePicker
-                                                selected={newDate}
-                                                onChange={(date) => setNewDate(date)}
-                                                className="post-input"
-                                                placeholderText="When?"
-                                                dateFormat="MM/dd/yyyy"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="post-input-group">
-                                            <label>Time (Optional)</label>
-                                            <DatePicker
-                                                selected={newTime}
-                                                onChange={(time) => setNewTime(time)}
-                                                showTimeSelect
-                                                showTimeSelectOnly
-                                                timeIntervals={15}
-                                                timeCaption="Time"
-                                                dateFormat="h:mm aa"
-                                                className="post-input"
-                                                placeholderText="Time (Optional)"
-                                                isClearable
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="post-input-group">
-                                        <label>Description</label>
-                                        <textarea className="post-textarea" placeholder="Tell your story..." value={newDescription} onChange={(e) => setNewDescription(e.target.value)} required />
-                                    </div>
-                                    <div className="post-modal-actions">
-                                        <button type="button" className="btn-cancel" onClick={cancelPost}>CANCEL</button>
-                                        <button type="submit" className="btn-submit">POST</button>
-                                    </div>
-                                </form>
+                                </InfoWindow>
                             )}
-                        </div>
-                    </div>
-                )}
 
-                {showReportModal && (
-                    <div className="post-modal-overlay">
-                        <div className="post-modal-card report-modal">
-                            <div className="report-warning-box">
-                                <span className="warning-emoji">🛑</span>
-                                <h2 className="post-modal-title">REPORT PIN</h2>
-                                <p className="warning-text">
-                                    If you falsely claim what we deem a <strong>Good Pin</strong> your account will be suspended for 48 hours your first strike.
-                                </p>
-                            </div>
-                            <div className="post-input-group">
-                                <label>REASON FOR REPORTING</label>
-                                <textarea
-                                    className="post-textarea"
-                                    placeholder="Example: Offensive language, fake location, etc."
-                                    value={reportReason}
-                                    onChange={(e) => setReportReason(e.target.value)}
+                            {tempCoords && (
+                                <Marker
+                                    position={tempCoords}
+                                    icon={{
+                                        url: '/assets/heart-logo.svg',
+                                        scaledSize: { width: 44, height: 44 },
+                                        anchor: { x: 22, y: 44 },
+                                        opacity: 0.6
+                                    }}
                                 />
-                            </div>
-                            <div className="post-modal-actions">
-                                <button type="button" className="btn-cancel" onClick={() => setShowReportModal(false)}>CANCEL</button>
-                                <button type="button" className="btn-submit report-submit" onClick={handleReportSubmit}>SUBMIT REPORT</button>
+                            )}
+                        </GoogleMap>
+                    </div>
+
+                    {isPosting && (
+                        <div className="post-modal-overlay">
+                            <div className="post-modal-card">
+                                <button className="post-modal-close" onClick={cancelPost}>✕</button>
+                                {!isLoggedIn ? (
+                                    <div className="post-login-prompt">
+                                        <h2 className="post-modal-title">WAIT A MINUTE!</h2>
+                                        <p className="post-modal-text">YOU NEED TO BE SIGNED IN TO POST A CONNECTION.</p>
+                                        <button className="post-modal-submit" onClick={() => navigate('/login')}>SIGN IN TO POST</button>
+                                    </div>
+                                ) : (
+                                    <form className="post-form" onSubmit={handleSavePin}>
+                                        <div className="safety-badge">🛡️ PRIVACY PROTECTED</div>
+                                        <h2 className="post-modal-title">ADD MISSED CONNECTION</h2>
+                                        <div className="post-input-group">
+                                            <label>Type</label>
+                                            <select className="post-select" value={newType} onChange={(e) => setNewType(e.target.value)} required>
+                                                <option value="">Select option</option>
+                                                <option value="Man for Woman">Man for Woman</option>
+                                                <option value="Man for Man">Man for Man</option>
+                                                <option value="Woman for Man">Woman for Man</option>
+                                                <option value="Woman for Woman">Woman for Woman</option>
+                                            </select>
+                                        </div>
+                                        <div className="post-input-group">
+                                            <label>Title</label>
+                                            <input type="text" className="post-input" placeholder="Enter title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required />
+                                        </div>
+                                        <div className="post-input-group">
+                                            <label>Location</label>
+                                            <div className="location-input-wrapper">
+                                                <input id="post-location-input" type="text" className="post-input" placeholder="Venue or street" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} required />
+                                                <button type="button" className="location-refresh-btn" onClick={handleAddClick}>📍</button>
+                                            </div>
+                                        </div>
+                                        <div className="date-time-inputs">
+                                            <div className="post-input-group">
+                                                <label>Date</label>
+                                                <DatePicker
+                                                    selected={newDate}
+                                                    onChange={(date) => setNewDate(date)}
+                                                    className="post-input"
+                                                    placeholderText="When?"
+                                                    dateFormat="MM/dd/yyyy"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="post-input-group">
+                                                <label>Time (Optional)</label>
+                                                <DatePicker
+                                                    selected={newTime}
+                                                    onChange={(time) => setNewTime(time)}
+                                                    showTimeSelect
+                                                    showTimeSelectOnly
+                                                    timeIntervals={15}
+                                                    timeCaption="Time"
+                                                    dateFormat="h:mm aa"
+                                                    className="post-input"
+                                                    placeholderText="Time (Optional)"
+                                                    isClearable
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="post-input-group">
+                                            <label>Description</label>
+                                            <textarea className="post-textarea" placeholder="Tell your story..." value={newDescription} onChange={(e) => setNewDescription(e.target.value)} required />
+                                        </div>
+                                        <div className="post-modal-actions">
+                                            <button type="button" className="btn-cancel" onClick={cancelPost}>CANCEL</button>
+                                            <button type="submit" className="btn-submit">POST</button>
+                                        </div>
+                                    </form>
+                                )}
                             </div>
                         </div>
-                    </div>
-                )}
-                <ConfirmModal
-                    isOpen={confirmConfig.isOpen}
-                    title={confirmConfig.title}
-                    message={confirmConfig.message}
-                    onConfirm={confirmConfig.onConfirm}
-                    onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
-                    confirmText={confirmConfig.confirmText}
-                    cancelText={confirmConfig.cancelText}
-                    type={confirmConfig.type}
-                />
-                <BottomNav onAddClick={handleAddClick} showAddButton={true} />
-            </div>
+                    )}
+
+                    {showReportModal && (
+                        <div className="post-modal-overlay">
+                            <div className="post-modal-card report-modal">
+                                <div className="report-warning-box">
+                                    <span className="warning-emoji">🛑</span>
+                                    <h2 className="post-modal-title">REPORT PIN</h2>
+                                    <p className="warning-text">
+                                        If you falsely claim what we deem a <strong>Good Pin</strong> your account will be suspended for 48 hours your first strike.
+                                    </p>
+                                </div>
+                                <div className="post-input-group">
+                                    <label>REASON FOR REPORTING</label>
+                                    <textarea
+                                        className="post-textarea"
+                                        placeholder="Example: Offensive language, fake location, etc."
+                                        value={reportReason}
+                                        onChange={(e) => setReportReason(e.target.value)}
+                                    />
+                                </div>
+                                <div className="post-modal-actions">
+                                    <button type="button" className="btn-cancel" onClick={() => setShowReportModal(false)}>CANCEL</button>
+                                    <button type="button" className="btn-submit report-submit" onClick={handleReportSubmit}>SUBMIT REPORT</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <ConfirmModal
+                        isOpen={confirmConfig.isOpen}
+                        title={confirmConfig.title}
+                        message={confirmConfig.message}
+                        onConfirm={confirmConfig.onConfirm}
+                        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                        confirmText={confirmConfig.confirmText}
+                        cancelText={confirmConfig.cancelText}
+                        type={confirmConfig.type}
+                    />
+                    <BottomNav onAddClick={handleAddClick} showAddButton={true} />
+                </div>
+            )}
         </APIProvider>
     );
 };
