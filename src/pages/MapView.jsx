@@ -172,6 +172,11 @@ const MapView = () => {
         console.log("📍 MAP DEBUG: Total pins loaded from Firebase:", pins.length);
     }, [pins]);
 
+    // Sync global distance unit
+    useEffect(() => {
+        setActiveFilters(prev => ({ ...prev, unit: distanceUnit }));
+    }, [distanceUnit]);
+
     // Initial Geolocation (Browser GPS)
     useEffect(() => {
         if (!navigator.geolocation) {
@@ -205,7 +210,7 @@ const MapView = () => {
 
     // Initial Geolocation (User Postal Code fallback)
     useEffect(() => {
-        if (!user?.postalCode || isCenterManualRef.current) return;
+        if (!user?.postalCode || isCenterManualRef.current || mapCenter) return;
 
         let geocodeInterval = setInterval(() => {
             if (typeof window.google?.maps?.Geocoder === 'function') {
@@ -214,15 +219,17 @@ const MapView = () => {
                 geocoder.geocode({ address: user.postalCode }, (results, status) => {
                     if (status === "OK" && results?.[0] && !isCenterManualRef.current) {
                         const loc = results[0].geometry.location;
-                        setMapCenter({ lat: loc.lat(), lng: loc.lng() });
-                        setIsLocating(false);
+                        const newCenter = { lat: loc.lat(), lng: loc.lng() };
                         isCenterManualRef.current = true;
+                        setMapCenter(newCenter);
+                        setIsLocating(false);
                         console.log("📍 Centered map based on user postal code:", user.postalCode);
-                    } else {
+                    } else if (status !== "OK") {
                         // Hard fallback if geocode fails
                         if (!mapCenter) {
                             setMapCenter({ lat: 35.2271, lng: -80.8431 });
                             setIsLocating(false);
+                            isCenterManualRef.current = true;
                         }
                     }
                 });
@@ -230,19 +237,22 @@ const MapView = () => {
         }, 500);
 
         return () => clearInterval(geocodeInterval);
-    }, [user?.postalCode, mapCenter]);
+    }, [user?.postalCode]); // REMOVED mapCenter from deps to stop the loop!
 
     // Total Safety Fallback: If still locating after 8 seconds, just force open it
     useEffect(() => {
         const timer = setTimeout(() => {
             if (isLocating) {
                 console.log("📍 Forced map activation after timeout");
-                if (!mapCenter) setMapCenter({ lat: 35.2271, lng: -80.8431 });
+                if (!mapCenter) {
+                    setMapCenter({ lat: 35.2271, lng: -80.8431 });
+                    isCenterManualRef.current = true;
+                }
                 setIsLocating(false);
             }
         }, 8000);
         return () => clearTimeout(timer);
-    }, [isLocating, mapCenter]);
+    }, [isLocating]); // REMOVED mapCenter from deps!
 
     // Clustering Sync
     useEffect(() => {
