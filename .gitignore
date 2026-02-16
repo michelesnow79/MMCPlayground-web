@@ -10,6 +10,7 @@ figma_file_info.json
 !package.json
 !package-lock.json
 !firebase.json
+!vercel.json
 
 # Screenshots (Exclude root screenshots)
 app_*.png
