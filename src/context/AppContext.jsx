@@ -40,6 +40,21 @@ export const AppProvider = ({ children }) => {
     const [mapMode, setMapMode] = useState('dark');
     const [distanceUnit, setDistanceUnit] = useState('miles');
     const [hasNewNotifications, setHasNewNotifications] = useState(false);
+    const [visiblePinIds, setVisiblePinIds] = useState(null);
+    const [activeFilters, setActiveFilters] = useState({
+        location: '',
+        radius: 10,
+        unit: 'miles', // initial default
+        type: '',
+        date: null,
+        keyword: ''
+    });
+
+    useEffect(() => {
+        setActiveFilters(prev => ({ ...prev, unit: distanceUnit }));
+    }, [distanceUnit]);
+
+
 
     // 1. Auth Listener
     useEffect(() => {
@@ -399,7 +414,9 @@ export const AppProvider = ({ children }) => {
             distanceUnit, setDistanceUnit,
             replies, ratings, notifications,
             hasNewNotifications, markNotificationsAsRead,
-            reportPin, isSuspended, hasProbation, canStartNewThread, addNotification, refreshUserData
+            reportPin, isSuspended, hasProbation, canStartNewThread, addNotification, refreshUserData,
+            visiblePinIds, setVisiblePinIds,
+            activeFilters, setActiveFilters
         }}>
             {children}
         </AppContext.Provider>

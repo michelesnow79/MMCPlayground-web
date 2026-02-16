@@ -34,7 +34,8 @@ const MapView = () => {
         user, pins, isLoggedIn, loading, signup, login,
         addPin, removePin, hidePin, hiddenPins, formatDate, mapMode,
         getAverageRating, reportPin, distanceUnit, ratings,
-        isSuspended, hasProbation
+        isSuspended, hasProbation, setVisiblePinIds,
+        activeFilters, setActiveFilters
     } = useApp();
 
     // 1. ALL STATES AT THE TOP
@@ -47,14 +48,7 @@ const MapView = () => {
     const [selectedPins, setSelectedPins] = useState([]);
     const [selectedPinIndex, setSelectedPinIndex] = useState(0);
     const [mapInstance, setMapInstance] = useState(null);
-    const [activeFilters, setActiveFilters] = useState({
-        location: '',
-        radius: 10,
-        unit: distanceUnit,
-        type: '',
-        date: null,
-        keyword: ''
-    });
+
 
     const GROUP_RADIUS_METERS = 250;
     const [filterCenter, setFilterCenter] = useState(null);
@@ -570,6 +564,18 @@ const MapView = () => {
                                 setCurrentZoom(ev.detail.zoom);
                                 if (isCenterManualRef.current) {
                                     isCenterManualRef.current = false;
+                                }
+
+                                // SYNC VISIBLE PINS FOR BROWSE PAGE
+                                if (ev.detail.bounds) {
+                                    const { north, south, east, west } = ev.detail.bounds;
+                                    const visible = (pins || []).filter(p =>
+                                        p.lat >= south &&
+                                        p.lat <= north &&
+                                        p.lng >= west &&
+                                        p.lng <= east
+                                    ).map(p => p.id);
+                                    setVisiblePinIds(visible);
                                 }
                             }}
                             onLoad={(map) => setMapInstance(map)}

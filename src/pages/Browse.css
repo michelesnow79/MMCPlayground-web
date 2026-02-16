@@ -1,182 +1,447 @@
 .browse-container {
-    background-color: var(--bg-dark);
+    background-color: #0c0c0d;
+    /* Slightly darker than default */
     min-height: 100vh;
-    padding: 20px;
-    padding-bottom: 100px;
-}
-
-.browse-header {
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.browse-header h1 {
-    font-family: 'Bangers', cursive;
-    font-size: 2.8rem;
-    color: white;
-    margin: 0;
-    letter-spacing: 2px;
-}
-
-.connections-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 15px;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.connection-card {
-    background-color: #1a1a1e;
-    border-radius: 12px;
-    padding: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-}
-
-.connection-card:hover {
-    transform: translateY(-3px);
-    background-color: #252529;
-    border-color: rgba(254, 44, 85, 0.3);
-}
-
-.card-content-main {
-    flex: 1;
-}
-
-.card-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.card-type-label {
-    display: inline-block;
-    background: rgba(6, 174, 212, 0.1);
-    color: var(--missme-cyan);
+    padding-bottom: 120px;
     font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.avg-rating-badge-mini {
-    background: rgba(254, 44, 85, 0.1);
-    border: 1px solid rgba(254, 44, 85, 0.2);
-    color: var(--missme-pink);
-    font-size: 10px;
-    font-weight: 900;
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-.card-title {
-    font-family: 'Bangers', cursive;
-    font-weight: 400;
-    font-size: 1.5rem;
-    color: white;
-    margin: 0 0 8px 0;
-    letter-spacing: 1px;
-}
-
-.card-location-text {
-    font-family: 'Nunito', sans-serif;
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: var(--missme-pink);
-    margin: 0 0 10px 0;
-}
-
-.card-description-snippet {
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: #D1D1D6;
-    margin: 0 0 15px 0;
-}
-
-.card-meta {
-    font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-    font-size: 0.75rem;
-    color: #8E8E93;
-    text-transform: uppercase;
-}
-
-.card-action-side {
-    align-self: center;
-    margin-left: 20px;
-}
-
-.details-link {
-    color: var(--missme-cyan);
-    font-family: 'Nunito', sans-serif;
-    font-weight: 900;
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
 }
 
 /* =========================================================================
-   MOBILE RESPONSIVENESS (BREAKPOINTS)
+   HERO SECTION
    ========================================================================= */
+.browse-hero {
+    width: 100%;
+    min-height: 320px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-bottom: 3px solid var(--missme-pink);
+}
 
-@media (max-width: 600px) {
-    .browse-container {
-        padding: 15px;
-    }
+.browse-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(12, 12, 13, 0.4) 0%, rgba(12, 12, 13, 0.95) 100%);
+    z-index: 1;
+}
 
-    .browse-header h1 {
-        font-size: 2rem;
-    }
+.browse-top-bar {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 16px;
+}
 
-    .connection-card {
-        flex-direction: column;
-        padding: 20px;
-        gap: 15px;
-    }
+.top-bar-left {
+    position: absolute;
+    left: 16px;
+}
 
-    .card-action-side {
-        align-self: flex-start;
-        margin-left: 0;
-    }
+.top-bar-right {
+    position: absolute;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-    .card-title {
-        font-size: 1.3rem;
-    }
+.browse-logo-text {
+    font-family: 'Bangers', cursive;
+    font-size: 2rem;
+    color: white;
+    letter-spacing: 2px;
+    margin: 0;
+    cursor: pointer;
+}
 
-    .card-header-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
+.browse-top-bar .map-hamburger-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px;
+}
 
-    .avg-rating-badge-mini {
-        align-self: flex-start;
-    }
+.hamburger-line-small {
+    width: 20px;
+    height: 2px;
+    background-color: white;
+    border-radius: 2px;
+}
+
+.browse-filter-btn,
+.browse-close-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.browse-filter-btn.active svg {
+    fill: var(--missme-cyan);
+    filter: drop-shadow(0 0 5px var(--missme-cyan));
+}
+
+.browse-filter-btn:hover,
+.browse-close-btn:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+}
+
+.my-connections-section {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 900px;
+}
+
+.section-heading {
+    font-family: 'Bangers', cursive;
+    color: white;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.horizontal-scroll-wrap {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 10px 0;
+    scrollbar-width: none;
+    /* Hide scrollbar Firefox */
+}
+
+.horizontal-scroll-wrap::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar Chrome/Safari */
+}
+
+.mini-card {
+    min-width: 180px;
+    background: #1a1a1b;
+    border: 1px solid #333;
+    border-top: 3px solid var(--missme-cyan);
+    /* Small accent */
+    padding: 18px;
+    border-radius: 4px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.mini-card:hover {
+    transform: scale(1.05);
+    background: #252529;
+    border-color: var(--missme-cyan);
+}
+
+.mini-card-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    color: white;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+.mini-card-location {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--missme-yellow);
+    text-transform: capitalize;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.no-my-pins {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8rem;
+    font-weight: 700;
+    width: 100%;
+}
+
+/* =========================================================================
+   SEARCH & FILTERS
+   ========================================================================= */
+.search-filter-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 30px 20px;
+    position: relative;
+    z-index: 10;
+}
+
+.search-input-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+}
+
+.browse-search-bar {
+    width: 100%;
+    background: #1a1a1b;
+    border: 2px solid #333;
+    border-radius: 30px;
+    padding: 14px 60px 14px 25px;
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.browse-search-bar:focus {
+    border-color: var(--missme-cyan);
+    box-shadow: 0 0 15px rgba(6, 174, 212, 0.3);
+}
+
+.browse-search-btn {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--missme-cyan);
+    cursor: pointer;
+}
+
+.filter-options-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+}
+
+.toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toggle-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.reset-filter-btn {
+    background: transparent;
+    border: 1px solid var(--missme-cyan);
+    color: var(--missme-cyan);
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-weight: 900;
+    font-size: 0.7rem;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.2s;
+}
+
+.reset-filter-btn:hover {
+    background: var(--missme-cyan);
+    color: black;
+}
+
+/* =========================================================================
+   SWITCH COMPONENT
+   ========================================================================= */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--missme-pink);
+}
+
+input:checked+.slider:before {
+    transform: translateX(22px);
+}
+
+/* =========================================================================
+   FEED & CARDS
+   ========================================================================= */
+.browse-feed {
+    max-width: 700px;
+    margin: 40px auto 0;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.connection-card-premium {
+    background: #1a1a1b;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    position: relative;
+    padding: 30px;
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+}
+
+.connection-card-premium:hover {
+    transform: translateY(-4px);
+    background: #232326;
+    border-color: rgba(254, 44, 85, 0.4);
+}
+
+.premium-card-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--missme-pink);
+    color: white;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 5px 12px;
+    border-radius: 20px;
+    /* Pill style like Figma */
+    text-transform: lowercase;
+    /* Matching some Figma UI trends or keeping it unique */
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.premium-card-badge::first-letter {
+    text-transform: uppercase;
+}
+
+.p-card-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1.4rem;
+    color: white;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.5px;
+}
+
+.p-card-loc-date {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.p-card-loc {
+    color: #8E8E93;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+.p-card-loc::before {
+    content: '📍';
+    margin-right: 5px;
+}
+
+.p-card-date {
+    color: #666;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.p-card-desc {
+    color: #D1D1D6;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
 }
 
 .reported-badge-mini {
+    display: inline-block;
+    margin-top: 15px;
     background: #fe2c55;
     color: white;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 900;
-    padding: 4px 8px;
+    padding: 3px 8px;
     border-radius: 4px;
-    letter-spacing: 0.5px;
+}
+
+/* =========================================================================
+   RESPONSIVENESS
+   ========================================================================= */
+@media (max-width: 600px) {
+    .browse-hero {
+        min-height: 280px;
+    }
+
+    .browse-logo-text {
+        font-size: 1.6rem;
+    }
+
+    .p-card-title {
+        font-size: 1.2rem;
+    }
+
+    .connection-card-premium {
+        padding: 25px;
+    }
 }
