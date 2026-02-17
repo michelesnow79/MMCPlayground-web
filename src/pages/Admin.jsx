@@ -629,11 +629,11 @@ const Admin = () => {
                                     </div>
                                     <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: '0.65rem', color: '#555', textTransform: 'uppercase' }}>Owner</span>
-                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>{log.ownerEmail}</span>
+                                            <span style={{ fontSize: '0.65rem', color: '#555', textTransform: 'uppercase' }}>{log.type === 'user_block' ? 'Target UID' : 'Owner'}</span>
+                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>{log.type === 'user_block' ? log.targetUid : (log.ownerEmail || 'N/A')}</span>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: '0.65rem', color: '#555', textTransform: 'uppercase' }}>Deleted By</span>
+                                            <span style={{ fontSize: '0.65rem', color: '#555', textTransform: 'uppercase' }}>Action By</span>
                                             <span style={{ fontSize: '0.8rem', color: log.archivedByRole === 'admin' ? 'var(--missme-pink)' : '#888' }}>
                                                 {log.deletedBy === 'unknown' ? 'UNKNOWN' : (log.archivedByRole === 'admin' ? 'ADMIN' : 'USER')}
                                             </span>
@@ -642,6 +642,12 @@ const Admin = () => {
                                             <span style={{ fontSize: '0.65rem', color: '#555', textTransform: 'uppercase' }}>Reason</span>
                                             <span style={{ fontSize: '0.8rem', color: '#ffb300', fontStyle: 'italic' }}>"{log.deletionReason}"</span>
                                         </div>
+                                        {log.details && (
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: '0.65rem', color: '#555', textTransform: 'uppercase' }}>Details</span>
+                                                <span style={{ fontSize: '0.8rem', color: '#888' }}>{log.details}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

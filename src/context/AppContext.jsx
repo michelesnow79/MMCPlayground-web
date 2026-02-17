@@ -579,6 +579,18 @@ export const AppProvider = ({ children }) => {
                 await deleteDoc(doc(db, 'threads', tId));
             }
 
+            // 4. Log to Black Box (Audit Trail)
+            await addDoc(collection(db, 'deleted_pins'), {
+                type: 'user_block',
+                title: 'RECIPROCAL BLOCK',
+                deletedAt: serverTimestamp(),
+                deletedBy: user.uid,
+                targetUid: targetUid,
+                deletionReason: 'User used "BAR USER" feature',
+                archivedByRole: 'user',
+                details: `Cleaned up ${threadIdsToDelete.length} message threads.`
+            });
+
             await refreshUserData();
             console.log("✅ Reciprocal block complete. Threads purged.");
         } catch (err) {
