@@ -111,22 +111,12 @@ export const AppProvider = ({ children }) => {
                     const data = docSnap.data();
                     const pinId = docSnap.id;
 
-                    const ownerEmail = (data.ownerEmail || '').toLowerCase();
-                    const currentUserEmail = (user?.email || '').toLowerCase();
-
-                    // TRIPLE-CHECK OWNER SYNC
-                    if (user && ownerEmail === currentUserEmail && data.ownerUid !== user.uid) {
-                        const pinRef = doc(db, 'pins', pinId);
-                        updateDoc(pinRef, { ownerUid: user.uid }).catch(e => console.error("Pin owner sync error:", e));
-                    }
-
                     return { ...data, id: pinId };
                 });
 
                 // Filter out pins from blocked users
-                const filteredByBlocks = user?.blockedUids
-                    ? pinsData.filter(p => !user.blockedUids.includes(p.ownerUid))
-                    : pinsData;
+                const blockedUids = Array.isArray(user?.blockedUids) ? user.blockedUids : [];
+                const filteredByBlocks = pinsData.filter(p => !blockedUids.includes(p.ownerUid));
 
                 setPins(filteredByBlocks);
             });
@@ -283,6 +273,27 @@ export const AppProvider = ({ children }) => {
         });
     };
     const logout = () => signOut(auth);
+
+    const setThreadNickname = async (threadId, nickname) => {
+        if (!user || !threadId) return;
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                [`nicknames.${threadId}`]: nickname
+            });
+            // Local state will update via the Snapshot listener if you have one, 
+            // but here we manually update user state for immediate feedback
+            setUser(prev => ({
+                ...prev,
+                nicknames: {
+                    ...(prev.nicknames || {}),
+                    [threadId]: nickname
+                }
+            }));
+        } catch (err) {
+            console.error("Error setting thread nickname:", err);
+        }
+    };
 
     const updateUserProfile = async (uid, data) => {
         const userRef = doc(db, 'users', uid);
@@ -694,6 +705,7 @@ export const AppProvider = ({ children }) => {
         <AppContext.Provider value={{
             user, pins, isLoggedIn, loading, signup, login, logout,
             addPin, removePin, updatePin, updateUserProfile, ratePin, getAverageRating, addReply, updateReply, blockUser,
+            setThreadNickname,
             hiddenPins, hidePin, unhidePin, clearHiddenPins,
             formatDate, formatRelativeTime, dateFormat, setDateFormat, mapMode, setMapMode,
             distanceUnit, setDistanceUnit,

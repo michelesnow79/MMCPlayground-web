@@ -218,7 +218,11 @@ const Messages = () => {
                                     <div
                                         key={thread.id}
                                         className={`thread-item-premium ${isUnread ? 'has-unread-glow' : ''}`}
-                                        onClick={() => pin ? navigate(`/browse/${pin.id}`) : null}
+                                        onClick={() => {
+                                            if (!pin) return;
+                                            const responderUid = (pin.ownerUid === user.uid) ? thread.responderUid : null;
+                                            navigate(`/browse/${pin.id}`, { state: { openReply: true, responderUid, fromMessages: true } });
+                                        }}
                                         style={{ opacity: pin ? 1 : 0.7 }}
                                     >
                                         <div className="thread-avatar-circle">
@@ -233,7 +237,7 @@ const Messages = () => {
                                             </div>
                                             <p className="thread-preview-text">
                                                 <span className="sender-label">
-                                                    {latestReply?.senderUid === user.uid ? 'You: ' : (pin?.ownerUid === user.uid ? 'From Participant: ' : 'From Owner: ')}
+                                                    {latestReply?.senderUid === user.uid ? 'You: ' : (pin?.ownerUid === user.uid ? (user.nicknames?.[thread.id] ? `${user.nicknames[thread.id].toUpperCase()}: ` : 'Potential Missed Connection: ') : (user.nicknames?.[thread.id] ? `${user.nicknames[thread.id].toUpperCase()}: ` : 'From Owner: '))}
                                                 </span>
                                                 {latestReply?.content ? latestReply.content : 'Message sent...'}
                                             </p>

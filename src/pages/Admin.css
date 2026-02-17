@@ -576,3 +576,17 @@
     color: white;
     border-color: #666;
 }
+
+.root-locked-label {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid #222;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: #0a0a0c;
+    cursor: default;
+    user-select: none;
+}

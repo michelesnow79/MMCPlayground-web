@@ -120,11 +120,20 @@ const MapView = () => {
         }
 
         if (activeFilters.date) {
-            const filterDateStr = activeFilters.date.toISOString().split('T')[0];
-            result = result.filter(pin => {
-                const pinDateStr = new Date(pin.date).toISOString().split('T')[0];
-                return pinDateStr === filterDateStr;
-            });
+            try {
+                const filterDateStr = activeFilters.date.toISOString().split('T')[0];
+                result = result.filter(pin => {
+                    if (!pin.date) return false;
+                    try {
+                        const pinDateStr = new Date(pin.date).toISOString().split('T')[0];
+                        return pinDateStr === filterDateStr;
+                    } catch (e) {
+                        return false;
+                    }
+                });
+            } catch (e) {
+                console.error("Date filter error:", e);
+            }
         }
 
         if (activeFilters.keyword) {
@@ -221,11 +230,14 @@ const MapView = () => {
         });
     }, [user?.uid, user?.postalCode]);
 
-    const applyCharlotteFallback = useCallback((reason) => {
-        console.log(`📍 [FALLBACK] Triggered: ${reason}. Using Charlotte.`);
-        setMapCenter({ lat: 35.2271, lng: -80.8431 });
+    const applyNationwideFallback = useCallback((reason) => {
+        console.log(`📍 [FALLBACK] Triggered: ${reason}. Using Nationwide View.`);
+        // Geometric center of US: ~39.8, -98.5
+        setMapCenter({ lat: 39.8283, lng: -98.5795 });
+        setCurrentZoom(4);
         setFallbackUsed(true);
         setIsLocating(false);
+        isCenterManualRef.current = true;
     }, []);
 
     const attemptZipGeocode = useCallback((zip) => {
@@ -247,10 +259,10 @@ const MapView = () => {
                 isCenterManualRef.current = true;
             } else {
                 console.error("📍 [GEO] ZIP Geocode Failed:", status);
-                applyCharlotteFallback("Zip Geocode Failed");
+                applyNationwideFallback("Zip Geocode Failed");
             }
         });
-    }, [applyCharlotteFallback]);
+    }, [applyNationwideFallback]);
 
     // Main Geolocation Controller
     useEffect(() => {
@@ -276,7 +288,7 @@ const MapView = () => {
                     if (user?.postalCode) {
                         attemptZipGeocode(user.postalCode);
                     } else {
-                        applyCharlotteFallback("GPS Failed & No ZIP in profile");
+                        applyNationwideFallback("GPS Failed & No ZIP in profile");
                     }
                 },
                 { timeout: 5000, enableHighAccuracy: true }
@@ -286,9 +298,9 @@ const MapView = () => {
             attemptZipGeocode(user.postalCode);
         } else {
             // Absolute failure
-            applyCharlotteFallback("No GPS & No ZIP");
+            applyNationwideFallback("No GPS & No ZIP");
         }
-    }, [user?.uid, user?.postalCode, attemptZipGeocode, applyCharlotteFallback, isLocating]);
+    }, [user?.uid, user?.postalCode, attemptZipGeocode, applyNationwideFallback, isLocating]);
 
     // Safety Timeout: 10 seconds max loading
     useEffect(() => {
@@ -296,14 +308,14 @@ const MapView = () => {
             if (isLocating) {
                 console.warn("📍 [GEO] Global timeout - forcing map open.");
                 if (!mapCenter) {
-                    applyCharlotteFallback("Global Timeout");
+                    applyNationwideFallback("Global Timeout");
                 } else {
                     setIsLocating(false);
                 }
             }
         }, 10000);
         return () => clearTimeout(timer);
-    }, [isLocating, mapCenter, applyCharlotteFallback]);
+    }, [isLocating, mapCenter, applyNationwideFallback]);
 
     // Clustering Sync
     useEffect(() => {
@@ -367,7 +379,7 @@ const MapView = () => {
         });
     }, [activeFilters.location, window.google?.maps?.Geocoder]);
 
-    const MapHandler = ({ center }) => {
+    const MapHandler = ({ center, zoom }) => {
         const map = useMap();
         useEffect(() => {
             if (map) {
@@ -378,9 +390,12 @@ const MapView = () => {
         useEffect(() => {
             if (map && center && isCenterManualRef.current) {
                 map.panTo(center);
+                if (zoom !== undefined) {
+                    map.setZoom(zoom);
+                }
                 isCenterManualRef.current = false;
             }
-        }, [map, center]);
+        }, [map, center, zoom]);
         return null;
     };
 
@@ -619,7 +634,7 @@ const MapView = () => {
     };
 
 
-    const defaultCenter = mapCenter || { lat: 35.2271, lng: -80.8431 };
+    const defaultCenter = mapCenter || { lat: 39.8283, lng: -98.5795 };
 
     return (
         <APIProvider apiKey={API_KEY} libraries={['places', 'geometry']}>
@@ -638,7 +653,7 @@ const MapView = () => {
                 <div className="map-view-container">
                     {fallbackUsed && (
                         <div className="map-fallback-banner">
-                            LOCATION UNAVAILABLE — SHOWING DEFAULT AREA. ENABLE LOCATION OR SET ZIP.
+                            SHOWING NATIONWIDE CONNECTIONS. ENABLE LOCATION FOR LOCAL RESULTS.
                         </div>
                     )}
                     <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
@@ -708,7 +723,7 @@ const MapView = () => {
                             }}
                             onLoad={(map) => setMapInstance(map)}
                         >
-                            <MapHandler center={mapCenter} />
+                            <MapHandler center={mapCenter} zoom={currentZoom} />
                             {/* Render markers grouped by location to handle overlaps */}
                             {Object.entries(locationsGrouped).map(([locKey, groupPins]) => {
                                 const firstPin = groupPins[0];

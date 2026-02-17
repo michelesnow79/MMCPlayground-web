@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
@@ -15,7 +15,8 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const ConnectionDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, pins, threads, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, updatePin, removePin, formatDate, formatRelativeTime, hiddenPins, loading, isSuspended, canStartNewThread, subscribeToThread, addPin, mapMode, reportPin, distanceUnit, blockUser, hasProbation, setVisiblePinIds, activeFilters, setActiveFilters, isLoggedIn } = useApp();
+    const location = useLocation();
+    const { user, pins, threads, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, updatePin, removePin, formatDate, formatRelativeTime, hiddenPins, loading, isSuspended, canStartNewThread, subscribeToThread, addPin, mapMode, reportPin, distanceUnit, blockUser, hasProbation, setVisiblePinIds, activeFilters, setActiveFilters, isLoggedIn, setThreadNickname } = useApp();
 
     const pin = pins.find(p => String(p.id) === String(id));
 
@@ -32,6 +33,8 @@ const ConnectionDetail = () => {
     const [showReportModal, setShowReportModal] = React.useState(false);
     const [reportReason, setReportReason] = React.useState('');
     const [isEditing, setIsEditing] = React.useState(false);
+    const [isRenaming, setIsRenaming] = React.useState(false);
+    const [tempNickname, setTempNickname] = React.useState('');
 
     // Edit Pin State
     const [showEditModal, setShowEditModal] = React.useState(false);
@@ -112,17 +115,13 @@ const ConnectionDetail = () => {
         setShowReplyModal(true);
     };
 
-    const handleReplySubmit = async () => {
-        if (!replyText.trim()) return;
-        try {
-            await addReply(pin.id, replyText, activeResponderUid);
-            setReplyText('');
-            // If owner was replying to a new thread via handleReplyClick(uid), 
-            // the activeResponderUid is already set.
-        } catch (err) {
-            console.error(err);
+    const handleCloseReply = () => {
+        setShowReplyModal(false);
+        if (location.state?.fromMessages) {
+            navigate('/messages');
         }
     };
+
 
     const handleBlockUser = async () => {
         // Identify who the other user is. 
@@ -150,7 +149,7 @@ const ConnectionDetail = () => {
                 await blockUser(otherUid);
                 setShowReplyModal(false);
                 setConfirmConfig(prev => ({ ...prev, isOpen: false }));
-                navigate('/map');
+                navigate(location.state?.fromMessages ? '/messages' : '/map');
             },
             confirmText: 'BAR FOREVER',
             cancelText: 'CANCEL',
@@ -165,10 +164,17 @@ const ConnectionDetail = () => {
         }
     }, [threadMessages, showReplyModal]);
 
+    // Handle auto-opening the reply from Messages page
+    useEffect(() => {
+        if (location.state?.openReply && pin && user) {
+            handleReplyClick(location.state.responderUid);
+        }
+    }, [pin, user, location.state]);
+
     const handleHide = () => {
         if (pin) {
             hidePin(pin.id);
-            navigate('/map');
+            navigate(location.state?.fromMessages ? '/messages' : '/map');
         }
     };
 
@@ -210,7 +216,7 @@ const ConnectionDetail = () => {
                 console.log("🔴 CONFIRMED: Calling removePin with ID:", pin.id);
                 setConfirmConfig(prev => ({ ...prev, isOpen: false }));
                 await removePin(pin.id, 'User self-deleted');
-                navigate('/map');
+                navigate(location.state?.fromMessages ? '/messages' : '/map');
             },
             onCancel: () => setConfirmConfig(prev => ({ ...prev, isOpen: false })),
             confirmText: 'DELETE FOREVER',
@@ -358,14 +364,14 @@ const ConnectionDetail = () => {
         <APIProvider apiKey={API_KEY} libraries={['places']}>
             <div className="detail-page-wrapper">
                 <header className="detail-top-nav">
-                    <button className="nav-back-arrow" onClick={() => navigate(-1)}>
+                    <button className="nav-back-arrow" onClick={() => location.state?.fromMessages ? navigate('/messages') : navigate(-1)}>
                         <span className="arrow-icon">←</span> BACK
                     </button>
                     <div className="detail-logo-group" onClick={() => navigate('/')}>
                         <img src={logoAsset} alt="Logo" className="header-heart-logo-detail" />
                         <span className="logo-text-bangers">MISS ME CONNECTION</span>
                     </div>
-                    <button className="nav-close-x" onClick={() => navigate('/browse')}>
+                    <button className="nav-close-x" onClick={() => location.state?.fromMessages ? navigate('/messages') : navigate('/browse')}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -455,7 +461,7 @@ const ConnectionDetail = () => {
                                     {threads.filter(t => String(t.pinId) === String(pin.id)).map(t => (
                                         <div key={t.id} className="reply-card-mini" style={{ borderLeft: (t.lastSenderUid !== user.uid) ? '3px solid var(--missme-cyan)' : '3px solid #333' }}>
                                             <div className="reply-header">
-                                                <span className="reply-sender">{t.lastSenderUid === user.uid ? 'YOU' : 'PARTICIPANT'}</span>
+                                                <span className="reply-sender">{t.lastSenderUid === user.uid ? 'YOU' : 'POTENTIAL MISSED CONNECTION'}</span>
                                                 <span className="reply-date">{formatDate(t.lastMessageAt)}</span>
                                             </div>
                                             <p className="reply-text" style={{ fontStyle: 'italic', color: '#888' }}>"{t.lastMessagePreview}..."</p>
@@ -657,43 +663,99 @@ const ConnectionDetail = () => {
                                         BAR USER
                                     </button>
                                     <h2 className="modal-title">MESSAGE</h2>
-                                    <button className="close-modal-btn" onClick={() => setShowReplyModal(false)}>✕</button>
+                                    <button className="close-modal-btn" onClick={handleCloseReply}>✕</button>
                                 </div>
 
-                                {/* CONVERSATION HISTORY IN MODAL */}
-                                <div className="modal-history-scroll" ref={historyRef}>
+
+                                <div className="correspondence-history" ref={historyRef}>
                                     {threadMessages.map(m => (
                                         <div
                                             key={m.id}
-                                            className="history-msg-item"
-                                            style={{
-                                                background: m.senderUid === user?.uid ? '#333' : '#111',
-                                                borderLeft: m.senderUid === pin.ownerUid ? '3px solid var(--missme-cyan)' : '3px solid transparent'
-                                            }}
+                                            className={`letter-message ${m.senderUid === user?.uid ? 'sent' : 'received'}`}
                                         >
-                                            <div className="history-msg-meta">
-                                                <span>{m.senderUid === user?.uid ? 'YOU' : (m.senderUid === pin.ownerUid ? 'OWNER' : 'PARTICIPANT')}</span>
-                                                <span>{formatDate(m.createdAt)}</span>
+                                            <div className="letter-header">
+                                                <span className="letter-from">
+                                                    {m.senderUid === user?.uid ? 'FROM: YOU' : `FROM: ${user.nicknames?.[activeResponderUid ? `${pin.id}_${activeResponderUid}` : `${pin.id}_${user.uid}`] || (m.senderUid === pin.ownerUid ? 'PIN OWNER' : 'POTENTIAL MISSED CONNECTION')}`}
+                                                </span>
+                                                <span className="letter-date">{formatDate(m.createdAt)} ({formatRelativeTime(m.createdAt)})</span>
                                             </div>
-                                            <p className="history-msg-body">{m.content}</p>
+                                            <div className="letter-body">
+                                                {m.content}
+                                            </div>
                                         </div>
                                     ))}
                                     {threadMessages.length === 0 && (
-                                        <p className="no-history-text">No previous messages.</p>
+                                        <div className="letter-note">
+                                            No previous correspondence. Write your first message below.
+                                        </div>
                                     )}
                                 </div>
-                                <textarea
-                                    className="reply-textarea"
-                                    placeholder="Type your message here..."
-                                    value={replyText}
-                                    onChange={(e) => setReplyText(e.target.value)}
-                                />
-                                <div className="modal-actions">
-                                    <button className="modal-btn-cancel" onClick={() => setShowReplyModal(false)}>CANCEL</button>
-                                    <button className="modal-btn-confirm" onClick={handleReplySubmit}>
-                                        SEND REPLY
-                                    </button>
+
+
+                                <div className="letter-composer-area">
+                                    <div className="composer-header">
+                                        <span>REPLY TO THIS CONNECTION</span>
+                                        {user && (
+                                            <div className="nickname-composer-integration">
+                                                {!isRenaming ? (
+                                                    <div className="nickname-display">
+                                                        <span className="nickname-label">PRIVATE NICKNAME:</span>
+                                                        <span
+                                                            className="nickname-text"
+                                                            onClick={() => {
+                                                                setTempNickname(user.nicknames?.[activeResponderUid ? `${pin.id}_${activeResponderUid}` : `${pin.id}_${user.uid}`] || '');
+                                                                setIsRenaming(true);
+                                                            }}
+                                                            title="Click to rename"
+                                                        >
+                                                            {user.nicknames?.[activeResponderUid ? `${pin.id}_${activeResponderUid}` : `${pin.id}_${user.uid}`] || 'NOT SET'}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="nickname-input-group">
+                                                        <input
+                                                            type="text"
+                                                            className="nickname-input"
+                                                            placeholder="Rename..."
+                                                            value={tempNickname}
+                                                            onChange={(e) => setTempNickname(e.target.value)}
+                                                            autoFocus
+                                                        />
+                                                        <button className="nickname-save-btn" onClick={async () => {
+                                                            const tid = activeResponderUid ? `${pin.id}_${activeResponderUid}` : `${pin.id}_${user.uid}`;
+                                                            await setThreadNickname(tid, tempNickname);
+                                                            setIsRenaming(false);
+                                                        }}>SAVE</button>
+                                                        <button className="rename-btn-mini" onClick={() => setIsRenaming(false)}>CANCEL</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <textarea
+                                        className="letter-textarea"
+                                        placeholder="Start writing your message here..."
+                                        value={replyText}
+                                        onChange={(e) => setReplyText(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <div className="composer-actions">
+                                        <button className="letter-cancel-btn" onClick={handleCloseReply}>CANCEL</button>
+                                        <button
+                                            className="letter-send-btn"
+                                            onClick={async () => {
+                                                if (!replyText.trim()) return;
+                                                const text = replyText;
+                                                setReplyText('');
+                                                await addReply(pin.id, text, activeResponderUid);
+                                            }}
+                                            disabled={!replyText.trim()}
+                                        >
+                                            SEND MESSAGE
+                                        </button>
+                                    </div>
                                 </div>
+                                {/* REMOVED Stacked Actions */}
                             </div>
                         </div>
                     )

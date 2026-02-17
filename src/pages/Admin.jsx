@@ -87,6 +87,8 @@ const Admin = () => {
     };
 
     const isStillOnReview = (u) => {
+        // Root admin can NEVER be on review
+        if (u.email?.toLowerCase() === 'missme@missmeconnection.com') return false;
         if (!u.reviewStatus) return false;
         if (!u.reviewExpiresAt) return true;
         const now = new Date();
@@ -533,18 +535,24 @@ const Admin = () => {
                                     <span className="item-sub-label">{u.email} <span className="zip-badge">{u.postalCode}</span></span>
                                 </div>
                                 <div className="user-action-group">
-                                    <button
-                                        className={`admin-toggle-btn ${u.isSuspended ? 'is-admin' : ''}`}
-                                        onClick={() => handleToggleSuspension(u.id, u.isSuspended)}
-                                    >
-                                        {u.isSuspended ? 'RESTORE' : 'SUSPEND'}
-                                    </button>
-                                    <button
-                                        className={`admin-toggle-btn ${u.isAdmin ? 'is-admin' : ''}`}
-                                        onClick={() => handleToggleAdmin(u.id, u.isAdmin, u.email)}
-                                    >
-                                        {u.isAdmin ? 'REVOKE' : 'MAKE ADMIN'}
-                                    </button>
+                                    {u.email?.toLowerCase() !== 'missme@missmeconnection.com' ? (
+                                        <>
+                                            <button
+                                                className={`admin-toggle-btn ${u.isSuspended ? 'is-admin' : ''}`}
+                                                onClick={() => handleToggleSuspension(u.id, u.isSuspended)}
+                                            >
+                                                {u.isSuspended ? 'RESTORE' : 'SUSPEND'}
+                                            </button>
+                                            <button
+                                                className={`admin-toggle-btn ${u.isAdmin ? 'is-admin' : ''}`}
+                                                onClick={() => handleToggleAdmin(u.id, u.isAdmin, u.email)}
+                                            >
+                                                {u.isAdmin ? 'REVOKE' : 'MAKE ADMIN'}
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <span className="root-locked-label">PROTECTED ROOT</span>
+                                    )}
                                 </div>
                             </div>
                         ))}
