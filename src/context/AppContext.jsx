@@ -114,41 +114,27 @@ export const AppProvider = ({ children }) => {
                     const ownerEmail = (data.ownerEmail || '').toLowerCase();
                     const currentUserEmail = (user?.email || '').toLowerCase();
 
-                    // TRIPLE-CHECK OWNER SYNC: If email matches, the current UID MUST be the owner
+                    // TRIPLE-CHECK OWNER SYNC
                     if (user && ownerEmail === currentUserEmail && data.ownerUid !== user.uid) {
-                        console.log(`📡 OWNER SYNC: Matching ${currentUserEmail} to Pin ${pinId}`);
                         const pinRef = doc(db, 'pins', pinId);
-                        updateDoc(pinRef, { ownerUid: user.uid }).catch(e => console.error("Pin update error:", e));
-
-                        // Force update any existing threads so this account can see them
-                        const threadQuery = query(collection(db, 'threads'), where('pinId', '==', pinId));
-                        onSnapshot(threadQuery, (snapshot) => {
-                            snapshot.docs.forEach(tDoc => {
-                                const tData = tDoc.data();
-                                // If I'm the owner by email but not in participants, fix it!
-                                if (!tData.participants.includes(user.uid)) {
-                                    console.log(`🧵 UPDATING THREAD PARTICIAPNTS: Adding ${user.uid} to ${tDoc.id}`);
-                                    updateDoc(doc(db, 'threads', tDoc.id), {
-                                        ownerUid: user.uid,
-                                        participants: [user.uid, tData.responderUid]
-                                    }).catch(e => console.error("Thread Sync error:", e));
-                                }
-                            });
-                        });
+                        updateDoc(pinRef, { ownerUid: user.uid }).catch(e => console.error("Pin owner sync error:", e));
                     }
 
-                    return {
-                        ...data,
-                        id: pinId
-                    };
+                    return { ...data, id: pinId };
                 });
-                setPins(pinsData);
+
+                // Filter out pins from blocked users
+                const filteredByBlocks = user?.blockedUids
+                    ? pinsData.filter(p => !user.blockedUids.includes(p.ownerUid))
+                    : pinsData;
+
+                setPins(filteredByBlocks);
             });
             return () => unsubscribe();
         } catch (err) {
             console.error("Pins listener error:", err);
         }
-    }, []);
+    }, [user, user?.blockedUids]);
 
     // 3. Threads Private Listener (Email-style)
     useEffect(() => {
@@ -189,7 +175,7 @@ export const AppProvider = ({ children }) => {
         } catch (err) {
             console.error("❌ Threads listener setup error:", err);
         }
-    }, [user]);
+    }, [user, user?.blockedUids]);
 
     // Helper to subscribe to messages for a specific thread
     const subscribeToThread = (threadId, callback) => {
@@ -335,16 +321,30 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    const removePin = async (pinId) => {
+    const removePin = async (pinId, reason = 'User deleted', adminUid = null) => {
         if (!pinId) {
             console.error("❌ removePin called without an ID");
             return;
         }
 
         const stringId = String(pinId);
-        console.log("🗑️ FIREBASE DELETE INITIATED: Targeting ID:", stringId);
+        console.log("🗑️ INITIATING DELETE & ARCHIVE: Targeting ID:", stringId);
 
         try {
+            // Find the pin in local state to capture its content for the Black Box
+            const pinToArchive = pins.find(p => String(p.id) === stringId);
+            if (pinToArchive) {
+                console.log("📂 Archiving Pin to Black Box...");
+                await addDoc(collection(db, 'deleted_pins'), {
+                    ...pinToArchive,
+                    originalId: stringId,
+                    deletedAt: serverTimestamp(),
+                    deletedBy: adminUid || user?.uid || 'unknown',
+                    deletionReason: reason,
+                    archivedByRole: user?.isAdmin ? 'admin' : 'user'
+                });
+            }
+
             const docRef = doc(db, 'pins', stringId);
             await deleteDoc(docRef);
             console.log("✅ FIREBASE DELETE SUCCESS for ID:", stringId);
@@ -543,6 +543,49 @@ export const AppProvider = ({ children }) => {
         localStorage.removeItem('mmc_hiddenPins');
     };
 
+    const blockUser = async (targetUid) => {
+        if (!user || !targetUid || user.uid === targetUid) return;
+
+        console.log(`🚫 RECIPROCAL BLOCK INITIATED: ${user.uid} <-> ${targetUid}`);
+
+        try {
+            // 1. Update Current User's blockedUids
+            const userRef = doc(db, 'users', user.uid);
+            const currentBlocks = user.blockedUids || [];
+            if (!currentBlocks.includes(targetUid)) {
+                await updateDoc(userRef, {
+                    blockedUids: [...currentBlocks, targetUid]
+                });
+            }
+
+            // 2. Update Target User's blockedUids (Reciprocal)
+            const targetRef = doc(db, 'users', targetUid);
+            const targetSnap = await getDoc(targetRef);
+            if (targetSnap.exists()) {
+                const targetBlocks = targetSnap.data().blockedUids || [];
+                if (!targetBlocks.includes(user.uid)) {
+                    await updateDoc(targetRef, {
+                        blockedUids: [...targetBlocks, user.uid]
+                    });
+                }
+            }
+
+            // 3. Delete all threads between these users
+            const threadIdsToDelete = threads.filter(t =>
+                t.participants.includes(user.uid) && t.participants.includes(targetUid)
+            ).map(t => t.id);
+
+            for (const tId of threadIdsToDelete) {
+                await deleteDoc(doc(db, 'threads', tId));
+            }
+
+            await refreshUserData();
+            console.log("✅ Reciprocal block complete. Threads purged.");
+        } catch (err) {
+            console.error("❌ Block error:", err);
+        }
+    };
+
     const formatRelativeTime = (timestamp) => {
         if (!timestamp) return 'JUST NOW';
 
@@ -638,7 +681,7 @@ export const AppProvider = ({ children }) => {
     return (
         <AppContext.Provider value={{
             user, pins, isLoggedIn, loading, signup, login, logout,
-            addPin, removePin, updatePin, updateUserProfile, ratePin, getAverageRating, addReply, updateReply,
+            addPin, removePin, updatePin, updateUserProfile, ratePin, getAverageRating, addReply, updateReply, blockUser,
             hiddenPins, hidePin, unhidePin, clearHiddenPins,
             formatDate, formatRelativeTime, dateFormat, setDateFormat, mapMode, setMapMode,
             distanceUnit, setDistanceUnit,

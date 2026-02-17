@@ -15,7 +15,7 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const ConnectionDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, pins, threads, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, updatePin, removePin, formatDate, formatRelativeTime, hiddenPins, loading, isSuspended, canStartNewThread, subscribeToThread } = useApp();
+    const { user, pins, threads, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, updatePin, removePin, formatDate, formatRelativeTime, hiddenPins, loading, isSuspended, canStartNewThread, subscribeToThread, addPin, mapMode, reportPin, distanceUnit, blockUser, hasProbation, setVisiblePinIds, activeFilters, setActiveFilters, isLoggedIn } = useApp();
 
     const pin = pins.find(p => String(p.id) === String(id));
 
@@ -102,7 +102,9 @@ const ConnectionDetail = () => {
     // ALLOW MULTIPLE REPLIES (Chat Style) - No longer forcing edit mode on existing reply
     // ALLOW MULTIPLE REPLIES (Chat Style)
     const handleReplyClick = (responderUid = null) => {
-        if (!user) {
+        console.log(`💬 handleReplyClick called. responderUid: ${responderUid}, user: ${user?.uid}, isLoggedIn: ${isLoggedIn}`);
+        if (!user || !isLoggedIn) {
+            console.log("💬 Redirecting to login...");
             navigate('/login');
             return;
         }
@@ -120,6 +122,40 @@ const ConnectionDetail = () => {
         } catch (err) {
             console.error(err);
         }
+    };
+
+    const handleBlockUser = async () => {
+        // Identify who the other user is. 
+        // If I am the owner, it's the specific participant I'm chatting with (activeResponderUid).
+        // If I am the participant, it's the pin owner (pin.ownerUid).
+        const otherUid = pin.ownerUid === user.uid ? activeResponderUid : pin.ownerUid;
+
+        if (!otherUid) {
+            setConfirmConfig({
+                isOpen: true,
+                title: "CANNOT BLOCK",
+                message: "We couldn't identify the other user in this conversation.",
+                onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false })),
+                confirmText: 'OK',
+                type: 'info'
+            });
+            return;
+        }
+
+        setConfirmConfig({
+            isOpen: true,
+            title: "BAR THIS USER FOREVER?",
+            message: "THIS REPLIER WILL NOT ONLY BE BARRED FROM THIS CONVERSATION BUT ALL CONVERSATIONS. THIS CANNOT BE UNDONE.",
+            onConfirm: async () => {
+                await blockUser(otherUid);
+                setShowReplyModal(false);
+                setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                navigate('/map');
+            },
+            confirmText: 'BAR FOREVER',
+            cancelText: 'CANCEL',
+            type: 'danger'
+        });
     };
 
     // Auto-scroll to bottom of conversation
@@ -173,7 +209,7 @@ const ConnectionDetail = () => {
             onConfirm: async () => {
                 console.log("🔴 CONFIRMED: Calling removePin with ID:", pin.id);
                 setConfirmConfig(prev => ({ ...prev, isOpen: false }));
-                await removePin(pin.id);
+                await removePin(pin.id, 'User self-deleted');
                 navigate('/map');
             },
             onCancel: () => setConfirmConfig(prev => ({ ...prev, isOpen: false })),
@@ -613,7 +649,14 @@ const ConnectionDetail = () => {
                         <div className="modal-overlay">
                             <div className="expansive-reply-panel">
                                 <div className="modal-header-row">
-                                    <h2 className="modal-title">CONVERSATION</h2>
+                                    <button
+                                        className="block-user-btn"
+                                        onClick={handleBlockUser}
+                                        title="Bar this user forever"
+                                    >
+                                        BAR USER
+                                    </button>
+                                    <h2 className="modal-title">MESSAGE</h2>
                                     <button className="close-modal-btn" onClick={() => setShowReplyModal(false)}>✕</button>
                                 </div>
 

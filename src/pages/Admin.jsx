@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { collection, onSnapshot, query, orderBy, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, deleteDoc, doc, getDocs, updateDoc, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getStateAndCountryFromZip } from '../utils/locationHelper';
 import './Admin.css';
@@ -11,6 +11,7 @@ const Admin = () => {
     const { user, pins, removePin, addPin, addNotification } = useApp();
     const [allUsers, setAllUsers] = useState([]);
     const [reports, setReports] = useState([]);
+    const [deletedPins, setDeletedPins] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [adminModal, setAdminModal] = useState({
@@ -20,7 +21,9 @@ const Admin = () => {
         onConfirm: null,
         isAlert: false,
         showInput: false,
-        inputValue: ''
+        inputValue: '',
+        showDuration: false,
+        durationValue: '48'
     });
     const [insightTab, setInsightTab] = useState('postalCode');
     const [inspectPinId, setInspectPinId] = useState('');
@@ -46,7 +49,17 @@ const Admin = () => {
                 setReports(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
                 setLoading(false);
             });
-            return () => unsubscribe();
+
+            // Listen for Black Box (Deleted Pins)
+            const qDeleted = query(collection(db, 'deleted_pins'), orderBy('deletedAt', 'desc'), limit(50));
+            const unsubscribeDeleted = onSnapshot(qDeleted, (snapshot) => {
+                setDeletedPins(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+            });
+
+            return () => {
+                unsubscribe();
+                unsubscribeDeleted();
+            };
         }
     }, [user, navigate]);
 
@@ -65,6 +78,22 @@ const Admin = () => {
     const activePinsList = pins.filter(p => !isOld(p));
     const archivedPinsList = pins.filter(p => isOld(p));
 
+    const isStillSuspended = (u) => {
+        if (!u.isSuspended) return false;
+        if (!u.suspendedUntil) return true;
+        const now = new Date();
+        const until = u.suspendedUntil.toDate ? u.suspendedUntil.toDate() : new Date(u.suspendedUntil);
+        return now < until;
+    };
+
+    const isStillOnReview = (u) => {
+        if (!u.reviewStatus) return false;
+        if (!u.reviewExpiresAt) return true;
+        const now = new Date();
+        const until = u.reviewExpiresAt.toDate ? u.reviewExpiresAt.toDate() : new Date(u.reviewExpiresAt);
+        return now < until;
+    };
+
     if (!isAdmin) return <div className="admin-loading">ACCESS DENIED</div>;
 
     const handleDeletePin = async (id) => {
@@ -72,9 +101,10 @@ const Admin = () => {
             isOpen: true,
             title: 'CONFIRM DELETE',
             message: 'ARE YOU SURE YOU WANT TO DELETE THIS PIN? THIS CANNOT BE UNDONE.',
-            showInput: false,
-            onConfirm: async () => {
-                await removePin(id);
+            showInput: true,
+            inputValue: 'Manual moderation',
+            onConfirm: async (reason) => {
+                await removePin(id, reason || 'Manual moderation', user.uid);
                 setAdminModal(prev => ({ ...prev, isOpen: false }));
             },
             isAlert: false
@@ -89,7 +119,7 @@ const Admin = () => {
             showInput: false,
             onConfirm: async () => {
                 for (const pin of pins) {
-                    await removePin(pin.id);
+                    await removePin(pin.id, 'Bulk Wipe Action', user.uid);
                 }
                 setAdminModal({
                     isOpen: true,
@@ -183,25 +213,50 @@ const Admin = () => {
     };
 
     const handleToggleSuspension = async (uId, currentStatus) => {
-        const until = new Date();
-        until.setHours(until.getHours() + 48);
+        if (currentStatus) {
+            // Unsuspend logic
+            setAdminModal({
+                isOpen: true,
+                title: 'UNSUSPEND USER',
+                message: 'RESTORE ACCESS FOR THIS USER?',
+                showInput: false,
+                showDuration: false,
+                onConfirm: async () => {
+                    const userRef = doc(db, 'users', uId);
+                    await updateDoc(userRef, {
+                        isSuspended: false,
+                        suspendedUntil: null
+                    });
+                    setAllUsers(prev => prev.map(u => u.id === uId ? { ...u, isSuspended: false } : u));
+                    setAdminModal(prev => ({ ...prev, isOpen: false }));
+                },
+                isAlert: false
+            });
+        } else {
+            // Suspend logic with custom duration
+            setAdminModal({
+                isOpen: true,
+                title: 'MANUAL SUSPENSION',
+                message: 'HOW MANY HOURS SHOULD THIS USER BE SUSPENDED?',
+                showInput: false,
+                showDuration: true,
+                durationValue: '48',
+                onConfirm: async (reason, duration) => {
+                    const hours = parseInt(duration) || 48;
+                    const until = new Date();
+                    until.setHours(until.getHours() + hours);
 
-        setAdminModal({
-            isOpen: true,
-            title: currentStatus ? 'UNSUSPEND USER' : 'MANUAL SUSPENSION',
-            message: currentStatus ? 'Restore access for this user?' : 'SUSPEND THIS USER FOR 48 HOURS? This is for severe or repeated violations.',
-            showInput: false,
-            onConfirm: async () => {
-                const userRef = doc(db, 'users', uId);
-                await updateDoc(userRef, {
-                    isSuspended: !currentStatus,
-                    suspendedUntil: !currentStatus ? until : null
-                });
-                setAllUsers(prev => prev.map(u => u.id === uId ? { ...u, isSuspended: !currentStatus } : u));
-                setAdminModal(prev => ({ ...prev, isOpen: false }));
-            },
-            isAlert: false
-        });
+                    const userRef = doc(db, 'users', uId);
+                    await updateDoc(userRef, {
+                        isSuspended: true,
+                        suspendedUntil: until
+                    });
+                    setAllUsers(prev => prev.map(u => u.id === uId ? { ...u, isSuspended: true } : u));
+                    setAdminModal(prev => ({ ...prev, isOpen: false }));
+                },
+                isAlert: false
+            });
+        }
     };
 
     const handleToggleAdmin = async (uId, currentStatus, email) => {
@@ -257,8 +312,8 @@ const Admin = () => {
                     try {
                         const pin = pins.find(p => p.id === pinId);
                         if (pin) {
-                            // 1. Delete Pin
-                            await removePin(pinId);
+                            // 1. Delete Pin (Arrives in Black Box with reason)
+                            await removePin(pinId, reason, user.uid);
 
                             // 2. Clear Reports
                             const allReportsSnapshot = await getDocs(collection(db, 'reports'));
@@ -301,20 +356,23 @@ const Admin = () => {
             setAdminModal({
                 isOpen: true,
                 title: 'DISMISS & STRIKE REPORTER',
-                message: 'No violation found. Suspend reporter for 48 hours for false claim?',
+                message: 'No violation found. How many hours to suspend the false reporter?',
                 showInput: false,
-                onConfirm: async () => {
+                showDuration: true,
+                durationValue: '48',
+                onConfirm: async (reason, duration) => {
+                    const hours = parseInt(duration) || 48;
                     try {
                         const reporterRef = doc(db, 'users', report.reporterUid);
                         const suspDate = new Date();
-                        suspDate.setHours(suspDate.getHours() + 48);
+                        suspDate.setHours(suspDate.getHours() + hours);
 
                         await updateDoc(reporterRef, {
                             isSuspended: true,
                             suspendedUntil: suspDate
                         });
 
-                        await addNotification(report.reporterUid, 'Your account is on hold for 48 hours due to a false report strike.');
+                        await addNotification(report.reporterUid, `Your account is on hold for ${hours} hours due to a false report strike.`);
                         await deleteDoc(doc(db, 'reports', reportId));
                         await updateDoc(doc(db, 'pins', pinId), { isReported: false });
 
@@ -469,8 +527,8 @@ const Admin = () => {
                                         <span className="item-label">{u.name}</span>
                                         {u.email?.toLowerCase() === 'missme@missmeconnection.com' && <span className="admin-badge">ROOT</span>}
                                         {u.isAdmin && u.email?.toLowerCase() !== 'missme@missmeconnection.com' && <span className="admin-badge">ADMIN</span>}
-                                        {u.reviewStatus && <span className="moderation-badge review">⚠️ REVIEW</span>}
-                                        {u.isSuspended && <span className="moderation-badge suspended">🛑 HOLD</span>}
+                                        {isStillOnReview(u) && <span className="moderation-badge review">⚠️ REVIEW</span>}
+                                        {isStillSuspended(u) && <span className="moderation-badge suspended">🛑 HOLD</span>}
                                     </div>
                                     <span className="item-sub-label">{u.email} <span className="zip-badge">{u.postalCode}</span></span>
                                 </div>
@@ -558,6 +616,39 @@ const Admin = () => {
                     </div>
                 </section>
 
+                <section className="admin-section" style={{ gridColumn: '1 / -1' }}>
+                    <h2 className="section-title" style={{ color: '#ffb300' }}>⬛ BLACK BOX: DELETED LOG ({deletedPins.length})</h2>
+                    <div className="admin-list black-box-scroll" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                        {deletedPins.length === 0 && <p className="no-data-text">No deleted pins in log</p>}
+                        {deletedPins.map(log => (
+                            <div key={log.id} className="admin-item" style={{ borderLeft: '4px solid #444', background: '#0a0a0c' }}>
+                                <div className="item-info" style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                        <span className="item-label" style={{ color: '#eee' }}>{log.title || 'Untitled Pin'}</span>
+                                        <span style={{ fontSize: '0.7rem', color: '#666' }}>ID: {log.id}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '0.65rem', color: '#555', textTransform: 'uppercase' }}>Owner</span>
+                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>{log.ownerEmail}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '0.65rem', color: '#555', textTransform: 'uppercase' }}>Deleted By</span>
+                                            <span style={{ fontSize: '0.8rem', color: log.archivedByRole === 'admin' ? 'var(--missme-pink)' : '#888' }}>
+                                                {log.deletedBy === 'unknown' ? 'UNKNOWN' : (log.archivedByRole === 'admin' ? 'ADMIN' : 'USER')}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '0.65rem', color: '#555', textTransform: 'uppercase' }}>Reason</span>
+                                            <span style={{ fontSize: '0.8rem', color: '#ffb300', fontStyle: 'italic' }}>"{log.deletionReason}"</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
                 <section className="admin-section diagnostics-section" style={{ gridColumn: '1 / -1', background: '#111', border: '2px solid #333' }}>
                     <h2 className="section-title" style={{ color: 'var(--missme-cyan)' }}>🔍 SYSTEM DIAGNOSTICS</h2>
                     <div className="diagnostic-controls" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
@@ -606,7 +697,9 @@ const Admin = () => {
             {adminModal.isOpen && (
                 <div className="modal-overlay">
                     <div className="modal-card admin-modal-card">
-                        <h2 className="modal-title">{adminModal.title}</h2>
+                        <h2 className="modal-title" style={{ color: adminModal.title === 'DONE' || adminModal.title === 'RESOLVED' ? 'var(--missme-cyan)' : 'var(--missme-pink)' }}>
+                            {adminModal.title}
+                        </h2>
                         <p className="modal-message">{adminModal.message}</p>
 
                         {adminModal.showInput && (
@@ -621,6 +714,25 @@ const Admin = () => {
                             </div>
                         )}
 
+                        {adminModal.showDuration && (
+                            <div className="admin-modal-input-wrap">
+                                <label className="admin-modal-label">DURATION (HOURS)</label>
+                                <input
+                                    type="number"
+                                    className="admin-textarea"
+                                    style={{ minHeight: 'unset' }}
+                                    value={adminModal.durationValue}
+                                    onChange={(e) => setAdminModal({ ...adminModal, durationValue: e.target.value })}
+                                />
+                                <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+                                    <button className="duration-preset-btn" onClick={() => setAdminModal({ ...adminModal, durationValue: '24' })}>24H</button>
+                                    <button className="duration-preset-btn" onClick={() => setAdminModal({ ...adminModal, durationValue: '48' })}>48H</button>
+                                    <button className="duration-preset-btn" onClick={() => setAdminModal({ ...adminModal, durationValue: '72' })}>72H</button>
+                                    <button className="duration-preset-btn" onClick={() => setAdminModal({ ...adminModal, durationValue: '168' })}>1 WEEK</button>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="modal-actions">
                             {!adminModal.isAlert && (
                                 <button
@@ -632,7 +744,7 @@ const Admin = () => {
                             )}
                             <button
                                 className="modal-btn-confirm"
-                                onClick={adminModal.isAlert ? () => setAdminModal(prev => ({ ...prev, isOpen: false })) : () => adminModal.onConfirm(adminModal.inputValue)}
+                                onClick={adminModal.isAlert ? () => setAdminModal(prev => ({ ...prev, isOpen: false })) : () => adminModal.onConfirm(adminModal.inputValue, adminModal.durationValue)}
                             >
                                 {adminModal.isAlert ? 'OK' : 'CONFIRM'}
                             </button>
