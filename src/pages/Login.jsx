@@ -6,7 +6,7 @@ import './Login.css';
 
 const Login = () => {
     const navigate = useNavigate();
-    const { login, signup, isLoggedIn } = useApp();
+    const { login, signup, isLoggedIn, resetPassword } = useApp();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
@@ -14,6 +14,8 @@ const Login = () => {
     const [isSignUp, setIsSignUp] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isAgeConfirmed, setIsAgeConfirmed] = useState(false);
+    const [isTermsAgreed, setIsTermsAgreed] = useState(false);
 
     useEffect(() => {
         if (isLoggedIn) {
@@ -28,6 +30,11 @@ const Login = () => {
 
         try {
             if (isSignUp) {
+                if (!isAgeConfirmed || !isTermsAgreed) {
+                    setError('You must confirm your age and agree to our terms to proceed.');
+                    setLoading(false);
+                    return;
+                }
                 await signup(email, password, name, postalCode);
             } else {
                 await login(email, password);
@@ -38,6 +45,19 @@ const Login = () => {
             setError(err.message.replace('Firebase:', '').trim());
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            setError('Please enter your email address first.');
+            return;
+        }
+        try {
+            await resetPassword(email);
+            setError('Password reset email sent! Please check your inbox.');
+        } catch (err) {
+            setError(err.message.replace('Firebase:', '').trim());
         }
     };
 
@@ -104,7 +124,36 @@ const Login = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
+                        {!isSignUp && (
+                            <span className="forgot-password-link" onClick={handleForgotPassword}>
+                                Forgot Password?
+                            </span>
+                        )}
                     </div>
+
+                    {isSignUp && (
+                        <div className="legal-checkboxes">
+                            <label className="checkbox-container">
+                                <input
+                                    type="checkbox"
+                                    checked={isAgeConfirmed}
+                                    onChange={(e) => setIsAgeConfirmed(e.target.checked)}
+                                />
+                                <span className="checkbox-label">I confirm that I am 18 years of age or older.</span>
+                            </label>
+
+                            <label className="checkbox-container">
+                                <input
+                                    type="checkbox"
+                                    checked={isTermsAgreed}
+                                    onChange={(e) => setIsTermsAgreed(e.target.checked)}
+                                />
+                                <span className="checkbox-label">
+                                    I agree with the <span className="legal-link" onClick={(e) => { e.stopPropagation(); navigate('/privacy'); }}>Privacy Policy</span> and <span className="legal-link" onClick={(e) => { e.stopPropagation(); navigate('/terms'); }}>Terms and Service</span>
+                                </span>
+                            </label>
+                        </div>
+                    )}
                     <button
                         type="submit"
                         className="login-submit-btn"
@@ -122,12 +171,14 @@ const Login = () => {
                 </form>
 
                 <p className="signup-prompt">
-                    {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+                    {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
                     <span
                         className="signup-link"
                         onClick={() => {
                             setIsSignUp(!isSignUp);
                             setError('');
+                            setIsAgeConfirmed(false);
+                            setIsTermsAgreed(false);
                         }}
                     >
                         {isSignUp ? 'Sign in' : 'Sign up'}

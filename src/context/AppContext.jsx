@@ -3,7 +3,8 @@ import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
-    signOut
+    signOut,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import {
     collection,
@@ -646,7 +647,8 @@ export const AppProvider = ({ children }) => {
             reportPin, isSuspended, hasProbation, canStartNewThread, addNotification, refreshUserData,
             visiblePinIds, setVisiblePinIds,
             activeFilters, setActiveFilters,
-            subscribeToThread
+            subscribeToThread,
+            resetPassword: (email) => sendPasswordResetEmail(auth, email)
         }}>
             {children}
         </AppContext.Provider>

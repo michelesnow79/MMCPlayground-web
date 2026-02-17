@@ -283,7 +283,7 @@
 .report-link {
     background: none;
     border: none;
-    color: #48484a;
+    color: var(--missme-pink);
     font-weight: 800;
     font-size: 0.7rem;
     cursor: pointer;

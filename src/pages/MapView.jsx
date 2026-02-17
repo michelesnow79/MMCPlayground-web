@@ -51,6 +51,7 @@ const MapView = () => {
     const [selectedPinIndex, setSelectedPinIndex] = useState(0);
     const [mapInstance, setMapInstance] = useState(null);
     const [minLoadingTimeElapsed, setMinLoadingTimeElapsed] = useState(false);
+    const [fallbackUsed, setFallbackUsed] = useState(false);
 
 
     const GROUP_RADIUS_METERS = 75;
@@ -206,82 +207,103 @@ const MapView = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    // Initial Geolocation (Browser GPS)
+    // ---------------------------------------------------------
+    // ORCHESTRATED LOCATION LOGIC
+    // ---------------------------------------------------------
+
+    // Diagnosis logger
     useEffect(() => {
-        if (!navigator.geolocation) {
-            if (!user?.postalCode) {
-                setMapCenter({ lat: 35.2271, lng: -80.8431 });
-                setIsLocating(false);
-            }
+        console.log("📍 [DIAGNOSTICS] Map Initializing:", {
+            userUid: user?.uid,
+            profileZip: user?.postalCode,
+            hasGeo: !!navigator.geolocation,
+            currentCenter: mapCenter ? `${mapCenter.lat}, ${mapCenter.lng}` : 'null'
+        });
+    }, [user?.uid, user?.postalCode]);
+
+    const applyCharlotteFallback = useCallback((reason) => {
+        console.log(`📍 [FALLBACK] Triggered: ${reason}. Using Charlotte.`);
+        setMapCenter({ lat: 35.2271, lng: -80.8431 });
+        setFallbackUsed(true);
+        setIsLocating(false);
+    }, []);
+
+    const attemptZipGeocode = useCallback((zip) => {
+        console.log(`📍 [GEO] Attempting ZIP Geocode: ${zip}`);
+        if (!window.google?.maps?.Geocoder) {
+            console.warn("📍 [GEO] Google Geocoder not available yet.");
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                setMapCenter({ lat: latitude, lng: longitude });
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: zip }, (results, status) => {
+            if (status === "OK" && results?.[0]) {
+                const loc = results[0].geometry.location;
+                const newCenter = { lat: loc.lat(), lng: loc.lng() };
+                console.log("📍 [GEO] ZIP Success:", newCenter);
+                setMapCenter(newCenter);
+                setFallbackUsed(false);
                 setIsLocating(false);
                 isCenterManualRef.current = true;
-                console.log("📍 Centered map via GPS");
-            },
-            (error) => {
-                console.warn("📍 GPS Geolocation error:", error.message);
-                // If GPS fails, and we haven't found a center yet (e.g. from zip), 
-                // we'll let the user.postalCode effect handle it OR fallback later.
-                if (!user?.postalCode) {
-                    setMapCenter({ lat: 35.2271, lng: -80.8431 });
-                    setIsLocating(false);
-                }
-            },
-            { enableHighAccuracy: true, timeout: 6000 }
-        );
-    }, [user?.uid]); // Run once on auth load
-
-    // Initial Geolocation (User Postal Code fallback)
-    useEffect(() => {
-        if (!user?.postalCode || isCenterManualRef.current || mapCenter) return;
-
-        let geocodeInterval = setInterval(() => {
-            if (typeof window.google?.maps?.Geocoder === 'function') {
-                clearInterval(geocodeInterval);
-                const geocoder = new window.google.maps.Geocoder();
-                geocoder.geocode({ address: user.postalCode }, (results, status) => {
-                    if (status === "OK" && results?.[0] && !isCenterManualRef.current) {
-                        const loc = results[0].geometry.location;
-                        const newCenter = { lat: loc.lat(), lng: loc.lng() };
-                        isCenterManualRef.current = true;
-                        setMapCenter(newCenter);
-                        setIsLocating(false);
-                        console.log("📍 Centered map based on user postal code:", user.postalCode);
-                    } else if (status !== "OK") {
-                        // Hard fallback if geocode fails
-                        if (!mapCenter) {
-                            setMapCenter({ lat: 35.2271, lng: -80.8431 });
-                            setIsLocating(false);
-                            isCenterManualRef.current = true;
-                        }
-                    }
-                });
+            } else {
+                console.error("📍 [GEO] ZIP Geocode Failed:", status);
+                applyCharlotteFallback("Zip Geocode Failed");
             }
-        }, 500);
+        });
+    }, [applyCharlotteFallback]);
 
-        return () => clearInterval(geocodeInterval);
-    }, [user?.postalCode]); // REMOVED mapCenter from deps to stop the loop!
+    // Main Geolocation Controller
+    useEffect(() => {
+        // Reset if we are locating
+        if (!isLocating) return;
 
-    // Total Safety Fallback: If still locating after 8 seconds, just force open it
+        // 1. Try GPS first
+        if (navigator.geolocation) {
+            console.log("📍 [GEO] Requesting navigator.geolocation...");
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    console.log("📍 [GEO] GPS Success:", coords);
+                    setMapCenter(coords);
+                    setFallbackUsed(false);
+                    setIsLocating(false);
+                    isCenterManualRef.current = true;
+                },
+                (err) => {
+                    console.warn(`📍 [GEO] GPS Denied/Failed (${err.code}): ${err.message}`);
+
+                    // On GPS fail, check ZIP
+                    if (user?.postalCode) {
+                        attemptZipGeocode(user.postalCode);
+                    } else {
+                        applyCharlotteFallback("GPS Failed & No ZIP in profile");
+                    }
+                },
+                { timeout: 5000, enableHighAccuracy: true }
+            );
+        } else if (user?.postalCode) {
+            // No GPS capability, try ZIP
+            attemptZipGeocode(user.postalCode);
+        } else {
+            // Absolute failure
+            applyCharlotteFallback("No GPS & No ZIP");
+        }
+    }, [user?.uid, user?.postalCode, attemptZipGeocode, applyCharlotteFallback, isLocating]);
+
+    // Safety Timeout: 10 seconds max loading
     useEffect(() => {
         const timer = setTimeout(() => {
             if (isLocating) {
-                console.log("📍 Forced map activation after timeout");
+                console.warn("📍 [GEO] Global timeout - forcing map open.");
                 if (!mapCenter) {
-                    setMapCenter({ lat: 35.2271, lng: -80.8431 });
-                    isCenterManualRef.current = true;
+                    applyCharlotteFallback("Global Timeout");
+                } else {
+                    setIsLocating(false);
                 }
-                setIsLocating(false);
             }
-        }, 8000);
+        }, 10000);
         return () => clearTimeout(timer);
-    }, [isLocating]); // REMOVED mapCenter from deps!
+    }, [isLocating, mapCenter, applyCharlotteFallback]);
 
     // Clustering Sync
     useEffect(() => {
@@ -613,7 +635,12 @@ const MapView = () => {
                     </div>
                 </div>
             ) : (
-                <div className="map-view-container">
+                <div className="map-view-hero">
+                    {fallbackUsed && (
+                        <div className="map-fallback-banner">
+                            LOCATION UNAVAILABLE — SHOWING DEFAULT AREA. ENABLE LOCATION OR SET ZIP.
+                        </div>
+                    )}
                     <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
                     <header className="map-top-bar-original">
                         <div className="top-bar-side-left">
@@ -746,6 +773,7 @@ const MapView = () => {
                                             </div>
                                             <span className="popup-avg-text">AVG: {getAverageRating(selectedPin.id)}</span>
                                         </div>
+                                        <div className="popup-rating-disclaimer">CAN ONLY RATE PIN FROM DETAILS PAGE</div>
 
                                         <h2 className="popup-title">{selectedPin.title}</h2>
                                         <div className="popup-location-stack">

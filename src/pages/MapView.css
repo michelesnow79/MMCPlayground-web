@@ -636,6 +636,17 @@ div[role="button"] {
     letter-spacing: 0.5px;
 }
 
+.popup-rating-disclaimer {
+    font-size: 9px;
+    color: var(--missme-cyan);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-top: -12px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
 .popup-category-badge {
     align-self: flex-start;
     background: var(--missme-pink);
@@ -1223,8 +1234,8 @@ div[role="button"] {
 
 .popup-report-btn {
     background: transparent;
-    border: 1px solid #ff3355;
-    color: #ff3355;
+    border: 1px solid var(--missme-pink);
+    color: var(--missme-pink);
     padding: 6px 10px;
     border-radius: 4px;
     font-size: 0.65rem;
@@ -1234,7 +1245,7 @@ div[role="button"] {
 }
 
 .popup-report-btn:hover {
-    background: #ff3355;
+    background: var(--missme-pink);
     color: white;
 }
 
@@ -1398,4 +1409,37 @@ div[role="button"] {
     font-size: 11px !important;
     border: 2px solid white !important;
     margin-top: -30px !important;
+}
+
+.map-fallback-banner {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(18, 18, 20, 0.95);
+    border: 1px solid var(--missme-pink);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    z-index: 1000;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 800;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    animation: bannerFadeIn 0.5s ease;
+}
+
+@keyframes bannerFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
