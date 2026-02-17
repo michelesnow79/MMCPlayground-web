@@ -592,10 +592,14 @@ const MapView = () => {
 
     return (
         <APIProvider apiKey={API_KEY} libraries={['places', 'geometry']}>
-            {isLocating && !mapCenter ? (
+            {isLocating ? (
                 <div className="map-loading-screen">
                     <div className="loading-content">
-                        <span className="loading-heart">❤️</span>
+                        <div className="loading-hearts">
+                            <span className="heart-main">❤️</span>
+                            <span className="heart-sub-1">❤️</span>
+                            <span className="heart-sub-2">❤️</span>
+                        </div>
                         <p>LOCATING CONNECTIONS...</p>
                     </div>
                 </div>
@@ -609,15 +613,7 @@ const MapView = () => {
                                 <div className="hamburger-line-small"></div>
                                 <div className="hamburger-line-small"></div>
                             </button>
-                            <div className="map-search-wrap">
-                                <input
-                                    id="map-jump-search"
-                                    type="text"
-                                    className="map-jump-input"
-                                    placeholder="Jump to city/state..."
-                                />
-                                <span className="search-icon-mini">🔍</span>
-                            </div>
+
                         </div>
                         <div className="map-logo-group" onClick={() => navigate('/')}>
                             <img src={logoAsset} alt="Logo" className="header-heart-logo" />

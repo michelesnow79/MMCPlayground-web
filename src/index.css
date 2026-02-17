@@ -28,6 +28,10 @@ body,
 .app-container {
   min-height: 0;
   /* stop fighting height:100% */
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  /* For absolute children */
 }
 
 body {

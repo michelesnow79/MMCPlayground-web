@@ -1328,10 +1328,32 @@ div[role="button"] {
     gap: 20px;
 }
 
-.loading-heart {
+.loading-hearts {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.heart-main,
+.heart-sub-1,
+.heart-sub-2 {
     font-size: 3.5rem;
-    animation: pulse-heart 1.2s ease-in-out infinite;
     display: block;
+    animation: pulse-heart 1.2s ease-in-out infinite;
+}
+
+.heart-sub-1 {
+    font-size: 2rem;
+    animation-delay: 0.2s;
+    opacity: 0.8;
+}
+
+.heart-sub-2 {
+    font-size: 2rem;
+    animation-delay: 0.4s;
+    opacity: 0.8;
 }
 
 .loading-content p {

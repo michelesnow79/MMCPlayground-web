@@ -30,7 +30,8 @@ export const AppProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loading, setLoading] = useState(true);
     const [pins, setPins] = useState([]);
-    const [replies, setReplies] = useState([]);
+    const [threads, setThreads] = useState([]);
+    const [activeThreadMessages, setActiveThreadMessages] = useState({}); // { threadId: [messages] }
     const [notifications, setNotifications] = useState([]);
     const [ratings, setRatings] = useState({});
     const [hiddenPins, setHiddenPins] = useState(() => {
@@ -105,12 +106,39 @@ export const AppProvider = ({ children }) => {
         try {
             const q = query(collection(db, 'pins'), orderBy('createdAt', 'desc'));
             const unsubscribe = onSnapshot(q, (snapshot) => {
-                const pinsData = snapshot.docs.map(doc => {
-                    const data = doc.data();
-                    logPinDebug("FIRESTORE READ BACK:", { id: doc.id, title: data.title, date: data.date, createdAt: data.createdAt });
+                const pinsData = snapshot.docs.map(docSnap => {
+                    const data = docSnap.data();
+                    const pinId = docSnap.id;
+
+                    const ownerEmail = (data.ownerEmail || '').toLowerCase();
+                    const currentUserEmail = (user?.email || '').toLowerCase();
+
+                    // TRIPLE-CHECK OWNER SYNC: If email matches, the current UID MUST be the owner
+                    if (user && ownerEmail === currentUserEmail && data.ownerUid !== user.uid) {
+                        console.log(`📡 OWNER SYNC: Matching ${currentUserEmail} to Pin ${pinId}`);
+                        const pinRef = doc(db, 'pins', pinId);
+                        updateDoc(pinRef, { ownerUid: user.uid }).catch(e => console.error("Pin update error:", e));
+
+                        // Force update any existing threads so this account can see them
+                        const threadQuery = query(collection(db, 'threads'), where('pinId', '==', pinId));
+                        onSnapshot(threadQuery, (snapshot) => {
+                            snapshot.docs.forEach(tDoc => {
+                                const tData = tDoc.data();
+                                // If I'm the owner by email but not in participants, fix it!
+                                if (!tData.participants.includes(user.uid)) {
+                                    console.log(`🧵 UPDATING THREAD PARTICIAPNTS: Adding ${user.uid} to ${tDoc.id}`);
+                                    updateDoc(doc(db, 'threads', tDoc.id), {
+                                        ownerUid: user.uid,
+                                        participants: [user.uid, tData.responderUid]
+                                    }).catch(e => console.error("Thread Sync error:", e));
+                                }
+                            });
+                        });
+                    }
+
                     return {
                         ...data,
-                        id: doc.id
+                        id: pinId
                     };
                 });
                 setPins(pinsData);
@@ -121,18 +149,59 @@ export const AppProvider = ({ children }) => {
         }
     }, []);
 
-    // 3. Replies Real-time Listener
+    // 3. Threads Private Listener (Email-style)
     useEffect(() => {
-        if (!db) return;
-        const unsubscribe = onSnapshot(collection(db, 'replies'), (snapshot) => {
-            const repliesData = snapshot.docs.map(doc => ({
-                ...doc.data(),
-                id: doc.id
-            }));
-            setReplies(repliesData);
+        if (!user || !db) {
+            setThreads([]);
+            return;
+        }
+
+        try {
+            const q = query(
+                collection(db, 'threads'),
+                where('participants', 'array-contains', user.uid),
+                orderBy('lastMessageAt', 'desc')
+            );
+
+            console.log(`📡 THREADS LISTENER: Starting query for User [${user.uid}]...`);
+
+            const unsubscribe = onSnapshot(q, {
+                next: (snapshot) => {
+                    const threadsData = snapshot.docs.map(doc => ({
+                        ...doc.data(),
+                        id: doc.id
+                    }));
+                    console.log(`📥 INBOX QUERY RESULTS for User [${user.uid} / ${user.email}]:`, threadsData.map(t => ({
+                        id: t.id,
+                        participants: t.participants,
+                        lastMessageAt: t.lastMessageAt?.toDate ? t.lastMessageAt.toDate().toISOString() : t.lastMessageAt,
+                        lastSender: t.lastSenderUid,
+                        ownerEmail: t.ownerEmail || 'missing'
+                    })));
+                    setThreads(threadsData);
+                },
+                error: (err) => {
+                    console.error("❌ Threads listener error (Likely missing index or permissions):", err);
+                }
+            });
+            return () => unsubscribe();
+        } catch (err) {
+            console.error("❌ Threads listener setup error:", err);
+        }
+    }, [user]);
+
+    // Helper to subscribe to messages for a specific thread
+    const subscribeToThread = (threadId, callback) => {
+        if (!db || !threadId) return () => { };
+        const q = query(
+            collection(db, 'threads', threadId, 'messages'),
+            orderBy('createdAt', 'asc')
+        );
+        return onSnapshot(q, (snapshot) => {
+            const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            callback(msgs);
         });
-        return () => unsubscribe();
-    }, []);
+    };
 
     // 3.5 Notifications Listener
     useEffect(() => {
@@ -157,7 +226,7 @@ export const AppProvider = ({ children }) => {
         }
     }, [user]);
 
-    // 4. Ratings Global Listener (for average calculation)
+    // 4. Ratings Global Listener
     useEffect(() => {
         if (!db) return;
         const unsubscribe = onSnapshot(collection(db, 'ratings'), (snapshot) => {
@@ -165,38 +234,44 @@ export const AppProvider = ({ children }) => {
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
                 if (!ratingsMap[data.pinId]) ratingsMap[data.pinId] = [];
-                ratingsMap[data.pinId].push(data.rating);
+                ratingsMap[data.pinId].push({
+                    userId: data.userId,
+                    rating: data.rating
+                });
             });
             setRatings(ratingsMap);
         });
         return () => unsubscribe();
     }, []);
 
-    // 5. Notification Logic
+    // 5. Notification Logic (based on threads)
     useEffect(() => {
-        if (!user || replies.length === 0) {
+        if (!user) {
             setHasNewNotifications(false);
             return;
         }
 
-        const myPins = pins.filter(p => p.ownerEmail === user.email);
-        const receivedReplies = replies.filter(r => myPins.some(p => p.id === r.pinId));
+        // Check threads for unread activity (last message not from me)
+        const unreadThreadCount = threads.filter(t => {
+            // This is a simplified check. In a real app we'd have a 'lastReadAt' per participant.
+            // For now, if the thread updated and I wasn't the last sender (and I'm a participant), it's "new"
+            // Wait, threads might not have 'lastSenderUid'. Let's assume we'll add it in addReply.
+            return t.lastSenderUid && t.lastSenderUid !== user.uid && t.lastMessageAt;
+        }).length;
 
-        // Simple logic: if count is higher than last seen, show bubble
-        const lastSeenCount = parseInt(localStorage.getItem(`mmc_last_replies_count_${user.uid}`) || '0');
+        const lastSeenNotified = parseInt(localStorage.getItem(`mmc_last_notified_threads_${user.uid}`) || '0');
 
-        if (receivedReplies.length > lastSeenCount) {
+        if (unreadThreadCount > 0) {
             setHasNewNotifications(true);
         } else {
             setHasNewNotifications(false);
         }
-    }, [replies, pins, user]);
+    }, [threads, user]);
 
     const markNotificationsAsRead = () => {
         if (!user) return;
-        const myPins = pins.filter(p => p.ownerEmail === user.email);
-        const receivedReplies = replies.filter(r => myPins.some(p => p.id === r.pinId));
-        localStorage.setItem(`mmc_last_replies_count_${user.uid}`, receivedReplies.length.toString());
+        // In this architecture, we could update a 'lastReadAt' in the thread.
+        // For now, we'll just clear the indicator locally if the user is on the messages page.
         setHasNewNotifications(false);
     };
 
@@ -317,7 +392,7 @@ export const AppProvider = ({ children }) => {
     const getAverageRating = (pinId) => {
         const pinRatings = ratings[pinId] || [];
         if (pinRatings.length === 0) return "0.0";
-        const sum = pinRatings.reduce((a, b) => a + b, 0);
+        const sum = pinRatings.reduce((a, b) => a + (b.rating || 0), 0);
         return (sum / pinRatings.length).toFixed(1);
     };
 
@@ -342,9 +417,10 @@ export const AppProvider = ({ children }) => {
     const canStartNewThread = async (pinId) => {
         if (!user) return false;
         if (!isSuspended()) return true;
-        // If suspended, check if there are existing replies from this user for this pin
-        const existingReplies = replies.filter(r => r.pinId === pinId && r.senderUid === user.uid);
-        return existingReplies.length > 0;
+        // If suspended, check if there's already a thread for this pin where I am the responder
+        const threadId = `${pinId}_${user.uid}`;
+        const threadDoc = await getDoc(doc(db, 'threads', threadId));
+        return threadDoc.exists();
     };
 
     const addNotification = async (targetUid, message, type = 'moderation') => {
@@ -357,21 +433,89 @@ export const AppProvider = ({ children }) => {
         });
     };
 
-    const addReply = async (pinId, content) => {
-        if (!user) return;
-        await addDoc(collection(db, 'replies'), {
+    // responderUid: Optional. If sending as owner, specify who you are replying to. 
+    // If sending as participant, omit (defaults to current user).
+    const addReply = async (pinId, content, responderUid = null) => {
+        if (!user) {
+            console.error("❌ addReply Failed: User not logged in.");
+            return;
+        }
+
+        const pin = pins.find(p => String(p.id) === String(pinId));
+        if (!pin) {
+            console.error(`❌ addReply Failed: Pin ${pinId} not found in state.`);
+            return;
+        }
+
+        // --- RESOLVE OWNER UID ---
+        // If the pin missing ownerUid, but current user's email matches, we can't reply until synced.
+        let resolvedOwnerUid = pin.ownerUid;
+        if (!resolvedOwnerUid) {
+            if (user.email.toLowerCase() === (pin.ownerEmail || '').toLowerCase()) {
+                resolvedOwnerUid = user.uid;
+                console.log("⚠️ addReply: resolvedOwnerUid missing on pin, using current user as owner (match by email).");
+            } else {
+                console.error("❌ addReply Aborted: Pin has no ownerUid and user is not owner.");
+                return;
+            }
+        }
+
+        // --- RESOLVE RESPONDER UID ---
+        // responderUid is the UID of the OTHER person (the one who isn't the owner).
+        let targetResponderUid = responderUid;
+        if (user.uid !== resolvedOwnerUid) {
+            // I am the participant (not the owner)
+            targetResponderUid = user.uid;
+        }
+
+        if (!targetResponderUid) {
+            console.error("❌ addReply Aborted: No responder identified (Owner cannot start a thread with themselves).");
+            return;
+        }
+
+        const participants = [resolvedOwnerUid, targetResponderUid];
+
+        // Final integrity check
+        if (participants.includes(undefined) || participants.includes(null)) {
+            console.error("❌ addReply Integrity Error: Participants array contains invalid values:", participants);
+            return;
+        }
+
+        const threadId = `${pinId}_${targetResponderUid}`;
+        const threadRef = doc(db, 'threads', threadId);
+
+        const threadData = {
             pinId,
-            content,
-            senderEmail: user.email,
-            senderUid: user.uid,
-            createdAt: serverTimestamp()
-        });
+            ownerUid: resolvedOwnerUid,
+            ownerEmail: pin.ownerEmail || '',
+            responderUid: targetResponderUid,
+            participants: participants,
+            lastMessageAt: serverTimestamp(),
+            lastMessagePreview: content.substring(0, 80),
+            lastSenderUid: user.uid,
+            updatedAt: serverTimestamp()
+        };
+
+        console.log(`📤 WRITING THREAD [${threadId}]:`, threadData);
+
+        try {
+            await setDoc(threadRef, threadData, { merge: true });
+            const msgRef = await addDoc(collection(db, 'threads', threadId, 'messages'), {
+                content,
+                senderUid: user.uid,
+                senderEmail: user.email,
+                createdAt: serverTimestamp()
+            });
+            console.log(`✅ SUCCESS: Message ${msgRef.id} written to thread ${threadId}`);
+        } catch (err) {
+            console.error("❌ Firestore Write Error in addReply:", err);
+        }
     };
 
-    const updateReply = async (replyId, content) => {
+    const updateReply = async (threadId, messageId, content) => {
         if (!user) return;
-        const replyRef = doc(db, 'replies', replyId);
-        await updateDoc(replyRef, {
+        const msgRef = doc(db, 'threads', threadId, 'messages', messageId);
+        await updateDoc(msgRef, {
             content,
             updatedAt: serverTimestamp()
         });
@@ -497,11 +641,12 @@ export const AppProvider = ({ children }) => {
             hiddenPins, hidePin, unhidePin, clearHiddenPins,
             formatDate, formatRelativeTime, dateFormat, setDateFormat, mapMode, setMapMode,
             distanceUnit, setDistanceUnit,
-            replies, ratings, notifications,
+            threads, ratings, notifications,
             hasNewNotifications, markNotificationsAsRead,
             reportPin, isSuspended, hasProbation, canStartNewThread, addNotification, refreshUserData,
             visiblePinIds, setVisiblePinIds,
-            activeFilters, setActiveFilters
+            activeFilters, setActiveFilters,
+            subscribeToThread
         }}>
             {children}
         </AppContext.Provider>

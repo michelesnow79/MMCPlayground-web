@@ -8,7 +8,7 @@ import './Messages.css';
 import ConfirmModal from '../components/ConfirmModal';
 
 const Messages = () => {
-    const { user, loading, pins, replies, notifications, formatDate, markNotificationsAsRead, isSuspended, hasProbation } = useApp();
+    const { user, loading, pins, threads, notifications, formatDate, markNotificationsAsRead, isSuspended, hasProbation, removePin } = useApp();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = React.useState('received');
     const [confirmConfig, setConfirmConfig] = React.useState({
@@ -21,10 +21,10 @@ const Messages = () => {
 
     // Clear notifications when viewing the messages page
     React.useEffect(() => {
-        if (user && activeTab === 'notices') {
+        if (user) {
             markNotificationsAsRead();
         }
-    }, [user, activeTab, markNotificationsAsRead]);
+    }, [user, markNotificationsAsRead]);
 
     if (loading) {
         return <div className="loading-screen-missme">LOADING MESSAGES...</div>;
@@ -33,11 +33,24 @@ const Messages = () => {
     if (!user) return <AuthModal />;
 
     // Replies I received (to my pins)
-    const myPins = pins.filter(p => p.ownerEmail === user.email);
-    const receivedReplies = replies.filter(r => myPins.some(p => p.id === r.pinId));
+    const myPins = pins.filter(p => p.ownerUid === user.uid || p.ownerEmail === user.email);
 
-    // Replies I sent (to others' pins)
-    const sentReplies = replies.filter(r => r.senderEmail === user.email);
+    // Threads I am participating in
+    const myConversations = threads.map(t => {
+        const pin = pins.find(p => String(p.id) === String(t.pinId));
+        const isUnread = t.lastSenderUid && t.lastSenderUid !== user.uid;
+
+        return {
+            thread: t,
+            pin,
+            isUnread,
+            latestReply: {
+                content: t.lastMessagePreview,
+                timestamp: t.lastMessageAt,
+                senderUid: t.lastSenderUid
+            }
+        };
+    });
 
     // Filtered notifications
     const myNotifs = notifications || [];
@@ -92,55 +105,63 @@ const Messages = () => {
         </div>
     );
 
-    const renderPinItem = (pin) => (
-        <div
-            key={pin.id}
-            className="thread-item-premium my-pin-item"
-            onClick={() => navigate(`/browse/${pin.id}`)}
-        >
-            <div className="thread-avatar-circle pin-avatar">
-                <span className="thread-logo-mini">📍</span>
-            </div>
-            <div className="thread-content-block">
-                <div className="thread-top-line">
-                    <h3 className="thread-title-text">{pin.title}</h3>
-                    <span className="thread-time-meta">{pin.date ? formatDate(pin.date) : 'Active'}</span>
+    const renderPinItem = (pin) => {
+        const pinThreads = threads.filter(t => String(t.pinId) === String(pin.id));
+        const hasUnreadInPin = pinThreads.some(t => t.lastSenderUid && t.lastSenderUid !== user.uid);
+
+        return (
+            <div
+                key={pin.id}
+                className={`thread-item-premium my-pin-item ${hasUnreadInPin ? 'has-unread-glow' : ''}`}
+                onClick={() => navigate(`/browse/${pin.id}`)}
+            >
+                <div className="thread-avatar-circle pin-avatar">
+                    <span className="thread-logo-mini">{hasUnreadInPin ? '📩' : '📍'}</span>
                 </div>
-                <p className="thread-preview-text">
-                    {pin.description.substring(0, 60)}...
-                </p>
-                <div className="pin-meta-row">
-                    <span className="reply-count-badge">
-                        {replies.filter(r => r.pinId === pin.id).length} REPLIES
-                    </span>
-                    {pin.isReported && <span className="reported-badge-mini">UNDER REVIEW</span>}
-                    <button
-                        className="pin-delete-btn-mini"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setConfirmConfig({
-                                isOpen: true,
-                                title: 'DELETE POST?',
-                                message: 'ARE YOU SURE YOU WANT TO DELETE THIS POST FOREVER?',
-                                onConfirm: () => {
-                                    removePin(pin.id);
-                                    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
-                                },
-                                confirmText: 'DELETE',
-                                cancelText: 'CANCEL',
-                                type: 'danger'
-                            });
-                        }}
-                    >
-                        DELETE
-                    </button>
+                <div className="thread-content-block">
+                    <div className="thread-top-line">
+                        <div className="title-group-unread">
+                            <h3 className="thread-title-text">{pin.title}</h3>
+                            {hasUnreadInPin && <span className="new-msg-tag">NEW REPLY</span>}
+                        </div>
+                        <span className="thread-time-meta">{pin.date ? formatDate(pin.date) : 'Active'}</span>
+                    </div>
+                    <p className="thread-preview-text">
+                        {pin.description.substring(0, 60)}...
+                    </p>
+                    <div className="pin-meta-row">
+                        <span className={`reply-count-badge ${hasUnreadInPin ? 'highlight-cyan' : ''}`}>
+                            {pinThreads.length} {pinThreads.length === 1 ? 'CONVERSATION' : 'CONVERSATIONS'}
+                        </span>
+                        {pin.isReported && <span className="reported-badge-mini">UNDER REVIEW</span>}
+                        <button
+                            className="pin-delete-btn-mini"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmConfig({
+                                    isOpen: true,
+                                    title: 'DELETE POST?',
+                                    message: 'ARE YOU SURE YOU WANT TO DELETE THIS POST FOREVER?',
+                                    onConfirm: () => {
+                                        removePin(pin.id);
+                                        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                                    },
+                                    confirmText: 'DELETE',
+                                    cancelText: 'CANCEL',
+                                    type: 'danger'
+                                });
+                            }}
+                        >
+                            DELETE
+                        </button>
+                    </div>
+                </div>
+                <div className="thread-indicator">
+                    <span className="chevron-right">❯</span>
                 </div>
             </div>
-            <div className="thread-indicator">
-                <span className="chevron-right">❯</span>
-            </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="messages-page-pro">
@@ -160,13 +181,13 @@ const Messages = () => {
                     className={`tab-btn ${activeTab === 'received' ? 'active' : ''}`}
                     onClick={() => setActiveTab('received')}
                 >
-                    POSTS ({myPins.length})
+                    MY POSTS ({myPins.length})
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'sent' ? 'active' : ''}`}
                     onClick={() => setActiveTab('sent')}
                 >
-                    REPLIES ({sentReplies.length})
+                    CONVERSATIONS ({myConversations.length})
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'notices' ? 'active' : ''}`}
@@ -190,12 +211,46 @@ const Messages = () => {
                     </div>
                 ) : activeTab === 'sent' ? (
                     <div className="thread-stack">
-                        {sentReplies.length > 0 ? (
-                            sentReplies.map(r => renderReplyItem(r, true))
+                        {myConversations.length > 0 ? (
+                            myConversations.map(convo => {
+                                const { pin, latestReply, isUnread, thread } = convo;
+                                return (
+                                    <div
+                                        key={thread.id}
+                                        className={`thread-item-premium ${isUnread ? 'has-unread-glow' : ''}`}
+                                        onClick={() => pin ? navigate(`/browse/${pin.id}`) : null}
+                                        style={{ opacity: pin ? 1 : 0.7 }}
+                                    >
+                                        <div className="thread-avatar-circle">
+                                            <span className="thread-logo-mini">{pin ? '❤️' : '🚫'}</span>
+                                        </div>
+                                        <div className="thread-content-block">
+                                            <div className="thread-top-line">
+                                                <h3 className="thread-title-text">{pin ? pin.title : 'DELETED CONNECTION'}</h3>
+                                                <span className="thread-time-meta">
+                                                    {latestReply?.timestamp ? formatDate(latestReply.timestamp) : 'Recent'}
+                                                </span>
+                                            </div>
+                                            <p className="thread-preview-text">
+                                                <span className="sender-label">
+                                                    {latestReply?.senderUid === user.uid ? 'You: ' : (pin?.ownerUid === user.uid ? 'From Participant: ' : 'From Owner: ')}
+                                                </span>
+                                                {latestReply?.content ? latestReply.content : 'Message sent...'}
+                                            </p>
+                                            {!pin && <p className="deleted-tag">This post was removed by a moderator</p>}
+                                        </div>
+                                        {pin && (
+                                            <div className="thread-indicator">
+                                                <span className="chevron-right">❯</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })
                         ) : (
                             <div className="empty-messages">
                                 <span className="empty-icon">📝</span>
-                                <p>You haven't replied to any posts.</p>
+                                <p>You haven't joined any conversations yet.</p>
                             </div>
                         )}
                     </div>

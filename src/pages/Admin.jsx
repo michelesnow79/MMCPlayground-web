@@ -23,6 +23,8 @@ const Admin = () => {
         inputValue: ''
     });
     const [insightTab, setInsightTab] = useState('postalCode');
+    const [inspectPinId, setInspectPinId] = useState('');
+    const [diagnosticsData, setDiagnosticsData] = useState(null);
 
     useEffect(() => {
         // Security Check: Only allow if isadmin
@@ -362,6 +364,36 @@ const Admin = () => {
         });
     };
 
+    const handleInspect = async () => {
+        if (!inspectPinId.trim()) return;
+        try {
+            const pinRef = doc(db, 'pins', inspectPinId);
+            const pinSnap = await getDocs(query(collection(db, 'pins'))); // Fetching all is easier for debugging ID mismatches
+            const targetPinDoc = pinSnap.docs.find(d => d.id === inspectPinId.trim());
+
+            let pinData = null;
+            if (targetPinDoc) {
+                pinData = { id: targetPinDoc.id, ...targetPinDoc.data() };
+            }
+
+            const threadQuery = query(collection(db, 'threads'), where('pinId', '==', inspectPinId.trim()));
+            const threadSnap = await getDocs(threadQuery);
+            const threads = threadSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            setDiagnosticsData({
+                pin: pinData,
+                threads: threads,
+                currentUser: {
+                    uid: user?.uid,
+                    email: user?.email
+                }
+            });
+        } catch (err) {
+            console.error("DIAGNOSTICS ERROR:", err);
+            alert("Error fetching diagnostics. Check console.");
+        }
+    };
+
     const marketInsights = React.useMemo(() => {
         const counts = {};
         allUsers.forEach(u => {
@@ -524,6 +556,50 @@ const Admin = () => {
                             </div>
                         ))}
                     </div>
+                </section>
+
+                <section className="admin-section diagnostics-section" style={{ gridColumn: '1 / -1', background: '#111', border: '2px solid #333' }}>
+                    <h2 className="section-title" style={{ color: 'var(--missme-cyan)' }}>🔍 SYSTEM DIAGNOSTICS</h2>
+                    <div className="diagnostic-controls" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                        <input
+                            type="text"
+                            placeholder="PASTE PIN ID (e.g. 1771265236911)"
+                            className="admin-search"
+                            style={{ flex: 1 }}
+                            value={inspectPinId}
+                            onChange={(e) => setInspectPinId(e.target.value)}
+                        />
+                        <button className="seed-pins-btn" onClick={handleInspect}>INSPECT DOCUMENT DUMP</button>
+                    </div>
+
+                    {diagnosticsData && (
+                        <div className="diagnostics-dump" style={{ background: '#000', padding: '20px', borderRadius: '8px', fontSize: '0.9rem', color: '#ccc', maxHeight: '500px', overflowY: 'auto' }}>
+                            <div style={{ marginBottom: '20px' }}>
+                                <h3 style={{ color: 'white', borderBottom: '1px solid #333', paddingBottom: '5px' }}>CURRENT SESSION</h3>
+                                <pre>{JSON.stringify(diagnosticsData.currentUser, null, 2)}</pre>
+                            </div>
+
+                            <div style={{ marginBottom: '20px' }}>
+                                <h3 style={{ color: 'white', borderBottom: '1px solid #333', paddingBottom: '5px' }}>PIN DOCUMENT</h3>
+                                {diagnosticsData.pin ? (
+                                    <pre>{JSON.stringify(diagnosticsData.pin, null, 2)}</pre>
+                                ) : (
+                                    <p style={{ color: 'red' }}>PIN NOT FOUND IN FIRESTORE</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 style={{ color: 'white', borderBottom: '1px solid #333', paddingBottom: '5px' }}>ASSOCIATED THREADS ({diagnosticsData.threads.length})</h3>
+                                {diagnosticsData.threads.map((t, idx) => (
+                                    <div key={t.id} style={{ marginBottom: '15px', border: '1px solid #222', padding: '10px' }}>
+                                        <strong>THREAD #{idx + 1} ID: {t.id}</strong>
+                                        <pre>{JSON.stringify(t, null, 2)}</pre>
+                                    </div>
+                                ))}
+                                {diagnosticsData.threads.length === 0 && <p>No threads found for this Pin ID.</p>}
+                            </div>
+                        </div>
+                    )}
                 </section>
             </div>
 

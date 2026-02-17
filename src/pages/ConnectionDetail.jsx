@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { useApp } from '../context/AppContext';
@@ -15,13 +15,20 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const ConnectionDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, pins, replies, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, updatePin, removePin, formatDate, formatRelativeTime, hiddenPins, loading, isSuspended, canStartNewThread } = useApp();
+    const { user, pins, threads, addReply, updateReply, ratings, ratePin, getAverageRating, hidePin, updatePin, removePin, formatDate, formatRelativeTime, hiddenPins, loading, isSuspended, canStartNewThread, subscribeToThread } = useApp();
 
     const pin = pins.find(p => String(p.id) === String(id));
-    const currentRating = ratings[pin?.id] || 0;
+
+    // Find my specific rating for this pin
+    const pinRatings = ratings[pin?.id] || [];
+    const myRatingObj = user ? pinRatings.find(r => r.userId === user.uid) : null;
+    const currentRating = myRatingObj ? myRatingObj.rating : 0;
 
     const [replyText, setReplyText] = React.useState('');
     const [showReplyModal, setShowReplyModal] = React.useState(false);
+    const [activeResponderUid, setActiveResponderUid] = React.useState(null); // Used by owner to target a thread
+    const [threadMessages, setThreadMessages] = React.useState([]); // Messages for the active/only thread
+    const historyRef = useRef(null);
     const [showReportModal, setShowReportModal] = React.useState(false);
     const [reportReason, setReportReason] = React.useState('');
     const [isEditing, setIsEditing] = React.useState(false);
@@ -64,51 +71,63 @@ const ConnectionDetail = () => {
         if (pin) ratePin(pin.id, val);
     };
 
-    // Find if current user already replied to this pin
-    const existingReply = (pin && user) ? replies.find(r => String(r.pinId) === String(pin.id) && r.senderEmail === user.email) : null;
+    // Identify if current user already has a thread for this pin as a participant
+    const myThread = (pin && user) ? threads.find(t => String(t.pinId) === String(pin.id) && t.responderUid === user.uid) : null;
 
-    const handleReplyClick = async () => {
+    // Unified Thread Subscription
+    useEffect(() => {
+        if (!pin || !user) return;
+
+        // Determine which thread we are looking at:
+        // 1. Explicitly selected (owner clicked a participant)
+        // 2. Default participant thread (not owner)
+        let targetThreadId = null;
+
+        if (activeResponderUid) {
+            targetThreadId = `${pin.id}_${activeResponderUid}`;
+        } else if (pin.ownerUid !== user.uid) {
+            // I am the participant
+            targetThreadId = `${pin.id}_${user.uid}`;
+        }
+
+        if (!targetThreadId) {
+            setThreadMessages([]);
+            return;
+        }
+
+        const unsub = subscribeToThread(targetThreadId, setThreadMessages);
+        return () => unsub();
+    }, [pin, user, activeResponderUid, threads]); // Re-sub if threads change (optional but safer)
+
+    // ALLOW MULTIPLE REPLIES (Chat Style) - No longer forcing edit mode on existing reply
+    // ALLOW MULTIPLE REPLIES (Chat Style)
+    const handleReplyClick = (responderUid = null) => {
         if (!user) {
             navigate('/login');
             return;
         }
-
-        if (isSuspended()) {
-            const allowed = await canStartNewThread(id);
-            if (!allowed) {
-                setConfirmConfig({
-                    isOpen: true,
-                    title: 'RESTRICTED ACCESS',
-                    message: 'Your account is on hold. You can only reply to ongoing conversations, not start new ones.',
-                    onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false })),
-                    cancelText: 'CLOSE',
-                    confirmText: 'OK',
-                    type: 'info'
-                });
-                return;
-            }
-        }
-
-        if (existingReply) {
-            setReplyText(existingReply.content);
-            setIsEditing(true);
-        } else {
-            setReplyText('');
-            setIsEditing(false);
-        }
+        setActiveResponderUid(responderUid);
         setShowReplyModal(true);
     };
 
-    const handleReplySubmit = () => {
+    const handleReplySubmit = async () => {
         if (!replyText.trim()) return;
-
-        if (isEditing && existingReply) {
-            updateReply(existingReply.id, replyText);
-        } else {
-            addReply(id, replyText);
+        try {
+            await addReply(pin.id, replyText, activeResponderUid);
+            setReplyText('');
+            // If owner was replying to a new thread via handleReplyClick(uid), 
+            // the activeResponderUid is already set.
+        } catch (err) {
+            console.error(err);
         }
-        setShowReplyModal(false);
     };
+
+    // Auto-scroll to bottom of conversation
+    useEffect(() => {
+        if (historyRef.current) {
+            historyRef.current.scrollTop = historyRef.current.scrollHeight;
+        }
+    }, [threadMessages, showReplyModal]);
 
     const handleHide = () => {
         if (pin) {
@@ -392,22 +411,44 @@ const ConnectionDetail = () => {
                             </span>
                         </div>
 
-                        {pin.ownerEmail === user?.email && (
+                        {/* OWNER VIEW: See LIST OF THREADS */}
+                        {pin.ownerUid === user?.uid && (
                             <div className="owner-replies-section">
-                                <h3 className="section-title-mini">REPLIES ({replies.filter(r => r.pinId === pin.id).length})</h3>
+                                <h3 className="section-title-mini">CONVERSATIONS ({threads.filter(t => String(t.pinId) === String(pin.id)).length})</h3>
                                 <div className="replies-list-mini">
-                                    {replies.filter(r => r.pinId === pin.id).map(r => (
-                                        <div key={r.id} className="reply-card-mini">
+                                    {threads.filter(t => String(t.pinId) === String(pin.id)).map(t => (
+                                        <div key={t.id} className="reply-card-mini" style={{ borderLeft: (t.lastSenderUid !== user.uid) ? '3px solid var(--missme-cyan)' : '3px solid #333' }}>
                                             <div className="reply-header">
-                                                <span className="reply-sender">{r.senderEmail === user.email ? 'YOU' : 'PARTICIPANT'}</span>
-                                                <span className="reply-date">{formatDate(r.timestamp)}</span>
+                                                <span className="reply-sender">{t.lastSenderUid === user.uid ? 'YOU' : 'PARTICIPANT'}</span>
+                                                <span className="reply-date">{formatDate(t.lastMessageAt)}</span>
                                             </div>
-                                            <p className="reply-text">{r.content}</p>
-                                            {r.senderEmail !== user.email && (
-                                                <button className="reply-back-btn-mini" onClick={handleReplyClick}>
-                                                    REPLY BACK
-                                                </button>
-                                            )}
+                                            <p className="reply-text" style={{ fontStyle: 'italic', color: '#888' }}>"{t.lastMessagePreview}..."</p>
+                                            <button className="reply-back-btn-mini" onClick={() => handleReplyClick(t.responderUid)}>
+                                                OPEN CONVERSATION
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {threads.filter(t => String(t.pinId) === String(pin.id)).length === 0 && (
+                                        <p style={{ color: '#666', fontSize: '0.8rem', textAlign: 'center', padding: '20px' }}>No replies yet.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* PARTICIPANT VIEW: See MY thread history */}
+                        {pin.ownerUid !== user?.uid && threadMessages.length > 0 && (
+                            <div className="owner-replies-section">
+                                <h3 className="section-title-mini">CONVERSATION HISTORY</h3>
+                                <div className="replies-list-mini">
+                                    {threadMessages.map(m => (
+                                        <div key={m.id} className={`reply-card-mini ${m.senderUid === user?.uid ? 'my-reply' : 'owner-reply'}`} style={{ borderLeft: m.senderUid === pin.ownerUid ? '3px solid var(--missme-cyan)' : '3px solid #666' }}>
+                                            <div className="reply-header">
+                                                <span className="reply-sender" style={{ color: m.senderUid === pin.ownerUid ? 'var(--missme-cyan)' : 'white' }}>
+                                                    {m.senderUid === user?.uid ? 'YOU' : 'OWNER'}
+                                                </span>
+                                                <span className="reply-date">{formatDate(m.createdAt)}</span>
+                                            </div>
+                                            <p className="reply-text">{m.content}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -415,7 +456,8 @@ const ConnectionDetail = () => {
                         )}
 
                         <div className="detail-cta-group">
-                            {(pin.ownerUid === user?.uid || pin.ownerEmail === user?.email || user?.isAdmin) ? (
+                            {/* TRUE OWNER CONTROLS - Normalizing email for sync */}
+                            {(pin.ownerUid === user?.uid || (pin.ownerEmail || '').toLowerCase() === (user?.email || '').toLowerCase()) ? (
                                 <div className={`owner-buttons-stack ${pin.isReported ? 'disabled-controls' : ''}`}>
                                     <button className="btn-cyan-glow-reply" onClick={() => navigate('/messages')}>
                                         VIEW REPLIES
@@ -437,9 +479,33 @@ const ConnectionDetail = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <button className="btn-cyan-glow-reply" onClick={handleReplyClick}>
-                                    {existingReply ? 'EDIT MY REPLY' : 'REPLY TO THIS POST'}
-                                </button>
+                                /* NON-OWNER (User or Admin) -> Can Reply */
+                                <>
+                                    <button className="btn-cyan-glow-reply" onClick={() => handleReplyClick()}>
+                                        {myThread ? 'REPLY TO CONVERSATION' : 'REPLY TO PIN'}
+                                    </button>
+
+                                    {/* ADMIN MODERATION CONTROLS (Only visible to admin on OTHER PEOPLES posts) */}
+                                    {user?.isAdmin && (
+                                        <div className="admin-moderation-stack" style={{ marginTop: '20px', borderTop: '1px solid #333', paddingTop: '15px' }}>
+                                            <h4 style={{ color: '#666', fontSize: '0.8rem', marginBottom: '10px', textAlign: 'center' }}>ADMIN MODERATION</h4>
+                                            <div className="owner-buttons-stack">
+                                                <button
+                                                    className={`btn-hide-post-detail ${pin.status === 'hidden' ? 'is-private' : ''}`}
+                                                    onClick={async () => {
+                                                        const newStatus = pin.status === 'hidden' ? 'public' : 'hidden';
+                                                        await updatePin(pin.id, { status: newStatus });
+                                                    }}
+                                                >
+                                                    {pin.status === 'hidden' ? 'UNHIDE (ADMIN)' : 'HIDE (ADMIN)'}
+                                                </button>
+                                                <button className="btn-delete-post-detail" onClick={handleDelete}>
+                                                    DELETE POST (ADMIN)
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
 
                             <div className="secondary-row">
@@ -459,7 +525,7 @@ const ConnectionDetail = () => {
                 {
                     showEditModal && (
                         <div className="modal-overlay">
-                            <div className="modal-card edit-pin-modal">
+                            <div className="mmc-modal-card edit-pin-modal">
                                 <h2 className="modal-title">EDIT YOUR POST</h2>
                                 <div className="edit-form">
                                     <div className="edit-input-group">
@@ -545,8 +611,34 @@ const ConnectionDetail = () => {
                 {
                     showReplyModal && (
                         <div className="modal-overlay">
-                            <div className="modal-card reply-modal">
-                                <h2 className="modal-title">{isEditing ? 'EDIT YOUR REPLY' : 'REPLY TO POST'}</h2>
+                            <div className="expansive-reply-panel">
+                                <div className="modal-header-row">
+                                    <h2 className="modal-title">CONVERSATION</h2>
+                                    <button className="close-modal-btn" onClick={() => setShowReplyModal(false)}>✕</button>
+                                </div>
+
+                                {/* CONVERSATION HISTORY IN MODAL */}
+                                <div className="modal-history-scroll" ref={historyRef}>
+                                    {threadMessages.map(m => (
+                                        <div
+                                            key={m.id}
+                                            className="history-msg-item"
+                                            style={{
+                                                background: m.senderUid === user?.uid ? '#333' : '#111',
+                                                borderLeft: m.senderUid === pin.ownerUid ? '3px solid var(--missme-cyan)' : '3px solid transparent'
+                                            }}
+                                        >
+                                            <div className="history-msg-meta">
+                                                <span>{m.senderUid === user?.uid ? 'YOU' : (m.senderUid === pin.ownerUid ? 'OWNER' : 'PARTICIPANT')}</span>
+                                                <span>{formatDate(m.createdAt)}</span>
+                                            </div>
+                                            <p className="history-msg-body">{m.content}</p>
+                                        </div>
+                                    ))}
+                                    {threadMessages.length === 0 && (
+                                        <p className="no-history-text">No previous messages.</p>
+                                    )}
+                                </div>
                                 <textarea
                                     className="reply-textarea"
                                     placeholder="Type your message here..."
@@ -556,7 +648,7 @@ const ConnectionDetail = () => {
                                 <div className="modal-actions">
                                     <button className="modal-btn-cancel" onClick={() => setShowReplyModal(false)}>CANCEL</button>
                                     <button className="modal-btn-confirm" onClick={handleReplySubmit}>
-                                        {isEditing ? 'UPDATE REPLY' : 'SEND REPLY'}
+                                        SEND REPLY
                                     </button>
                                 </div>
                             </div>
@@ -567,7 +659,7 @@ const ConnectionDetail = () => {
                 {
                     showReportModal && (
                         <div className="modal-overlay">
-                            <div className="modal-card report-modal">
+                            <div className="mmc-modal-card report-modal">
                                 <div className="report-warning-box">
                                     <span className="warning-emoji">🛑</span>
                                     <h2 className="modal-title">REPORT PIN</h2>
