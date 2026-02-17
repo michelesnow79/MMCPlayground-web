@@ -635,7 +635,7 @@ const MapView = () => {
                     </div>
                 </div>
             ) : (
-                <div className="map-view-hero">
+                <div className="map-view-container">
                     {fallbackUsed && (
                         <div className="map-fallback-banner">
                             LOCATION UNAVAILABLE — SHOWING DEFAULT AREA. ENABLE LOCATION OR SET ZIP.
