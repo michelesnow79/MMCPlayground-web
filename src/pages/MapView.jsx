@@ -50,6 +50,7 @@ const MapView = () => {
     const [selectedPins, setSelectedPins] = useState([]);
     const [selectedPinIndex, setSelectedPinIndex] = useState(0);
     const [mapInstance, setMapInstance] = useState(null);
+    const [minLoadingTimeElapsed, setMinLoadingTimeElapsed] = useState(false);
 
 
     const GROUP_RADIUS_METERS = 75;
@@ -196,6 +197,14 @@ const MapView = () => {
     useEffect(() => {
         setActiveFilters(prev => ({ ...prev, unit: distanceUnit }));
     }, [distanceUnit]);
+
+    // Force a minimum loading time so the premium hearts are actually seen!
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setMinLoadingTimeElapsed(true);
+        }, 1500);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Initial Geolocation (Browser GPS)
     useEffect(() => {
@@ -592,11 +601,11 @@ const MapView = () => {
 
     return (
         <APIProvider apiKey={API_KEY} libraries={['places', 'geometry']}>
-            {isLocating ? (
+            {(isLocating || !minLoadingTimeElapsed) ? (
                 <div className="map-loading-screen">
                     <div className="loading-content">
                         <div className="loading-hearts">
-                            <span className="heart-main">❤️</span>
+                            <img src={logoAsset} className="heart-main-asset" alt="" />
                             <span className="heart-sub-1">❤️</span>
                             <span className="heart-sub-2">❤️</span>
                         </div>

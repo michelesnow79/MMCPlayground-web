@@ -1336,10 +1336,17 @@ div[role="button"] {
     margin-bottom: 20px;
 }
 
-.heart-main,
+.heart-main-asset {
+    width: 60px;
+    height: auto;
+    display: block;
+    animation: pulse-heart 1.2s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(254, 44, 85, 0.4));
+}
+
 .heart-sub-1,
 .heart-sub-2 {
-    font-size: 3.5rem;
+    font-size: 2.5rem;
     display: block;
     animation: pulse-heart 1.2s ease-in-out infinite;
 }
