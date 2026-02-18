@@ -153,7 +153,7 @@ export const AppProvider = ({ children }) => {
             telemetry.startTimer('thread_list_load');
             const q = query(
                 collection(db, 'threads'),
-                where('participants', 'array-contains-any', [user.uid, user.email])
+                where('participants', 'array-contains', user.uid)
             );
 
             const unsubscribe = onSnapshot(q, {
@@ -594,7 +594,6 @@ export const AppProvider = ({ children }) => {
             message,
             type,
             read: false,
-            createdAt: serverTimestamp()
         });
     };
 

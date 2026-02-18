@@ -110,8 +110,8 @@ const ConnectionDetail = () => {
     // ALLOW MULTIPLE REPLIES (Chat Style) - No longer forcing edit mode on existing reply
     // ALLOW MULTIPLE REPLIES (Chat Style)
     const handleReplyClick = (responderUid = null) => {
-        console.log(`💬 handleReplyClick called. responderUid: ${responderUid}, user: ${user?.uid}, isLoggedIn: ${isLoggedIn}`);
-        if (!user || !isLoggedIn) {
+        console.log(`💬 handleReplyClick called. responderUid: ${responderUid}, user: ${user?.uid}`);
+        if (!user) {
             console.log("💬 Redirecting to login...");
             navigate('/login');
             return;
