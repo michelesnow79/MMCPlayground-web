@@ -32,12 +32,20 @@ const Messages = () => {
 
     if (!user) return <AuthModal />;
 
+    // Defensively default all collections
+    const pinsSafe = Array.isArray(pins) ? pins : [];
+    const threadsSafe = Array.isArray(threads) ? threads : [];
+    const notificationsSafe = Array.isArray(notifications) ? notifications : [];
+
+    const myNotifs = notificationsSafe;
+
     // Replies I received (to my pins)
-    const myPins = pins.filter(p => p.ownerUid === user.uid || p.ownerEmail === user.email);
+    const myPins = pinsSafe.filter(p => p && (p.ownerUid === user.uid || p.ownerEmail === user.email));
 
     // Threads I am participating in
-    const myConversations = threads.map(t => {
-        const pin = pins.find(p => String(p.id) === String(t.pinId));
+    const myConversations = threadsSafe.map(t => {
+        if (!t) return null;
+        const pin = pinsSafe.find(p => p && String(p.id) === String(t.pinId));
         const isUnread = t.lastSenderUid && t.lastSenderUid !== user.uid;
 
         return {
@@ -45,12 +53,12 @@ const Messages = () => {
             pin,
             isUnread,
             latestReply: {
-                content: t.lastMessagePreview,
+                content: t.lastMessagePreview || '',
                 timestamp: t.lastMessageAt,
                 senderUid: t.lastSenderUid
             }
         };
-    });
+    }).filter(Boolean);
 
     // Inbox: People replying to MY pins
     const myEmail = user?.email?.toLowerCase() || '';
@@ -67,7 +75,8 @@ const Messages = () => {
     });
 
     const renderReplyItem = (reply, isSent) => {
-        const pin = pins.find(p => p.id === reply.pinId);
+        if (!reply) return null;
+        const pin = pinsSafe.find(p => p && p.id === reply.pinId);
 
         return (
             <div
@@ -117,7 +126,8 @@ const Messages = () => {
     );
 
     const renderPinItem = (pin) => {
-        const pinThreads = threads.filter(t => String(t.pinId) === String(pin.id));
+        if (!pin) return null;
+        const pinThreads = threadsSafe.filter(t => t && String(t.pinId) === String(pin.id));
         const hasUnreadInPin = pinThreads.some(t => t.lastSenderUid && t.lastSenderUid !== user.uid);
 
         return (
@@ -138,7 +148,7 @@ const Messages = () => {
                         <span className="thread-time-meta">{pin.date ? formatDate(pin.date) : 'Active'}</span>
                     </div>
                     <p className="thread-preview-text">
-                        {pin.description.substring(0, 60)}...
+                        {(pin.description || '').substring(0, 60)}...
                     </p>
                     <div className="pin-meta-row">
                         <span className={`reply-count-badge ${hasUnreadInPin ? 'highlight-cyan' : ''}`}>
