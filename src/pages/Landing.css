@@ -346,6 +346,50 @@
     box-shadow: 8px 8px 0px #000;
 }
 
+.cta-actions-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.mobile-promos {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.promo-text {
+    font-family: 'Bangers', cursive;
+    font-size: 1.4rem;
+    color: white;
+    letter-spacing: 1px;
+}
+
+.store-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.store-btn {
+    background: #000;
+    color: white;
+    border: 2px solid white;
+    padding: 10px 25px;
+    font-family: 'Bangers', cursive;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.store-btn:hover {
+    background: white;
+    color: black;
+}
+
 /* Footer Styles */
 .main-footer {
     background-color: #000;

@@ -15,6 +15,7 @@ import feature3 from '../assets/feature-3.png';
 import halftoneDense from '../assets/halftone-dense.svg';
 import halftoneMedium from '../assets/halftone-medium.svg';
 import speechBubbleImg from '../assets/speech-bubble.svg';
+import { isWeb } from '../utils/platform';
 
 const Landing = () => {
     const navigate = useNavigate();
@@ -103,9 +104,21 @@ const Landing = () => {
                 <div className="cta-content">
                     <h2 className="cta-title">START NOW - IT'S FREE TO BROWSE!</h2>
                     <p className="cta-subtitle">Browse the map. Discover missed connections.</p>
-                    <button className="cta-btn-cyan" onClick={() => navigate('/map')}>
-                        EXPLORE NOW!
-                    </button>
+                    <div className="cta-actions-group">
+                        <button className="cta-btn-cyan" onClick={() => navigate('/map')}>
+                            EXPLORE NOW!
+                        </button>
+
+                        {isWeb() && (
+                            <div className="mobile-promos">
+                                <span className="promo-text">OR GET THE MOBILE APP:</span>
+                                <div className="store-buttons">
+                                    <button className="store-btn">Google Play</button>
+                                    <button className="store-btn">App Store</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 

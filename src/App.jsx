@@ -16,8 +16,31 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import { AppProvider } from './context/AppContext';
 import './index.css';
+import { useEffect } from 'react';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { Capacitor } from '@capacitor/core';
 
 function App() {
+  useEffect(() => {
+    const initNativeFeatures = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          // Make status bar dark and transparent for that premium look
+          await StatusBar.setStyle({ style: Style.Dark });
+          await StatusBar.setBackgroundColor({ color: '#1a1a1b' });
+
+          // Hide splash screen once app is ready
+          await SplashScreen.hide();
+        } catch (e) {
+          console.warn('Capacitor plugin failed to init:', e);
+        }
+      }
+    };
+
+    initNativeFeatures();
+  }, []);
+
   return (
     <AppProvider>
       <Router>

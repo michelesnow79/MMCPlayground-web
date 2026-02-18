@@ -219,7 +219,7 @@ const Messages = () => {
                                         key={thread.id}
                                         className={`thread-item-premium ${isUnread ? 'has-unread-glow' : ''}`}
                                         onClick={() => {
-                                            if (!pin) return;
+                                            if (!pin || !user) return;
                                             const responderUid = (pin.ownerUid === user.uid) ? thread.responderUid : null;
                                             navigate(`/browse/${pin.id}`, { state: { openReply: true, responderUid, fromMessages: true } });
                                         }}

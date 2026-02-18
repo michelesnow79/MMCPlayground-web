@@ -153,8 +153,7 @@ export const AppProvider = ({ children }) => {
             telemetry.startTimer('thread_list_load');
             const q = query(
                 collection(db, 'threads'),
-                where('participants', 'array-contains', user.uid),
-                orderBy('lastMessageAt', 'desc')
+                where('participants', 'array-contains', user.uid)
             );
 
             const unsubscribe = onSnapshot(q, {
@@ -163,6 +162,14 @@ export const AppProvider = ({ children }) => {
                         ...doc.data(),
                         id: doc.id
                     }));
+
+                    // In-memory sort by lastMessageAt (descending)
+                    threadsData.sort((a, b) => {
+                        const dateA = a.lastMessageAt?.toDate ? a.lastMessageAt.toDate() : (a.lastMessageAt || 0);
+                        const dateB = b.lastMessageAt?.toDate ? b.lastMessageAt.toDate() : (b.lastMessageAt || 0);
+                        return dateB - dateA;
+                    });
+
                     setThreads(threadsData);
                     telemetry.endTimer('thread_list_load', { count: threadsData.length });
                     telemetry.trackEvent('thread_list_load_success', { count: threadsData.length });

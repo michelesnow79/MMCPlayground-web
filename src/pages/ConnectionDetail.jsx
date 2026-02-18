@@ -122,6 +122,7 @@ const ConnectionDetail = () => {
 
     const handleCloseReply = () => {
         setShowReplyModal(false);
+        setActiveResponderUid(null);
         if (location.state?.fromMessages) {
             navigate('/messages');
         }
