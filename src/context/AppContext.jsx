@@ -153,7 +153,7 @@ export const AppProvider = ({ children }) => {
             telemetry.startTimer('thread_list_load');
             const q = query(
                 collection(db, 'threads'),
-                where('participants', 'array-contains', user.uid)
+                where('participants', 'array-contains-any', [user.uid, user.email])
             );
 
             const unsubscribe = onSnapshot(q, {
@@ -651,6 +651,11 @@ export const AppProvider = ({ children }) => {
         }
 
         const participants = [resolvedOwnerUid, targetResponderUid];
+        // Add ownerEmail as a participant backup (Hybrid Identity)
+        if (pin.ownerEmail && !participants.includes(pin.ownerEmail)) {
+            participants.push(pin.ownerEmail.toLowerCase());
+        }
+
         if (participants.includes(undefined) || participants.includes(null)) {
             console.error("❌ addReply Integrity Error: Participants array contains invalid values:", participants);
             return;
@@ -662,7 +667,7 @@ export const AppProvider = ({ children }) => {
         const threadData = {
             pinId,
             ownerUid: resolvedOwnerUid,
-            ownerEmail: pin.ownerEmail || '',
+            ownerEmail: (pin.ownerEmail || '').toLowerCase(),
             responderUid: targetResponderUid,
             participants: participants,
             lastMessageAt: serverTimestamp(),

@@ -53,9 +53,16 @@ const Messages = () => {
     });
 
     // Inbox: People replying to MY pins
-    const inboundConversations = myConversations.filter(c => c.pin?.ownerUid === user.uid);
+    const inboundConversations = myConversations.filter(c =>
+        c.pin?.ownerUid === user.uid ||
+        (c.pin?.ownerEmail && c.pin.ownerEmail.toLowerCase() === user.email.toLowerCase())
+    );
     // Outbox: Pins I reached out to
-    const outboundConversations = myConversations.filter(c => c.pin?.ownerUid !== user.uid);
+    const outboundConversations = myConversations.filter(c =>
+        c.pin &&
+        c.pin.ownerUid !== user.uid &&
+        c.pin.ownerEmail?.toLowerCase() !== user.email.toLowerCase()
+    );
 
     const renderReplyItem = (reply, isSent) => {
         const pin = pins.find(p => p.id === reply.pinId);
