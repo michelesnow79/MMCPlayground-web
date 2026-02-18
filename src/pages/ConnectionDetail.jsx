@@ -29,6 +29,7 @@ const ConnectionDetail = () => {
     const [showReplyModal, setShowReplyModal] = React.useState(false);
     const [activeResponderUid, setActiveResponderUid] = React.useState(null); // Used by owner to target a thread
     const [threadMessages, setThreadMessages] = React.useState([]); // Messages for the active/only thread
+    const [isSendingReply, setIsSendingReply] = React.useState(false);
     const historyRef = useRef(null);
     const [showReportModal, setShowReportModal] = React.useState(false);
     const [reportReason, setReportReason] = React.useState('');
@@ -86,11 +87,15 @@ const ConnectionDetail = () => {
         // 2. Default participant thread (not owner)
         let targetThreadId = null;
 
-        if (activeResponderUid) {
+        // Only owners are allowed to select a responder thread
+        if (activeResponderUid && pin.ownerUid === user.uid) {
             targetThreadId = `${pin.id}_${activeResponderUid}`;
         } else if (pin.ownerUid !== user.uid) {
-            // I am the participant
+            // Non-owner always subscribes only to their own thread
             targetThreadId = `${pin.id}_${user.uid}`;
+        } else {
+            // Owner has no activeResponderUid selected yet
+            targetThreadId = null;
         }
 
         if (!targetThreadId) {
@@ -100,7 +105,7 @@ const ConnectionDetail = () => {
 
         const unsub = subscribeToThread(targetThreadId, setThreadMessages);
         return () => unsub();
-    }, [pin, user, activeResponderUid, threads]); // Re-sub if threads change (optional but safer)
+    }, [pin?.id, pin?.ownerUid, user?.uid, activeResponderUid]);
 
     // ALLOW MULTIPLE REPLIES (Chat Style) - No longer forcing edit mode on existing reply
     // ALLOW MULTIPLE REPLIES (Chat Style)
@@ -744,12 +749,22 @@ const ConnectionDetail = () => {
                                         <button
                                             className="letter-send-btn"
                                             onClick={async () => {
+                                                if (isSendingReply) return;
                                                 if (!replyText.trim()) return;
-                                                const text = replyText;
-                                                setReplyText('');
-                                                await addReply(pin.id, text, activeResponderUid);
+
+                                                try {
+                                                    setIsSendingReply(true);
+                                                    const text = replyText;
+                                                    setReplyText('');
+                                                    await addReply(pin.id, text, activeResponderUid);
+                                                } catch (err) {
+                                                    console.error("Reply failed:", err);
+                                                    alert("Failed to send message: " + err.message);
+                                                } finally {
+                                                    setIsSendingReply(false);
+                                                }
                                             }}
-                                            disabled={!replyText.trim()}
+                                            disabled={!replyText.trim() || isSendingReply}
                                         >
                                             SEND MESSAGE
                                         </button>

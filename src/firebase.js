@@ -1,5 +1,11 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+    initializeAuth,
+    indexedDBLocalPersistence,
+    browserLocalPersistence,
+    getAuth,
+    onAuthStateChanged
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
@@ -13,27 +19,47 @@ const firebaseConfig = {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Resilient initialization
-let app;
+const app = initializeApp(firebaseConfig);
+
+// 🔐 AUTH: Stable initialization with persistence fallback
+// This directly addresses the auth/network-request-failed issue in restricted Chrome profiles
 let auth;
-let db;
-let analytics;
-
 try {
-    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== 'undefined') {
-        app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-
-        if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
-            analytics = getAnalytics(app);
-        }
-    } else {
-        console.warn("Firebase API Key is missing. App is running in offline mode.");
-    }
+    auth = initializeAuth(app, {
+        persistence: [indexedDBLocalPersistence, browserLocalPersistence]
+    });
 } catch (error) {
-    console.error("Firebase failed to initialize:", error);
+    if (import.meta.env.DEV) console.warn("🔐 Auth: initializeAuth failed (likely IndexedDB restricted). Falling back to getAuth().");
+    auth = getAuth(app);
 }
+
+if (import.meta.env.DEV) {
+    console.log(`🚀 MMC INITIALIZED [ENV: ${import.meta.env.MODE}]`);
+}
+
+const db = getFirestore(app);
+
+let analytics;
+if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+    try {
+        analytics = getAnalytics(app);
+    } catch (e) {
+        if (import.meta.env.DEV) console.warn("📊 Analytics: Storage unavailable.", e.message);
+    }
+}
+
+// PERSISTENCE: Enable multi-tab offline support for Firestore (Soft-fail)
+import('firebase/firestore').then(({ enableMultiTabIndexedDbPersistence }) => {
+    if (db) {
+        enableMultiTabIndexedDbPersistence(db).catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.warn("Firestore Persistence failed: Multiple tabs open.");
+            } else {
+                console.warn("Firestore Persistence failed:", err.code);
+            }
+        });
+    }
+});
 
 export { auth, db, analytics };
 export default app;

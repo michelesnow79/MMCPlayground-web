@@ -207,7 +207,7 @@ const Browse = () => {
 
             {/* MAIN FEED */}
             <main className="browse-feed">
-                {filteredPins.length === 0 ? (
+                {filteredPins.filter(p => !isLoggedIn || p.ownerUid !== user?.uid).length === 0 ? (
                     <div className="empty-state">
                         <p>No connections found matching your filters.</p>
                         <button className="reset-filter-btn" onClick={() => {
@@ -224,39 +224,41 @@ const Browse = () => {
                         }}>Clear Filters</button>
                     </div>
                 ) : (
-                    filteredPins.map(conn => (
-                        <div
-                            key={conn.id}
-                            className="connection-card-premium"
-                            onClick={() => navigate(`/browse/${conn.id}`)}
-                        >
-                            <span className="premium-card-badge">{conn.type || 'Missed Connection'}</span>
+                    filteredPins
+                        .filter(p => !isLoggedIn || p.ownerUid !== user?.uid)
+                        .map(conn => (
+                            <div
+                                key={conn.id}
+                                className="connection-card-premium"
+                                onClick={() => navigate(`/browse/${conn.id}`)}
+                            >
+                                <span className="premium-card-badge">{conn.type || 'Missed Connection'}</span>
 
-                            <div className="p-card-content">
-                                <h3 className="p-card-title">{conn.title}</h3>
-                                <div className="p-card-loc-date">
-                                    <span className="p-card-loc">
-                                        {sanitizeLocation(conn.location)}
-                                        {conn.address && conn.address !== conn.location && <span style={{ opacity: 0.7, marginLeft: '8px', fontWeight: 400 }}>• {conn.address.replace(', USA', '')}</span>}
-                                    </span>
-                                    {conn.date && <span className="p-card-date">
-                                        {formatDate(conn.date)}
-                                    </span>}
-                                </div>
-                                <p className="p-card-desc">{conn.description}</p>
+                                <div className="p-card-content">
+                                    <h3 className="p-card-title">{conn.title}</h3>
+                                    <div className="p-card-loc-date">
+                                        <span className="p-card-loc">
+                                            {sanitizeLocation(conn.location)}
+                                            {conn.address && conn.address !== conn.location && <span style={{ opacity: 0.7, marginLeft: '8px', fontWeight: 400 }}>• {conn.address.replace(', USA', '')}</span>}
+                                        </span>
+                                        {conn.date && <span className="p-card-date">
+                                            {formatDate(conn.date)}
+                                        </span>}
+                                    </div>
+                                    <p className="p-card-desc">{conn.description}</p>
 
-                                <div className="p-card-footer-badges">
-                                    {conn.isReported && (
-                                        <span className="reported-badge-mini">UNDER REVIEW</span>
-                                    )}
-                                    {conn.status === 'hidden' && (
-                                        <span className="private-badge-mini">HIDDEN FROM MAP</span>
-                                    )}
-                                    <span className="p-card-posted-time">{formatRelativeTime(conn.createdAt)}</span>
+                                    <div className="p-card-footer-badges">
+                                        {conn.isReported && (
+                                            <span className="reported-badge-mini">UNDER REVIEW</span>
+                                        )}
+                                        {conn.status === 'hidden' && (
+                                            <span className="private-badge-mini">HIDDEN FROM MAP</span>
+                                        )}
+                                        <span className="p-card-posted-time">{formatRelativeTime(conn.createdAt)}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))
+                        ))
                 )}
             </main>
 

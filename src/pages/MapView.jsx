@@ -13,6 +13,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { fuzzAndProcessLocation, haversineMeters } from '../utils/locationHelper';
 import { logPinDebug } from '../utils/logger';
 import logoAsset from '../assets/heart-logo.svg';
+import telemetry from '../utils/telemetry';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -54,10 +55,11 @@ const MapView = () => {
     const [fallbackUsed, setFallbackUsed] = useState(false);
 
 
-    const GROUP_RADIUS_METERS = 75;
+    const GROUP_RADIUS_METERS = 150; // Increased from 75 to prevent label overlap
     const [filterCenter, setFilterCenter] = useState(null);
 
     const [isPosting, setIsPosting] = useState(false);
+    const [isSavingPin, setIsSavingPin] = useState(false);
     const [tempCoords, setTempCoords] = useState(null);
     const [newType, setNewType] = useState('');
     const [newTitle, setNewTitle] = useState('');
@@ -76,6 +78,16 @@ const MapView = () => {
     const isCenterManualRef = useRef(false);
     const clustererRef = useRef(null);
     const markerInstances = useRef(new Map());
+
+    // Start map load timer
+    useEffect(() => {
+        telemetry.startTimer('map_load');
+    }, []);
+
+    const handleMapLoad = useCallback((map) => {
+        setMapInstance(map);
+        telemetry.endTimer('map_load');
+    }, []);
 
     // 3. MEMOIZED CALLBACKS
     const setMarkerRef = useCallback((marker, id) => {
@@ -275,7 +287,7 @@ const MapView = () => {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    console.log("📍 [GEO] GPS Success:", coords);
+                    if (import.meta.env.DEV) console.log("📍 [GEO] GPS Success:", coords);
                     setMapCenter(coords);
                     setFallbackUsed(false);
                     setIsLocating(false);
@@ -570,8 +582,10 @@ const MapView = () => {
         });
     };
 
-    const handleSavePin = (e) => {
+    const handleSavePin = async (e) => {
         e.preventDefault();
+        if (isSavingPin) return; // Prevent double clicks
+
         logPinDebug("SAVE newDate state:", newDate);
         logPinDebug("SAVE newDate local:", newDate?.toString?.());
         logPinDebug("SAVE newDate iso:", newDate?.toISOString?.());
@@ -596,17 +610,26 @@ const MapView = () => {
             address: newAddress,
             placeId: newPlaceId
         };
-        addPin(newPin);
-        setIsPosting(false);
-        setTempCoords(null);
-        setNewType('');
-        setNewTitle('');
-        setNewLocation('');
-        setNewAddress('');
-        setNewPlaceId(null);
-        setNewDate(new Date());
-        setNewTime(null);
-        setNewDescription('');
+
+        try {
+            setIsSavingPin(true);
+            await addPin(newPin);
+            // success: close modal + reset form fields
+            setIsPosting(false);
+            setTempCoords(null);
+            setNewType('');
+            setNewTitle('');
+            setNewLocation('');
+            setNewAddress('');
+            setNewPlaceId(null);
+            setNewDate(new Date());
+            setNewTime(null);
+            setNewDescription('');
+        } catch (err) {
+            console.error("Failed to save pin:", err);
+        } finally {
+            setIsSavingPin(false);
+        }
     };
 
     const cancelPost = () => {
@@ -721,7 +744,7 @@ const MapView = () => {
                                     setVisiblePinIds(visible);
                                 }
                             }}
-                            onLoad={(map) => setMapInstance(map)}
+                            onLoad={handleMapLoad}
                         >
                             <MapHandler center={mapCenter} zoom={currentZoom} />
                             {/* Render markers grouped by location to handle overlaps */}
@@ -742,7 +765,7 @@ const MapView = () => {
                                             text: String(groupPins.length),
                                             color: 'white',
                                             className: 'marker-count-label'
-                                        } : (currentZoom >= 12 && firstPin.title ? {
+                                        } : (currentZoom >= 14 && firstPin.title ? {
                                             text: firstPin.title.toString().toUpperCase(),
                                             color: 'white',
                                             className: 'legacy-marker-label'
@@ -945,7 +968,7 @@ const MapView = () => {
                                         </div>
                                         <div className="post-modal-actions">
                                             <button type="button" className="btn-cancel" onClick={cancelPost}>CANCEL</button>
-                                            <button type="submit" className="btn-submit">POST</button>
+                                            <button type="submit" className="btn-submit" disabled={isSavingPin}>{isSavingPin ? 'SAVING...' : 'POST'}</button>
                                         </div>
                                     </form>
                                 )}

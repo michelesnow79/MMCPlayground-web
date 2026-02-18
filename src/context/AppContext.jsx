@@ -16,13 +16,16 @@ import {
     setDoc,
     updateDoc,
     getDoc,
+    writeBatch,
     orderBy,
     where,
-    serverTimestamp
+    serverTimestamp,
+    arrayUnion
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { logPinDebug } from '../utils/logger';
 import { getStateAndCountryFromZip } from '../utils/locationHelper';
+import telemetry from '../utils/telemetry';
 
 const AppContext = createContext();
 
@@ -66,6 +69,9 @@ export const AppProvider = ({ children }) => {
             return;
         }
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (import.meta.env.DEV) {
+                console.log(`🔐 AUTH_STATE_CHANGE: [User: ${firebaseUser ? "LOGGED_IN" : "LOGGED_OUT"}]`);
+            }
             try {
                 if (firebaseUser) {
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
@@ -105,12 +111,13 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         if (!db) return;
         try {
+            if (import.meta.env.DEV) console.log("📡 SUBSCRIPTION: [Pins Listener]");
+            telemetry.startTimer('pins_load');
             const q = query(collection(db, 'pins'), orderBy('createdAt', 'desc'));
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const pinsData = snapshot.docs.map(docSnap => {
                     const data = docSnap.data();
                     const pinId = docSnap.id;
-
                     return { ...data, id: pinId };
                 });
 
@@ -119,10 +126,18 @@ export const AppProvider = ({ children }) => {
                 const filteredByBlocks = pinsData.filter(p => !blockedUids.includes(p.ownerUid));
 
                 setPins(filteredByBlocks);
+                telemetry.endTimer('pins_load', { count: filteredByBlocks.length });
+                telemetry.trackEvent('pins_load_success', { count: filteredByBlocks.length });
+            }, (err) => {
+                telemetry.trackError(err, { source: 'Pins Listener' });
+                telemetry.trackEvent('pins_load_fail', { error: err.code });
             });
-            return () => unsubscribe();
+            return () => {
+                if (import.meta.env.DEV) console.log("📡 UNSUBSCRIBE: [Pins Listener]");
+                unsubscribe();
+            };
         } catch (err) {
-            console.error("Pins listener error:", err);
+            telemetry.trackError(err, { source: 'Pins Listener Setup' });
         }
     }, [user, user?.blockedUids]);
 
@@ -134,13 +149,13 @@ export const AppProvider = ({ children }) => {
         }
 
         try {
+            if (import.meta.env.DEV) console.log(`📡 SUBSCRIPTION: [Threads Listener] for [${user.uid}]`);
+            telemetry.startTimer('thread_list_load');
             const q = query(
                 collection(db, 'threads'),
                 where('participants', 'array-contains', user.uid),
                 orderBy('lastMessageAt', 'desc')
             );
-
-            console.log(`📡 THREADS LISTENER: Starting query for User [${user.uid}]...`);
 
             const unsubscribe = onSnapshot(q, {
                 next: (snapshot) => {
@@ -148,24 +163,23 @@ export const AppProvider = ({ children }) => {
                         ...doc.data(),
                         id: doc.id
                     }));
-                    console.log(`📥 INBOX QUERY RESULTS for User [${user.uid} / ${user.email}]:`, threadsData.map(t => ({
-                        id: t.id,
-                        participants: t.participants,
-                        lastMessageAt: t.lastMessageAt?.toDate ? t.lastMessageAt.toDate().toISOString() : t.lastMessageAt,
-                        lastSender: t.lastSenderUid,
-                        ownerEmail: t.ownerEmail || 'missing'
-                    })));
                     setThreads(threadsData);
+                    telemetry.endTimer('thread_list_load', { count: threadsData.length });
+                    telemetry.trackEvent('thread_list_load_success', { count: threadsData.length });
                 },
                 error: (err) => {
-                    console.error("❌ Threads listener error (Likely missing index or permissions):", err);
+                    telemetry.trackError(err, { source: 'Threads Listener' });
+                    telemetry.trackEvent('thread_list_load_fail', { error: err.code });
                 }
             });
-            return () => unsubscribe();
+            return () => {
+                if (import.meta.env.DEV) console.log(`📡 UNSUBSCRIBE: [Threads Listener] for [${user.uid}]`);
+                unsubscribe();
+            };
         } catch (err) {
-            console.error("❌ Threads listener setup error:", err);
+            telemetry.trackError(err, { source: 'Threads Listener Setup' });
         }
-    }, [user, user?.blockedUids]);
+    }, [user?.uid, db]);
 
     // Helper to subscribe to messages for a specific thread
     const subscribeToThread = (threadId, callback) => {
@@ -174,16 +188,24 @@ export const AppProvider = ({ children }) => {
             collection(db, 'threads', threadId, 'messages'),
             orderBy('createdAt', 'asc')
         );
-        return onSnapshot(q, (snapshot) => {
-            const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            callback(msgs);
-        });
+        return onSnapshot(
+            q,
+            (snapshot) => {
+                const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                callback(msgs);
+            },
+            (err) => {
+                console.error("❌ Messages listener error:", err);
+                callback([]);
+            }
+        );
     };
 
     // 3.5 Notifications Listener
     useEffect(() => {
         if (!user || !db) return;
         try {
+            if (import.meta.env.DEV) console.log(`📡 SUBSCRIPTION: [Notifications Listener] for ${user.uid}`);
             // Removed orderBy('createdAt', 'desc') to avoid missing index errors in dev. 
             // We'll sort in-memory below.
             const q = query(collection(db, 'notifications'), where('targetUid', '==', user.uid));
@@ -206,6 +228,7 @@ export const AppProvider = ({ children }) => {
     // 4. Ratings Global Listener
     useEffect(() => {
         if (!db) return;
+        if (import.meta.env.DEV) console.log("📡 SUBSCRIPTION: [Global Ratings Listener]");
         const unsubscribe = onSnapshot(collection(db, 'ratings'), (snapshot) => {
             const ratingsMap = {};
             snapshot.docs.forEach(doc => {
@@ -252,46 +275,102 @@ export const AppProvider = ({ children }) => {
         setHasNewNotifications(false);
     };
 
-    // Actions
-    const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
-    const signup = async (email, password, name, postalCode) => {
-        const res = await createUserWithEmailAndPassword(auth, email, password);
-
-        // Smarts: Geocode state/country from zip
-        const locInfo = await getStateAndCountryFromZip(postalCode);
-        const state = locInfo?.state || '';
-        const country = locInfo?.country || '';
-
-        await setDoc(doc(db, 'users', res.user.uid), {
-            name,
-            email,
-            postalCode: postalCode || '',
-            state,
-            country,
-            createdAt: serverTimestamp(),
-            isAdmin: email === 'MissMe@missmeconnection.com' // Set first admin
-        });
+    // Help: Centralized sanitize/cap helper
+    const sanitizeText = (value, maxLen) => {
+        if (value === null || value === undefined) return '';
+        const str = String(value).trim();
+        // collapsed repeated whitespace (optional, but requested as allowed)
+        const collapsed = str.replace(/\s+/g, ' ');
+        return collapsed.slice(0, maxLen);
     };
-    const logout = () => signOut(auth);
+
+    const looksLikeStreetAddress = (text) => {
+        if (!text) return false;
+        const suffixes = 'st|street|ave|avenue|rd|road|blvd|boulevard|dr|drive|ln|lane|ct|court|way|hwy|highway';
+        // Pattern: Starts with number, contains space, ends with street suffix (case insensitive)
+        const regex = new RegExp(`^\\d+[-/]*\\d*\\s+.*\\s+(?:${suffixes})$`, 'i');
+        return regex.test(text.trim());
+    };
+
+    // Actions
+    const login = async (email, password) => {
+        telemetry.trackEvent('auth_login_attempt');
+        try {
+            const res = await signInWithEmailAndPassword(auth, email, password);
+            telemetry.trackEvent('auth_login_success');
+            return res;
+        } catch (err) {
+            telemetry.trackEvent('auth_login_fail', { error: err.code });
+            throw err;
+        }
+    };
+
+    const signup = async (email, password, name, postalCode) => {
+        telemetry.trackEvent('auth_signup_attempt');
+        try {
+            const res = await createUserWithEmailAndPassword(auth, email, password);
+
+            // Sanitize
+            const cleanName = sanitizeText(name, 40);
+            const cleanZip = sanitizeText(postalCode, 16);
+
+            // Smarts: Geocode state/country from zip
+            const locInfo = await getStateAndCountryFromZip(cleanZip);
+            const state = locInfo?.state || '';
+            const country = locInfo?.country || '';
+
+            await setDoc(doc(db, 'users', res.user.uid), {
+                name: cleanName,
+                email,
+                postalCode: cleanZip,
+                state,
+                country,
+                createdAt: serverTimestamp(),
+                isAdmin: email === 'MissMe@missmeconnection.com' // Set first admin
+            });
+            telemetry.trackEvent('auth_signup_success');
+            return res;
+        } catch (err) {
+            telemetry.trackEvent('auth_signup_fail', { error: err.code });
+            throw err;
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            // Proactive state purge to prevent stale UI ghosting
+            setUser(null);
+            setIsLoggedIn(false);
+            setPins([]);
+            setThreads([]);
+            setNotifications([]);
+            setRatings({});
+        } catch (err) {
+            console.error("Logout error:", err);
+        }
+    };
 
     const setThreadNickname = async (threadId, nickname) => {
         if (!user || !threadId) return;
         try {
+            const cleanNickname = sanitizeText(nickname, 40);
+
             const userRef = doc(db, 'users', user.uid);
             await updateDoc(userRef, {
-                [`nicknames.${threadId}`]: nickname
+                [`nicknames.${threadId}`]: cleanNickname
             });
-            // Local state will update via the Snapshot listener if you have one, 
-            // but here we manually update user state for immediate feedback
+            // Local state reset for immediate feedback
             setUser(prev => ({
                 ...prev,
                 nicknames: {
                     ...(prev.nicknames || {}),
-                    [threadId]: nickname
+                    [threadId]: cleanNickname
                 }
             }));
         } catch (err) {
             console.error("Error setting thread nickname:", err);
+            throw err; // Allow caller to handle
         }
     };
 
@@ -299,22 +378,49 @@ export const AppProvider = ({ children }) => {
         const userRef = doc(db, 'users', uid);
 
         let extraData = {};
-        if (data.postalCode) {
-            const locInfo = await getStateAndCountryFromZip(data.postalCode);
+        const normalizedData = { ...data };
+
+        if (data.name !== undefined) normalizedData.name = sanitizeText(data.name, 40);
+        if (data.postalCode !== undefined) {
+            normalizedData.postalCode = sanitizeText(data.postalCode, 16);
+            const locInfo = await getStateAndCountryFromZip(normalizedData.postalCode);
             if (locInfo) {
                 extraData = { state: locInfo.state, country: locInfo.country };
             }
         }
 
-        await updateDoc(userRef, { ...data, ...extraData });
-        await refreshUserData();
+        try {
+            await updateDoc(userRef, { ...normalizedData, ...extraData });
+            await refreshUserData();
+        } catch (err) {
+            console.error("Profile update error:", err);
+            throw err;
+        }
     };
 
     const addPin = async (newPin) => {
         if (!newPin) return;
 
+        // Sanitize and normalize
+        const title = sanitizeText(newPin.title, 80).toUpperCase();
+        const description = sanitizeText(newPin.description, 2000);
+        let cleanLocation = sanitizeText(newPin.location, 120);
+        let cleanAddress = sanitizeText(newPin.address, 160);
+
+        if (looksLikeStreetAddress(cleanLocation)) cleanLocation = "Public Area";
+        if (looksLikeStreetAddress(cleanAddress)) cleanAddress = "";
+
+        if (!title || !description) {
+            console.error("❌ addPin Aborted: Title and description are required after sanitization.");
+            return;
+        }
+
         const pinData = {
             ...newPin,
+            title,
+            description,
+            location: cleanLocation,
+            address: cleanAddress,
             ownerEmail: user?.email || newPin.ownerEmail || 'admin@missmeconnection.com',
             ownerUid: user?.uid || 'seeder-bot',
             createdAt: serverTimestamp()
@@ -323,12 +429,16 @@ export const AppProvider = ({ children }) => {
         logPinDebug("FIRESTORE WRITE pinData.date:", pinData.date);
         logPinDebug("FIRESTORE WRITE createdAt:", pinData.createdAt);
 
-        if (newPin.id) {
-            // If ID is provided, use setDoc to ensure we don't duplicate or to use a specific ID
-            await setDoc(doc(db, 'pins', String(newPin.id)), pinData);
-        } else {
-            // Otherwise use addDoc for auto-generated ID
-            await addDoc(collection(db, 'pins'), pinData);
+        try {
+            if (newPin.id) {
+                // ID provided -> setDoc for idempotency (prevents duplicates on retry)
+                await setDoc(doc(db, 'pins', String(newPin.id)), pinData);
+            } else {
+                await addDoc(collection(db, 'pins'), pinData);
+            }
+        } catch (err) {
+            console.error("addPin failed:", err);
+            throw err;
         }
     };
 
@@ -367,38 +477,74 @@ export const AppProvider = ({ children }) => {
 
     const reportPin = async (pinId, reason) => {
         if (!user) return;
-        await addDoc(collection(db, 'reports'), {
-            pinId,
-            reporterUid: user.uid,
-            reporterEmail: user.email,
-            reason,
-            status: 'pending',
-            createdAt: serverTimestamp()
-        });
-        // Optionally mark the pin as reported locally or in the pin doc
-        const pinRef = doc(db, 'pins', pinId);
-        await updateDoc(pinRef, { isReported: true });
+        const cleanReason = sanitizeText(reason, 500);
+        if (!cleanReason) {
+            console.error("❌ reportPin Aborted: Empty reason after sanitization.");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, 'reports'), {
+                pinId,
+                reporterUid: user.uid,
+                reporterEmail: user.email,
+                reason: cleanReason,
+                status: 'pending',
+                createdAt: serverTimestamp()
+            });
+            // Optionally mark the pin as reported locally or in the pin doc
+            const pinRef = doc(db, 'pins', pinId);
+            await updateDoc(pinRef, { isReported: true });
+        } catch (err) {
+            console.error("reportPin failed:", err);
+            throw err;
+        }
     };
 
     const updatePin = async (pinId, updatedData) => {
         if (!user) return;
-        const pinRef = doc(db, 'pins', pinId);
-        await updateDoc(pinRef, {
-            ...updatedData,
-            updatedAt: serverTimestamp()
-        });
+
+        const normalizedData = { ...updatedData };
+        if (updatedData.title !== undefined) normalizedData.title = sanitizeText(updatedData.title, 80).toUpperCase();
+        if (updatedData.description !== undefined) normalizedData.description = sanitizeText(updatedData.description, 2000);
+        if (updatedData.location !== undefined) {
+            let loc = sanitizeText(updatedData.location, 120);
+            if (looksLikeStreetAddress(loc)) loc = "Public Area";
+            normalizedData.location = loc;
+        }
+        if (updatedData.address !== undefined) {
+            let addr = sanitizeText(updatedData.address, 160);
+            if (looksLikeStreetAddress(addr)) addr = "";
+            normalizedData.address = addr;
+        }
+
+        try {
+            const pinRef = doc(db, 'pins', pinId);
+            await updateDoc(pinRef, {
+                ...normalizedData,
+                updatedAt: serverTimestamp()
+            });
+        } catch (err) {
+            console.error("updatePin failed:", err);
+            throw err;
+        }
     };
 
     const ratePin = async (pinId, rating) => {
         if (!user) return;
-        // Use a unique ID for user+pin combination to prevent multi-rating
-        const ratingId = `${user.uid}_${pinId}`;
-        await setDoc(doc(db, 'ratings', ratingId), {
-            pinId,
-            userId: user.uid,
-            rating,
-            updatedAt: serverTimestamp()
-        });
+        try {
+            // Use a unique ID for user+pin combination to prevent multi-rating
+            const ratingId = `${user.uid}_${pinId}`;
+            await setDoc(doc(db, 'ratings', ratingId), {
+                pinId,
+                userId: user.uid,
+                rating,
+                updatedAt: serverTimestamp()
+            });
+        } catch (err) {
+            console.error("ratePin failed:", err);
+            throw err;
+        }
     };
 
     const getAverageRating = (pinId) => {
@@ -453,6 +599,14 @@ export const AppProvider = ({ children }) => {
             return;
         }
 
+        // 1. Guards
+        const cleanContent = (content || "").toString().trim();
+        if (!cleanContent) {
+            console.error("❌ addReply Aborted: Empty message.");
+            return;
+        }
+        const finalContent = cleanContent.slice(0, 2000);
+
         const pin = pins.find(p => String(p.id) === String(pinId));
         if (!pin) {
             console.error(`❌ addReply Failed: Pin ${pinId} not found in state.`);
@@ -460,7 +614,6 @@ export const AppProvider = ({ children }) => {
         }
 
         // --- RESOLVE OWNER UID ---
-        // If the pin missing ownerUid, but current user's email matches, we can't reply until synced.
         let resolvedOwnerUid = pin.ownerUid;
         if (!resolvedOwnerUid) {
             if (user.email.toLowerCase() === (pin.ownerEmail || '').toLowerCase()) {
@@ -473,21 +626,24 @@ export const AppProvider = ({ children }) => {
         }
 
         // --- RESOLVE RESPONDER UID ---
-        // responderUid is the UID of the OTHER person (the one who isn't the owner).
         let targetResponderUid = responderUid;
         if (user.uid !== resolvedOwnerUid) {
             // I am the participant (not the owner)
             targetResponderUid = user.uid;
+        } else {
+            // I am the owner
+            if (!targetResponderUid) {
+                console.error("❌ addReply Aborted: Owner must specify target responderUid to reply.");
+                return;
+            }
         }
 
-        if (!targetResponderUid) {
-            console.error("❌ addReply Aborted: No responder identified (Owner cannot start a thread with themselves).");
+        if (targetResponderUid === resolvedOwnerUid) {
+            console.error("❌ addReply Aborted: Responder cannot be the owner.");
             return;
         }
 
         const participants = [resolvedOwnerUid, targetResponderUid];
-
-        // Final integrity check
         if (participants.includes(undefined) || participants.includes(null)) {
             console.error("❌ addReply Integrity Error: Participants array contains invalid values:", participants);
             return;
@@ -503,34 +659,66 @@ export const AppProvider = ({ children }) => {
             responderUid: targetResponderUid,
             participants: participants,
             lastMessageAt: serverTimestamp(),
-            lastMessagePreview: content.substring(0, 80),
+            lastMessagePreview: finalContent.substring(0, 80),
             lastSenderUid: user.uid,
             updatedAt: serverTimestamp()
         };
 
-        console.log(`📤 WRITING THREAD [${threadId}]:`, threadData);
-
         try {
-            await setDoc(threadRef, threadData, { merge: true });
-            const msgRef = await addDoc(collection(db, 'threads', threadId, 'messages'), {
-                content,
+            telemetry.trackEvent('reply_send_attempt');
+            telemetry.startTimer('reply_send');
+            const batch = writeBatch(db);
+            // MESSAGE ID: Client-side generation with entropy for absolute idempotency
+            const entropy = Math.random().toString(36).substring(2, 9);
+            const msgId = `${user.uid}_${Date.now()}_${entropy}`;
+            const messageRef = doc(db, 'threads', threadId, 'messages', msgId);
+
+            const messageData = {
+                content: finalContent,
                 senderUid: user.uid,
                 senderEmail: user.email,
                 createdAt: serverTimestamp()
-            });
-            console.log(`✅ SUCCESS: Message ${msgRef.id} written to thread ${threadId}`);
+            };
+
+            batch.set(threadRef, threadData, { merge: true });
+            batch.set(messageRef, messageData);
+
+            await batch.commit();
+            telemetry.endTimer('reply_send');
+            telemetry.trackEvent('reply_send_success');
+            console.log(`✅ SUCCESS: Atomic write for thread ${threadId} and message ${msgId}`);
         } catch (err) {
-            console.error("❌ Firestore Write Error in addReply:", err);
+            telemetry.trackEvent('reply_send_fail', { error: err.code });
+            telemetry.trackError(err, { source: 'addReply' });
+            throw err;
         }
     };
 
     const updateReply = async (threadId, messageId, content) => {
         if (!user) return;
         const msgRef = doc(db, 'threads', threadId, 'messages', messageId);
-        await updateDoc(msgRef, {
-            content,
-            updatedAt: serverTimestamp()
-        });
+
+        try {
+            const msgSnap = await getDoc(msgRef);
+            if (!msgSnap.exists()) {
+                console.error("❌ updateReply Failed: Message does not exist.");
+                return;
+            }
+            if (msgSnap.data().senderUid !== user.uid) {
+                console.error("❌ updateReply Access Denied: User is not the author.");
+                return;
+            }
+
+            const cleanContent = (content || "").toString().trim();
+            if (!cleanContent) return;
+
+            await updateDoc(msgRef, {
+                content: cleanContent.slice(0, 2000),
+                updatedAt: serverTimestamp()
+            });
+        } catch (err) {
+            console.error("❌ updateReply Error:", err);
+        }
     };
 
     const hidePin = (pinId) => {
@@ -562,24 +750,15 @@ export const AppProvider = ({ children }) => {
         try {
             // 1. Update Current User's blockedUids
             const userRef = doc(db, 'users', user.uid);
-            const currentBlocks = user.blockedUids || [];
-            if (!currentBlocks.includes(targetUid)) {
-                await updateDoc(userRef, {
-                    blockedUids: [...currentBlocks, targetUid]
-                });
-            }
+            await updateDoc(userRef, {
+                blockedUids: arrayUnion(targetUid)
+            });
 
             // 2. Update Target User's blockedUids (Reciprocal)
             const targetRef = doc(db, 'users', targetUid);
-            const targetSnap = await getDoc(targetRef);
-            if (targetSnap.exists()) {
-                const targetBlocks = targetSnap.data().blockedUids || [];
-                if (!targetBlocks.includes(user.uid)) {
-                    await updateDoc(targetRef, {
-                        blockedUids: [...targetBlocks, user.uid]
-                    });
-                }
-            }
+            await updateDoc(targetRef, {
+                blockedUids: arrayUnion(user.uid)
+            });
 
             // 3. Delete all threads between these users
             const threadIdsToDelete = threads.filter(t =>
@@ -587,6 +766,9 @@ export const AppProvider = ({ children }) => {
             ).map(t => t.id);
 
             for (const tId of threadIdsToDelete) {
+                // TODO: Firestore does not delete subcollections automatically. 
+                // Proper cleanup requires admin tooling / backend / recursive delete.
+                // This is intentionally deferred.
                 await deleteDoc(doc(db, 'threads', tId));
             }
 

@@ -32,17 +32,39 @@ const Login = () => {
             if (isSignUp) {
                 if (!isAgeConfirmed || !isTermsAgreed) {
                     setError('You must confirm your age and agree to our terms to proceed.');
-                    setLoading(false);
-                    return;
+                    return; // Hit finally
                 }
                 await signup(email, password, name, postalCode);
             } else {
                 await login(email, password);
             }
+            // Auth successful, navigate to map
             navigate('/map');
         } catch (err) {
-            console.error(err);
-            setError(err.message.replace('Firebase:', '').trim());
+            // Diagnostic logging for development
+            if (import.meta.env.DEV) {
+                console.error("🔐 AUTH_DIAGNOSTIC:", {
+                    code: err.code,
+                    message: err.message,
+                    error: err
+                });
+            }
+
+            // Human-friendly error translation
+            let userMsg = err.message.replace('Firebase:', '').trim();
+            if (err.code === 'auth/network-request-failed') {
+                userMsg = "Network connection lost. Please check your internet and try again.";
+            } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                userMsg = "Invalid email or password.";
+            } else if (err.code === 'auth/email-already-in-use') {
+                userMsg = "This email address is already registered.";
+            } else if (err.code === 'auth/too-many-requests') {
+                userMsg = "Too many login attempts. Please wait a moment and try again.";
+            } else if (err.code === 'auth/weak-password') {
+                userMsg = "Password is too weak. Please use at least 6 characters.";
+            }
+
+            setError(userMsg);
         } finally {
             setLoading(false);
         }
@@ -64,6 +86,11 @@ const Login = () => {
     return (
         <div className="login-page">
             <div className="login-card">
+                <button className="login-back-arrow" onClick={() => navigate(-1)} title="Go Back">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
                 <div className="login-logo-group" onClick={() => navigate('/')}>
                     <img src={logoAsset} alt="Logo" className="login-heart-logo" />
                     <h1 className="login-title">MISS ME CONNECTION</h1>

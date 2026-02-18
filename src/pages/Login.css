@@ -9,6 +9,7 @@
 }
 
 .login-card {
+    position: relative;
     width: 100%;
     max-width: 440px;
     background: rgba(30, 30, 34, 0.85);
@@ -17,6 +18,30 @@
     border: 1px solid rgba(255, 255, 255, 0.05);
     text-align: center;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.login-back-arrow {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.login-back-arrow:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .login-logo-group {

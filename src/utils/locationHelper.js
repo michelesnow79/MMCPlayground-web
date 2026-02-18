@@ -109,12 +109,26 @@ export const fuzzAndProcessLocation = async (placeOrResult) => {
 
     if (isVenue) {
         const poiName = placeOrResult.name || (comps.length > 0 ? comps[0].long_name : "Public Venue");
-        const fullAddress = placeOrResult.formatted_address || "";
+
+        // Coarse address logic: <City/Area>, <State>
+        const city = comps.find(c =>
+            c.types.includes("locality") ||
+            c.types.includes("postal_town") ||
+            c.types.includes("sublocality") ||
+            c.types.includes("administrative_area_level_2")
+        )?.long_name;
+
+        const state = comps.find(c => c.types.includes("administrative_area_level_1"))?.short_name;
+
+        let coarseLabel = "";
+        if (city && state) coarseLabel = `${city}, ${state}`;
+        else if (city) coarseLabel = city;
+        else if (state) coarseLabel = state;
 
         return {
             coords: { lat, lng },
             label: poiName,
-            secondaryLabel: fullAddress,
+            secondaryLabel: coarseLabel,
             placeId: placeOrResult.place_id || null
         };
     }
