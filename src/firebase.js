@@ -25,11 +25,15 @@ const app = initializeApp(firebaseConfig);
 // This directly addresses the auth/network-request-failed issue in restricted Chrome profiles
 let auth;
 try {
-    auth = initializeAuth(app, {
-        persistence: [indexedDBLocalPersistence, browserLocalPersistence]
-    });
+    // DEV: Use browserLocalPersistence to avoid IndexedDB locks
+    // PROD: Prefer indexedDBLocalPersistence
+    const persistence = import.meta.env.DEV
+        ? [browserLocalPersistence]
+        : [indexedDBLocalPersistence, browserLocalPersistence];
+
+    auth = initializeAuth(app, { persistence });
 } catch (error) {
-    if (import.meta.env.DEV) console.warn("🔐 Auth: initializeAuth failed (likely IndexedDB restricted). Falling back to getAuth().");
+    if (import.meta.env.DEV) console.warn("🔐 Auth: initializeAuth failed. Falling back to getAuth().");
     auth = getAuth(app);
 }
 
@@ -49,17 +53,20 @@ if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
 }
 
 // PERSISTENCE: Enable multi-tab offline support for Firestore (Soft-fail)
-import('firebase/firestore').then(({ enableMultiTabIndexedDbPersistence }) => {
-    if (db) {
-        enableMultiTabIndexedDbPersistence(db).catch((err) => {
-            if (err.code === 'failed-precondition') {
-                console.warn("Firestore Persistence failed: Multiple tabs open.");
-            } else {
-                console.warn("Firestore Persistence failed:", err.code);
-            }
-        });
-    }
-});
+// Disabled in DEV to prevent lock contention
+if (!import.meta.env.DEV) {
+    import('firebase/firestore').then(({ enableMultiTabIndexedDbPersistence }) => {
+        if (db) {
+            enableMultiTabIndexedDbPersistence(db).catch((err) => {
+                if (err.code === 'failed-precondition') {
+                    console.warn("Firestore Persistence failed: Multiple tabs open.");
+                } else {
+                    console.warn("Firestore Persistence failed:", err.code);
+                }
+            });
+        }
+    });
+}
 
 export { auth, db, analytics };
 export default app;
