@@ -52,8 +52,10 @@ const Messages = () => {
         };
     });
 
-    // Filtered notifications
-    const myNotifs = notifications || [];
+    // Inbox: People replying to MY pins
+    const inboundConversations = myConversations.filter(c => c.pin?.ownerUid === user.uid);
+    // Outbox: Pins I reached out to
+    const outboundConversations = myConversations.filter(c => c.pin?.ownerUid !== user.uid);
 
     const renderReplyItem = (reply, isSent) => {
         const pin = pins.find(p => p.id === reply.pinId);
@@ -163,6 +165,52 @@ const Messages = () => {
         );
     };
 
+    const renderConvoItem = (convo) => {
+        const { pin, latestReply, isUnread, thread } = convo;
+        if (!user) return null;
+        const isOutbound = pin?.ownerUid !== user.uid;
+
+        return (
+            <div
+                key={thread.id}
+                className={`thread-item-premium ${isUnread ? 'has-unread-glow' : ''} ${isOutbound ? 'outbound-style' : ''}`}
+                onClick={() => {
+                    if (!pin || !user) return;
+                    const responderUid = (pin.ownerUid === user.uid) ? thread.responderUid : null;
+                    navigate(`/browse/${pin.id}`, { state: { openReply: true, responderUid, fromMessages: true } });
+                }}
+                style={{ opacity: pin ? 1 : 0.7 }}
+            >
+                <div className="thread-avatar-circle">
+                    <span className="thread-logo-mini">{pin ? (isOutbound ? '📤' : '📥') : '🚫'}</span>
+                </div>
+                <div className="thread-content-block">
+                    <div className="thread-top-line">
+                        <div className="title-with-tag">
+                            <h3 className="thread-title-text">{pin ? pin.title : 'DELETED CONNECTION'}</h3>
+                            {isOutbound && <span className="sent-label-tag">REPLIED</span>}
+                        </div>
+                        <span className="thread-time-meta">
+                            {latestReply?.timestamp ? formatDate(latestReply.timestamp) : 'Recent'}
+                        </span>
+                    </div>
+                    <p className="thread-preview-text">
+                        <span className="sender-label">
+                            {latestReply?.senderUid === user.uid ? 'You: ' : (pin?.ownerUid === user.uid ? (user.nicknames?.[thread.id] ? `${user.nicknames[thread.id].toUpperCase()}: ` : 'Potential Missed Connection: ') : (user.nicknames?.[thread.id] ? `${user.nicknames[thread.id].toUpperCase()}: ` : 'From Owner: '))}
+                        </span>
+                        {latestReply?.content ? latestReply.content : 'Message sent...'}
+                    </p>
+                    {!pin && <p className="deleted-tag">This post was removed by a moderator</p>}
+                </div>
+                {pin && (
+                    <div className="thread-indicator">
+                        <span className="chevron-right">❯</span>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="messages-page-pro">
             <header className="messages-top-bar">
@@ -181,13 +229,20 @@ const Messages = () => {
                     className={`tab-btn ${activeTab === 'received' ? 'active' : ''}`}
                     onClick={() => setActiveTab('received')}
                 >
-                    MY POSTS ({myPins.length})
+                    POSTS ({myPins.length})
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'sent' ? 'active' : ''}`}
                     onClick={() => setActiveTab('sent')}
                 >
-                    CONVERSATIONS ({myConversations.length})
+                    MY REPLIES ({outboundConversations.length})
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'inbox' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('inbox')}
+                    title="All direct chats regarding your posts"
+                >
+                    INBOX ({inboundConversations.length})
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'notices' ? 'active' : ''}`}
@@ -211,50 +266,23 @@ const Messages = () => {
                     </div>
                 ) : activeTab === 'sent' ? (
                     <div className="thread-stack">
-                        {myConversations.length > 0 ? (
-                            myConversations.map(convo => {
-                                const { pin, latestReply, isUnread, thread } = convo;
-                                return (
-                                    <div
-                                        key={thread.id}
-                                        className={`thread-item-premium ${isUnread ? 'has-unread-glow' : ''}`}
-                                        onClick={() => {
-                                            if (!pin || !user) return;
-                                            const responderUid = (pin.ownerUid === user.uid) ? thread.responderUid : null;
-                                            navigate(`/browse/${pin.id}`, { state: { openReply: true, responderUid, fromMessages: true } });
-                                        }}
-                                        style={{ opacity: pin ? 1 : 0.7 }}
-                                    >
-                                        <div className="thread-avatar-circle">
-                                            <span className="thread-logo-mini">{pin ? '❤️' : '🚫'}</span>
-                                        </div>
-                                        <div className="thread-content-block">
-                                            <div className="thread-top-line">
-                                                <h3 className="thread-title-text">{pin ? pin.title : 'DELETED CONNECTION'}</h3>
-                                                <span className="thread-time-meta">
-                                                    {latestReply?.timestamp ? formatDate(latestReply.timestamp) : 'Recent'}
-                                                </span>
-                                            </div>
-                                            <p className="thread-preview-text">
-                                                <span className="sender-label">
-                                                    {latestReply?.senderUid === user.uid ? 'You: ' : (pin?.ownerUid === user.uid ? (user.nicknames?.[thread.id] ? `${user.nicknames[thread.id].toUpperCase()}: ` : 'Potential Missed Connection: ') : (user.nicknames?.[thread.id] ? `${user.nicknames[thread.id].toUpperCase()}: ` : 'From Owner: '))}
-                                                </span>
-                                                {latestReply?.content ? latestReply.content : 'Message sent...'}
-                                            </p>
-                                            {!pin && <p className="deleted-tag">This post was removed by a moderator</p>}
-                                        </div>
-                                        {pin && (
-                                            <div className="thread-indicator">
-                                                <span className="chevron-right">❯</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })
+                        {outboundConversations.length > 0 ? (
+                            outboundConversations.map(convo => renderConvoItem(convo))
                         ) : (
                             <div className="empty-messages">
-                                <span className="empty-icon">📝</span>
-                                <p>You haven't joined any conversations yet.</p>
+                                <span className="empty-icon">📤</span>
+                                <p>You haven't replied to any pins yet.</p>
+                            </div>
+                        )}
+                    </div>
+                ) : activeTab === 'inbox' ? (
+                    <div className="thread-stack">
+                        {inboundConversations.length > 0 ? (
+                            inboundConversations.map(convo => renderConvoItem(convo))
+                        ) : (
+                            <div className="empty-messages">
+                                <span className="empty-icon">📥</span>
+                                <p>No one has replied to your pins lately.</p>
                             </div>
                         )}
                     </div>

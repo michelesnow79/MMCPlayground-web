@@ -304,3 +304,30 @@
     background: #fe2c55;
     color: #fff;
 }
+
+.title-with-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.sent-label-tag {
+    background: rgba(0, 240, 255, 0.15);
+    color: #00f0ff;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.outbound-style {
+    border-left: 3px solid rgba(0, 240, 255, 0.2);
+}
+
+.outbound-style.has-unread-glow {
+    border-left: 3px solid #00f0ff !important;
+}
