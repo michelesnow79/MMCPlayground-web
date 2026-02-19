@@ -1443,3 +1443,17 @@ div[role="button"] {
         transform: translate(-50%, 0);
     }
 }
+
+/* FIX: Ensure DatePicker always shows 7 columns properly */
+.react-datepicker__week,
+.react-datepicker__day-names {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    justify-content: center !important;
+}
+
+.react-datepicker__day-name,
+.react-datepicker__day {
+    width: auto !important;
+    margin: 0 !important;
+}

@@ -614,8 +614,48 @@ input:checked+.slider:before {
         padding: 10px 45px 10px 15px;
     }
 
+
     .browse-feed {
         margin-top: 20px;
         gap: 15px;
+    }
+}
+
+/* FIX: Header overlap on small screens (Browse Page) */
+@media (max-width: 600px) {
+    .browse-top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .top-bar-left,
+    .top-bar-right {
+        position: static;
+        transform: none;
+        width: auto;
+    }
+
+    .browse-logo-group {
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
+        text-align: center;
+    }
+
+    .browse-logo-text {
+        font-size: 1.1rem !important;
+        /* Force smaller size to fit */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        width: 100%;
+    }
+
+    /* Ensure right buttons don't shrink */
+    .top-bar-right {
+        flex-shrink: 0;
     }
 }

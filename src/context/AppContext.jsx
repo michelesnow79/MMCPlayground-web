@@ -602,6 +602,47 @@ export const AppProvider = ({ children }) => {
         return threadDoc.exists();
     };
 
+    const markThreadAsRead = async (threadId) => {
+        if (!user || !db || !threadId) return;
+        try {
+            const threadRef = doc(db, 'threads', threadId);
+            // We need to know if we are owner or responder.
+            // Since we don't have the thread data handy in this specific function call (usually called from UI with just ID),
+            // and we want to avoid unnecessary reads if possible, we can check the context 'threads' state if available.
+            // BUT for robustness against stale state, a direct read or a precondition is safer.
+            // Let's use the 'threads' state as a cache hint, but verify.
+
+            // Actually, the UI usually calls this when it HAS the thread open.
+            // Let's assume the caller knows the role, or we fetch it.
+            // Fetching is safer for security rules (though rules will block invalid updates anyway).
+            // Let's rely on the rules rejection if we guess wrong, but we need to know WHICH field to update.
+
+            // Since ID contains minimal info (pinId_responderUid), we can infer role if we are the responder.
+            const parts = threadId.split('_');
+            const possibleResponderUid = parts[parts.length - 1];
+
+            let fieldToUpdate = null;
+
+            if (user.uid === possibleResponderUid) {
+                // I am the responder
+                fieldToUpdate = 'responderLastReadAt';
+            } else {
+                // I am presumably the owner (or an impostor, but rules will catching that)
+                // Wait, if I am not the responder, and I am a participant, I MUST be the owner.
+                fieldToUpdate = 'ownerLastReadAt';
+            }
+
+            await updateDoc(threadRef, {
+                [fieldToUpdate]: serverTimestamp()
+            });
+        } catch (err) {
+            // Ignore permission errors if we guessed wrong (e.g. not a participant), but log others
+            if (err.code !== 'permission-denied') {
+                console.error("markRead failed", err);
+            }
+        }
+    };
+
     const addNotification = async (targetUid, message, type = 'moderation') => {
         await addDoc(collection(db, 'notifications'), {
             targetUid,
@@ -682,7 +723,9 @@ export const AppProvider = ({ children }) => {
             lastMessageAt: serverTimestamp(),
             lastMessagePreview: finalContent.substring(0, 80),
             lastSenderUid: user.uid,
-            updatedAt: serverTimestamp()
+            updatedAt: serverTimestamp(),
+            ownerLastReadAt: serverTimestamp(),
+            responderLastReadAt: serverTimestamp()
         };
 
         try {
@@ -702,7 +745,43 @@ export const AppProvider = ({ children }) => {
                 participants: participants // Security: Required for atomic batch rules
             };
 
-            batch.set(threadRef, threadData, { merge: true });
+            // CONDITIONAL UPDATE: only update the sender's lastReadAt
+            const updateData = {
+                lastMessageAt: serverTimestamp(),
+                lastMessagePreview: finalContent.substring(0, 80),
+                lastSenderUid: user.uid,
+                updatedAt: serverTimestamp()
+            };
+
+            if (user.uid === resolvedOwnerUid) {
+                updateData.ownerLastReadAt = serverTimestamp();
+            } else if (user.uid === targetResponderUid) {
+                updateData.responderLastReadAt = serverTimestamp();
+            }
+
+            // Create if new (with full data), Update if exists (with partial data)
+            // But set() with merge: true merges top-level fields.
+            // If the document doesn't exist, we need ALL fields.
+            // If it DOES exist, we only want the updateData.
+            // Complex case: 'threadData' has all fields. 'updateData' has only changing fields.
+            // We can't easily check existence inside a batch without a transaction or pre-reading (which we didn't do for the thread).
+            // Actually, we can just use set with merge for the full threadData on creation,
+            // but for updates we must be careful not to overwrite the other person's ReadAt.
+
+            // To be safe and compliant with the "don't touch other field" rule:
+            // We'll trust that if we are sending a message, we want to update the thread.
+            // However, the rule says "Do NOT allow both to change...". 
+            // If we use set(..., {merge: true}) with the FULL threadData, it sends both fields.
+            // We need to differentiate Creation vs Update.
+
+            // Let's check existence first. We can afford one read.
+            const threadSnap = await getDoc(threadRef);
+
+            if (!threadSnap.exists()) {
+                batch.set(threadRef, threadData);
+            } else {
+                batch.update(threadRef, updateData);
+            }
             batch.set(messageRef, messageData);
 
             await batch.commit();
@@ -918,7 +997,7 @@ export const AppProvider = ({ children }) => {
             reportPin, isSuspended, hasProbation, canStartNewThread, addNotification, refreshUserData,
             visiblePinIds, setVisiblePinIds,
             activeFilters, setActiveFilters,
-            subscribeToThread,
+            subscribeToThread, markThreadAsRead,
             resetPassword: (email) => sendPasswordResetEmail(auth, email)
         }}>
             {children}

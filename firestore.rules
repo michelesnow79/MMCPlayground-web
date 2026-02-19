@@ -26,7 +26,7 @@ service cloud.firestore {
       // 2. CREATE: Strict Integrity (New threads only)
       allow create: if isSignedIn() 
                     // Keys check
-                    && request.resource.data.keys().hasAll(['participants', 'ownerUid', 'responderUid', 'pinId'])
+                    && request.resource.data.keys().hasAll(['participants', 'ownerUid', 'responderUid', 'pinId', 'ownerLastReadAt', 'responderLastReadAt'])
                     
                     // STRICT PARTICIPANTS: Exactly 2 UIDs
                     && request.resource.data.participants.size() == 2
@@ -35,13 +35,13 @@ service cloud.firestore {
                     && request.resource.data.participants.hasAny([request.auth.uid])
                     
                     // Enforce canonical ID pattern: pinId_responderUid
-                    && threadId == request.resource.data.pinId + "_" + request.resource.data.responderUid
+                    && threadId == string(request.resource.data.pinId) + "_" + request.resource.data.responderUid
                     
                     // Integrity: Pin must exist
-                    && exists(/databases/$(database)/documents/pins/$(request.resource.data.pinId))
+                    && exists(/databases/$(database)/documents/pins/$(string(request.resource.data.pinId)))
                     
                     // Integrity: Owner must be the correct Pin Owner (fetched from DB)
-                    && request.resource.data.ownerUid == get(/databases/$(database)/documents/pins/$(request.resource.data.pinId)).data.ownerUid
+                    && request.resource.data.ownerUid == get(/databases/$(database)/documents/pins/$(string(request.resource.data.pinId))).data.ownerUid
                     
                     // Integrity: Participants must exactly match [ownerUid, responderUid]
                     && request.resource.data.participants.hasAll([request.resource.data.ownerUid, request.resource.data.responderUid])
@@ -49,8 +49,26 @@ service cloud.firestore {
                     // Integrity: Responder cannot be Owner
                     && request.resource.data.ownerUid != request.resource.data.responderUid;
 
-      // 3. UPDATE: Allow if user is a participant
-      allow update: if isParticipant(resource.data);
+      // 3. UPDATE: Strict field control
+      allow update: if isSignedIn() && (
+        // Owner update path
+        (
+          request.auth.uid == resource.data.ownerUid && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+            ['lastMessageAt', 'lastMessagePreview', 'lastSenderUid', 'updatedAt', 'ownerLastReadAt'].toSet()
+          )
+        ) ||
+        // Responder update path
+        (
+          request.auth.uid == resource.data.responderUid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+             ['lastMessageAt', 'lastMessagePreview', 'lastSenderUid', 'updatedAt', 'responderLastReadAt'].toSet()
+          )
+        )
+      ) &&
+      // Quality Checks
+      (!('ownerLastReadAt' in request.resource.data) || request.resource.data.ownerLastReadAt is timestamp) &&
+      (!('responderLastReadAt' in request.resource.data) || request.resource.data.responderLastReadAt is timestamp);
 
       match /messages/{messageId} {
         // READ: Allow if parent thread participant (using safe hasAny)

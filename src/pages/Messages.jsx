@@ -8,7 +8,7 @@ import './Messages.css';
 import ConfirmModal from '../components/ConfirmModal';
 
 const Messages = () => {
-    const { user, loading, pins, threads, notifications, formatDate, markNotificationsAsRead, isSuspended, hasProbation, removePin } = useApp();
+    const { user, loading, pins, threads, notifications, formatDate, markNotificationsAsRead, isSuspended, hasProbation, removePin, markThreadAsRead } = useApp();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = React.useState('received');
     const [confirmConfig, setConfirmConfig] = React.useState({
@@ -47,7 +47,15 @@ const Messages = () => {
         if (!t) return null;
         // Try to find the pin, but proceed even if it's missing (deleted pin)
         const pin = pinsSafe.find(p => p && String(p.id) === String(t.pinId));
-        const isUnread = t.lastSenderUid && t.lastSenderUid !== user.uid;
+        const isOwner = t.ownerUid === user.uid;
+        const myReadTime = isOwner ? t.ownerLastReadAt : t.responderLastReadAt;
+
+        // Safe timestamp comparison handling Firestore objects or Dates
+        // Handle Firestore Timestamp object (has toMillis) or Date or number
+        const lastMsgTime = t.lastMessageAt?.toMillis ? t.lastMessageAt.toMillis() : (t.lastMessageAt?.getTime ? t.lastMessageAt.getTime() : (new Date(t.lastMessageAt || 0).getTime()));
+        const readTime = myReadTime?.toMillis ? myReadTime.toMillis() : (myReadTime?.getTime ? myReadTime.getTime() : (new Date(myReadTime || 0).getTime()));
+
+        const isUnread = lastMsgTime > readTime;
 
         return {
             thread: t,
@@ -217,6 +225,10 @@ const Messages = () => {
                 className={`thread-item-premium ${isUnread ? 'has-unread-glow' : ''} ${isOutbound ? 'outbound-style' : ''}`}
                 onClick={() => {
                     if (!pin) return; // Cannot navigate to a deleted pin
+
+                    // Mark as read immediately on click
+                    markThreadAsRead(thread.id);
+
                     // Logic: If I am the owner, I'm replying to the responder. If I'm the responder, I'm replying to the owner (null target)
                     const targetResponderUid = (isOutbound) ? null : thread.responderUid;
 
