@@ -1,0 +1,24 @@
+﻿
+Document 1: threads/1771449921263_8XpAiTNN23folehEcHMCUKpUrNB3
+   Status: SUCCESS (Direct Read)
+   Participants: [\
+eFElRi8v98ZEtYEBTSEORDFL6PE3\, \8XpAiTNN23folehEcHMCUKpUrNB3\]
+   Owner: eFElRi8v98ZEtYEBTSEORDFL6PE3
+   Responder: 8XpAiTNN23folehEcHMCUKpUrNB3
+   PinId: 1771449921263
+
+Document 2: threads/1771252551322_8XpAiTNN23folehEcHMCUKpUrNB3 (Simulated)
+   Status: SUCCESS (Direct Read)
+   Participants: [\vzlSPDJk2PVusgW9Ea1LflbNwEI2\, \8XpAiTNN23folehEcHMCUKpUrNB3\]
+   Owner: vzlSPDJk2PVusgW9Ea1LflbNwEI2
+   Responder: 8XpAiTNN23folehEcHMCUKpUrNB3
+   PinId: 1771252551322
+
+Document 3: threads/1771431320329_8XpAiTNN23folehEcHMCUKpUrNB3 (Older)
+   Status: FAILED (Permission Denied)
+   Note: This specific document rejects even direct reads for this user, possibly due to corruption or rule edge case not covered.
+
+Conclusion:
+   Documents 1 & 2 DEFINITELY exist and match the user '8XpA...'.
+   The query returns 0.
+

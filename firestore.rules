@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- HELPER FUNCTIONS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Simplified check compatible with 'array-contains' queries
+    function isParticipant(data) {
+      return isSignedIn() && request.auth.uid in data.participants;
+    }
+    
+    // Check if the current user is listed in the batch-created thread doc
+    function isParticipantInFutureThread(threadId) {
+      return getAfter(/databases/$(database)/documents/threads/$(threadId)).data.participants.hasAny([request.auth.uid]);
+    }
+
+    // --- THREADS AND MESSAGES ---
+    match /threads/{threadId} {
+      // 1. READ: Explicit OR check matching the new query
+      allow read: if isSignedIn() 
+                  && (request.auth.uid == resource.data.ownerUid || request.auth.uid == resource.data.responderUid);
+
+      // 2. CREATE: Strict Integrity (New threads only)
+      allow create: if isSignedIn() 
+                    // Keys check
+                    && request.resource.data.keys().hasAll(['participants', 'ownerUid', 'responderUid', 'pinId'])
+                    
+                    // STRICT PARTICIPANTS: Exactly 2 UIDs
+                    && request.resource.data.participants.size() == 2
+                    
+                    // User must be one of the participants
+                    && request.resource.data.participants.hasAny([request.auth.uid])
+                    
+                    // Enforce canonical ID pattern: pinId_responderUid
+                    && threadId == request.resource.data.pinId + "_" + request.resource.data.responderUid
+                    
+                    // Integrity: Pin must exist
+                    && exists(/databases/$(database)/documents/pins/$(request.resource.data.pinId))
+                    
+                    // Integrity: Owner must be the correct Pin Owner (fetched from DB)
+                    && request.resource.data.ownerUid == get(/databases/$(database)/documents/pins/$(request.resource.data.pinId)).data.ownerUid
+                    
+                    // Integrity: Participants must exactly match [ownerUid, responderUid]
+                    && request.resource.data.participants.hasAll([request.resource.data.ownerUid, request.resource.data.responderUid])
+                    
+                    // Integrity: Responder cannot be Owner
+                    && request.resource.data.ownerUid != request.resource.data.responderUid;
+
+      // 3. UPDATE: Allow if user is a participant
+      allow update: if isParticipant(resource.data);
+
+      match /messages/{messageId} {
+        // READ: Allow if parent thread participant (using safe hasAny)
+        allow read: if isSignedIn() 
+                    && get(/databases/$(database)/documents/threads/$(threadId)).data.participants.hasAny([request.auth.uid]);
+
+        // CREATE:
+        // Case A: Thread Exists -> Check existing participants using hasAny
+        // Case B: New Thread (Batch) -> Check future thread participants using hasAny
+        allow create: if isSignedIn()
+                      && request.resource.data.senderUid == request.auth.uid
+                      && request.resource.data.content.size() <= 2000
+                      && (
+                        (exists(/databases/$(database)/documents/threads/$(threadId)) && 
+                         get(/databases/$(database)/documents/threads/$(threadId)).data.participants.hasAny([request.auth.uid]))
+                        ||
+                        (!exists(/databases/$(database)/documents/threads/$(threadId)) && 
+                         isParticipantInFutureThread(threadId))
+                      );
+
+        // NO UPDATE/DELETE allowed for messages (Immutable history)
+        allow update, delete: if false; 
+      }
+    }
+
+    // --- PINS (Existing logic maintained) ---
+    match /pins/{pinId} {
+      allow read: if true; // Public read
+      allow create: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if isSignedIn() && (resource.data.ownerUid == request.auth.uid || request.auth.token.isAdmin == true);
+    }
+
+    // --- RATINGS (Existing logic maintained) ---
+    match /ratings/{ratingId} {
+      allow read: if true; // Public read
+      allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // --- REPORTS (Existing logic maintained) ---
+    match /reports/{reportId} {
+      allow create: if isSignedIn(); // Any signed-in user can report
+      allow read, update, delete: if false; // Only admins (backend) can manage
+    }
+
+    // --- NOTIFICATIONS (Existing logic maintained) ---
+    match /notifications/{notifId} {
+      allow read: if isSignedIn() && resource.data.targetUid == request.auth.uid;
+      allow create: if isSignedIn(); // Allow users to trigger notifications
+      allow update: if isSignedIn() && resource.data.targetUid == request.auth.uid; // Mark as read
+      allow delete: if isSignedIn() && resource.data.targetUid == request.auth.uid;
+    }
+    
+    // --- USERS (Existing logic maintained) ---
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // --- DELETED PINS (Black Box Audit) ---
+    match /deleted_pins/{docId} {
+        allow read: if false; // Only admins via Admin SDK
+        allow create: if isSignedIn(); // Allow app to archive deleted pins
+    }
+  }
+}

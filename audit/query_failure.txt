@@ -1,0 +1,16 @@
+﻿
+User UID: 8XpAiTNN23folehEcHMCUKpUrNB3 (sanity_b)
+
+Exact Query (AppContext.jsx):
+   const q = query(
+      collection(db, 'threads'),
+      where('participants', 'array-contains', user.uid)
+   );
+
+Result:
+   Status: SUCCESS (No Permission Error)
+   Count: 0 Documents
+   Errors: None
+
+Note: Query returns 0 docs even though direct fetch proves existence.
+

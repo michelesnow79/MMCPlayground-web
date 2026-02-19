@@ -20,7 +20,8 @@ import {
     orderBy,
     where,
     serverTimestamp,
-    arrayUnion
+    arrayUnion,
+    or
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { logPinDebug } from '../utils/logger';
@@ -77,12 +78,14 @@ export const AppProvider = ({ children }) => {
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
                     const userData = userDoc.exists() ? userDoc.data() : {};
 
+                    const { uid: _uid, email: _email, ...safeUserData } = userData;
+
                     setUser({
+                        ...safeUserData,
                         uid: firebaseUser.uid,
                         email: firebaseUser.email,
-                        name: userData.name || firebaseUser.email.split('@')[0].toUpperCase(),
-                        isAdmin: userData.isAdmin || firebaseUser.email === 'MissMe@missmeconnection.com',
-                        ...userData
+                        name: safeUserData.name || firebaseUser.email.split('@')[0].toUpperCase(),
+                        isAdmin: safeUserData.isAdmin || firebaseUser.email === 'MissMe@missmeconnection.com',
                     });
                     setIsLoggedIn(true);
                 } else {
@@ -149,11 +152,21 @@ export const AppProvider = ({ children }) => {
         }
 
         try {
-            if (import.meta.env.DEV) console.log(`📡 SUBSCRIPTION: [Threads Listener] for [${user.uid}]`);
+            if (import.meta.env.DEV) {
+                console.log(`📡 SUBSCRIPTION: [Threads Listener] for [${user.uid}]`);
+                console.log("DEBUG: Auth State at Listener:", {
+                    contextUid: user.uid,
+                    firebaseAuthParams: auth.currentUser ? { uid: auth.currentUser.uid } : 'NULL',
+                    queryParam: user.uid
+                });
+            }
             telemetry.startTimer('thread_list_load');
             const q = query(
                 collection(db, 'threads'),
-                where('participants', 'array-contains', user.uid)
+                or(
+                    where('ownerUid', '==', user.uid),
+                    where('responderUid', '==', user.uid)
+                )
             );
 
             const unsubscribe = onSnapshot(q, {
@@ -175,6 +188,7 @@ export const AppProvider = ({ children }) => {
                     telemetry.trackEvent('thread_list_load_success', { count: threadsData.length });
                 },
                 error: (err) => {
+                    console.error("❌ Threads Listener Error:", err.code, err.message, "User:", user.uid);
                     telemetry.trackError(err, { source: 'Threads Listener' });
                     telemetry.trackEvent('thread_list_load_fail', { error: err.code });
                 }
@@ -650,10 +664,6 @@ export const AppProvider = ({ children }) => {
         }
 
         const participants = [resolvedOwnerUid, targetResponderUid];
-        // Add ownerEmail as a participant backup (Hybrid Identity)
-        if (pin.ownerEmail && !participants.includes(pin.ownerEmail)) {
-            participants.push(pin.ownerEmail.toLowerCase());
-        }
 
         if (participants.includes(undefined) || participants.includes(null)) {
             console.error("❌ addReply Integrity Error: Participants array contains invalid values:", participants);
@@ -688,7 +698,8 @@ export const AppProvider = ({ children }) => {
                 content: finalContent,
                 senderUid: user.uid,
                 senderEmail: user.email,
-                createdAt: serverTimestamp()
+                createdAt: serverTimestamp(),
+                participants: participants // Security: Required for atomic batch rules
             };
 
             batch.set(threadRef, threadData, { merge: true });

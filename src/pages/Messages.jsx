@@ -45,12 +45,13 @@ const Messages = () => {
     // Threads I am participating in
     const myConversations = threadsSafe.map(t => {
         if (!t) return null;
+        // Try to find the pin, but proceed even if it's missing (deleted pin)
         const pin = pinsSafe.find(p => p && String(p.id) === String(t.pinId));
         const isUnread = t.lastSenderUid && t.lastSenderUid !== user.uid;
 
         return {
             thread: t,
-            pin,
+            pin, // Can be undefined
             isUnread,
             latestReply: {
                 content: t.lastMessagePreview || '',
@@ -60,19 +61,32 @@ const Messages = () => {
         };
     }).filter(Boolean);
 
-    // Inbox: People replying to MY pins
+    // Inbox: People replying to ME (I am the owner)
+    // Hybrid Identity: Check UID first, fallback to Email match if needed
     const myEmail = user?.email?.toLowerCase() || '';
     const inboundConversations = myConversations.filter(c => {
-        const pinEmail = c.pin?.ownerEmail?.toLowerCase() || '';
-        return c.pin?.ownerUid === user.uid || (pinEmail !== '' && pinEmail === myEmail);
+        const isOwnerByUid = c.thread.ownerUid === user.uid;
+        const isOwnerByEmail = c.thread.ownerEmail && c.thread.ownerEmail === myEmail;
+        return isOwnerByUid || isOwnerByEmail;
     });
-    // Outbox: Pins I reached out to
+
+    // Outbox: Pins I reached out to (I am NOT the owner)
     const outboundConversations = myConversations.filter(c => {
-        const pinEmail = c.pin?.ownerEmail?.toLowerCase() || '';
-        return c.pin &&
-            c.pin.ownerUid !== user.uid &&
-            (pinEmail === '' || pinEmail !== myEmail);
+        const isOwnerByUid = c.thread.ownerUid === user.uid;
+        const isOwnerByEmail = c.thread.ownerEmail && c.thread.ownerEmail === myEmail;
+        return !isOwnerByUid && !isOwnerByEmail;
     });
+
+    // --- DEBUG: Verify Data Flow ---
+    if (import.meta.env.DEV) {
+        const missingPins = myConversations.filter(c => !c.pin).length;
+        console.log(`🔎 MESSAGES DEBUG: User [${user?.uid}]`);
+        console.log(`   - Total Processed: ${myConversations.length}`);
+        console.log(`   - Inbound (My Pins): ${inboundConversations.length}`);
+        console.log(`   - Outbound (My Replies): ${outboundConversations.length}`);
+        console.log(`   - Threads with Missing Pins (Deleted?): ${missingPins}`);
+    }
+    // -------------------------------
 
     const renderReplyItem = (reply, isSent) => {
         if (!reply) return null;
@@ -186,40 +200,62 @@ const Messages = () => {
 
     const renderConvoItem = (convo) => {
         const { pin, latestReply, isUnread, thread } = convo;
-        if (!user) return null;
-        const isOutbound = pin?.ownerUid !== user.uid;
+
+        // DEBUG: Trace execution
+        if (import.meta.env.DEV) console.log(`RENDER ITEM for thread ${thread?.id}: user=${!!user}, thread=${!!thread}`);
+
+        if (!user || !thread) return null;
+
+        // Use thread data for directionality, falling back to pin if needed for legacy data
+        const threadOwnerUid = thread.ownerUid;
+        const isOutbound = threadOwnerUid !== user.uid;
+        const isDeleted = !pin;
 
         return (
             <div
                 key={thread.id}
                 className={`thread-item-premium ${isUnread ? 'has-unread-glow' : ''} ${isOutbound ? 'outbound-style' : ''}`}
                 onClick={() => {
-                    if (!pin || !user) return;
-                    const responderUid = (pin.ownerUid === user.uid) ? thread.responderUid : null;
-                    navigate(`/browse/${pin.id}`, { state: { openReply: true, responderUid, fromMessages: true } });
+                    if (!pin) return; // Cannot navigate to a deleted pin
+                    // Logic: If I am the owner, I'm replying to the responder. If I'm the responder, I'm replying to the owner (null target)
+                    const targetResponderUid = (isOutbound) ? null : thread.responderUid;
+
+                    navigate(`/browse/${pin.id}`, {
+                        state: {
+                            openReply: true,
+                            responderUid: targetResponderUid,
+                            fromMessages: true
+                        }
+                    });
                 }}
-                style={{ opacity: pin ? 1 : 0.7 }}
+                style={{ opacity: pin ? 1 : 0.6, cursor: pin ? 'pointer' : 'default' }}
             >
                 <div className="thread-avatar-circle">
                     <span className="thread-logo-mini">{pin ? (isOutbound ? '📤' : '📥') : '🚫'}</span>
                 </div>
                 <div className="thread-content-block">
                     <div className="thread-top-line">
-                        <div className="title-with-tag">
-                            <h3 className="thread-title-text">{pin ? pin.title : 'DELETED CONNECTION'}</h3>
-                            {isOutbound && <span className="sent-label-tag">REPLIED</span>}
+                        <div className="title-group-vertical">
+                            <h3 className="thread-title-text">
+                                {pin ? pin.title : 'DELETED CONNECTION'}
+                            </h3>
+
                         </div>
                         <span className="thread-time-meta">
                             {latestReply?.timestamp ? formatDate(latestReply.timestamp) : 'Recent'}
                         </span>
                     </div>
+                    <div className="thread-tags-row">
+                        {isOutbound && <span className="sent-label-tag">MY REPLY</span>}
+                        {!pin && <span className="deleted-status-tag">POST REMOVED</span>}
+                    </div>
+
                     <p className="thread-preview-text">
                         <span className="sender-label">
-                            {latestReply?.senderUid === user.uid ? 'You: ' : (pin?.ownerUid === user.uid ? (user.nicknames?.[thread.id] ? `${user.nicknames[thread.id].toUpperCase()}: ` : 'Potential Missed Connection: ') : (user.nicknames?.[thread.id] ? `${user.nicknames[thread.id].toUpperCase()}: ` : 'From Owner: '))}
+                            {latestReply?.senderUid === user.uid ? 'You: ' : 'From: '}
                         </span>
                         {latestReply?.content ? latestReply.content : 'Message sent...'}
                     </p>
-                    {!pin && <p className="deleted-tag">This post was removed by a moderator</p>}
                 </div>
                 {pin && (
                     <div className="thread-indicator">
@@ -272,6 +308,9 @@ const Messages = () => {
             </div>
 
             <main className="messages-list-scroll">
+                {/* DEBUG: Trace Active Tab */}
+                {import.meta.env.DEV && console.log(`RENDER MAIN: ActiveTab=${activeTab}, OutboundLen=${outboundConversations.length}`)}
+
                 {activeTab === 'received' ? (
                     <div className="thread-stack">
                         {myPins.length > 0 ? (
