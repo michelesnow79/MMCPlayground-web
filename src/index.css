@@ -23,10 +23,15 @@ body,
   padding: 0;
   background: #1a1a1b;
   /* Support for notches/safe areas */
-  padding-top: env(safe-area-inset-top, 0);
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  padding-left: env(safe-area-inset-left, 0);
-  padding-right: env(safe-area-inset-right, 0);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+#root {
+  padding-top: max(45px, env(safe-area-inset-top));
+  /* Force black bumper */
 }
 
 .app-container {
@@ -57,7 +62,7 @@ h3,
 /* Global Hamburger Button */
 .hamburger-btn-static {
   position: fixed;
-  top: 25px;
+  top: max(45px, env(safe-area-inset-top) + 10px);
   left: 25px;
   z-index: 100;
   background: none;
@@ -135,4 +140,14 @@ h3,
 
 .hdpi .pac-icon {
   background-image: url(https://maps.gstatic.com/mapfiles/api-3/images/autocomplete-icons_hdpi.png) !important;
+}
+/* Global Modal Fix for Leaflet/Google Maps Overlays */
+.leaflet-pane, .gm-style {
+    z-index: 0 !important;
+}
+
+/* When modal is open, prevent map interactions completely */
+body.modal-open .map-view-container,
+body.modal-open .browse-hero::before {
+    pointer-events: none !important;
 }

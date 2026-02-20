@@ -8,6 +8,7 @@ import './Browse.css';
 
 import { useApp } from '../context/AppContext';
 import mapBg from '../assets/map-bg.svg';
+import telemetry from '../utils/telemetry';
 
 const Browse = () => {
     const navigate = useNavigate();
@@ -97,6 +98,12 @@ const Browse = () => {
 
     const hasActiveFilters = !!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword);
 
+    useEffect(() => {
+        if (!isLoggedIn) {
+            telemetry.trackEvent('logged_out_browse_cta_view');
+        }
+    }, [isLoggedIn]);
+
     return (
         <div className="browse-container">
             <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
@@ -142,34 +149,65 @@ const Browse = () => {
                     </div>
                 </div>
 
-                <div className="my-connections-section">
-                    <h2 className="section-heading">MY MISSED CONNECTIONS</h2>
-                    <div className="horizontal-scroll-container">
-                        <button className="scroll-btn left" onClick={() => scroll('left')}>
-                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                        </button>
-                        <div className="horizontal-scroll-wrap" ref={scrollRef}>
-                            {myPins.length === 0 ? (
-                                <div className="no-my-pins">No posts from you yet.</div>
-                            ) : (
-                                myPins.map(p => (
-                                    <div key={p.id} className={`mini-card ${p.status === 'hidden' ? 'is-private' : ''}`} onClick={() => navigate(`/browse/${p.id}`)}>
-                                        <h3 className="mini-card-title">{p.title}</h3>
-                                        <p className="mini-card-location">{sanitizeLocation(p.location)}</p>
-                                        {p.status === 'hidden' && <span className="mini-private-badge">PRIVATE</span>}
-                                    </div>
-                                ))
-                            )}
+                {!isLoggedIn && (
+                    <div className="browse-join-banner-container">
+                        <div className="browse-join-banner-content">
+                            <h2 className="join-banner-title">JOIN MISS ME CONNECTION</h2>
+                            <p className="join-banner-subtitle">Create an account to save connections, message, and get notified.</p>
+                            <div className="join-banner-actions">
+                                <button
+                                    className="join-btn-primary"
+                                    onClick={() => {
+                                        telemetry.trackEvent('join_now_click', { source: 'browse_banner' });
+                                        navigate('/login', { state: { mode: 'signup' } });
+                                    }}
+                                >
+                                    JOIN NOW
+                                </button>
+                                <button
+                                    className="join-btn-secondary"
+                                    onClick={() => {
+                                        telemetry.trackEvent('login_click', { source: 'browse_banner' });
+                                        navigate('/login', { state: { mode: 'login' } });
+                                    }}
+                                >
+                                    LOG IN
+                                </button>
+                            </div>
                         </div>
-                        <button className="scroll-btn right" onClick={() => scroll('right')}>
-                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
-                        </button>
                     </div>
-                </div>
+                )}
+
+                {isLoggedIn && (
+                    <div className="my-connections-section">
+                        <h2 className="section-heading">MY MISSED CONNECTIONS</h2>
+                        <div className="horizontal-scroll-container">
+                            <button className="scroll-btn left" onClick={() => scroll('left')}>
+                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+                            <div className="horizontal-scroll-wrap" ref={scrollRef}>
+                                {myPins.length === 0 ? (
+                                    <div className="no-my-pins">No posts from you yet.</div>
+                                ) : (
+                                    myPins.map(p => (
+                                        <div key={p.id} className={`mini-card ${p.status === 'hidden' ? 'is-private' : ''}`} onClick={() => navigate(`/browse/${p.id}`)}>
+                                            <h3 className="mini-card-title">{p.title}</h3>
+                                            <p className="mini-card-location">{sanitizeLocation(p.location)}</p>
+                                            {p.status === 'hidden' && <span className="mini-private-badge">PRIVATE</span>}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            <button className="scroll-btn right" onClick={() => scroll('right')}>
+                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* SEARCH & FILTERS SECTION */}

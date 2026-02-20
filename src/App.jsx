@@ -21,6 +21,8 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
 
+import { registerNotifications } from './utils/notifications';
+
 function App() {
   useEffect(() => {
     const initNativeFeatures = async () => {
@@ -29,6 +31,9 @@ function App() {
           // Make status bar dark and transparent for that premium look
           await StatusBar.setStyle({ style: Style.Dark });
           await StatusBar.setBackgroundColor({ color: '#1a1a1b' });
+
+          // Initialize Notifications
+          await registerNotifications();
 
           // Hide splash screen once app is ready
           await SplashScreen.hide();

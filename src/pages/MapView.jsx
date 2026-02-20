@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { APIProvider, Map as GoogleMap, Marker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import BottomNav from '../components/BottomNav';
+import { Geolocation } from '@capacitor/geolocation';
 import SideMenu from '../components/SideMenu';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -10,6 +11,7 @@ import './MapView.css';
 import { useApp } from '../context/AppContext';
 import FilterMenu from '../components/FilterMenu';
 import ConfirmModal from '../components/ConfirmModal';
+import MapHeader from '../components/MapHeader';
 import { fuzzAndProcessLocation, haversineMeters } from '../utils/locationHelper';
 import { logPinDebug } from '../utils/logger';
 import logoAsset from '../assets/heart-logo.svg';
@@ -57,6 +59,8 @@ const MapView = () => {
 
     const GROUP_RADIUS_METERS = 150; // Increased from 75 to prevent label overlap
     const [filterCenter, setFilterCenter] = useState(null);
+    const [userLocation, setUserLocation] = useState(null);
+    const [showRecenterBtn, setShowRecenterBtn] = useState(false);
 
     const [isPosting, setIsPosting] = useState(false);
     const [isSavingPin, setIsSavingPin] = useState(false);
@@ -278,41 +282,73 @@ const MapView = () => {
 
     // Main Geolocation Controller
     useEffect(() => {
+        // 0. BLOCK: Wait for Auth Loading
+        if (loading) {
+            console.log("📍 [GEO] Waiting for auth loading...");
+            return;
+        }
+
         // Reset if we are locating
         if (!isLocating) return;
 
-        // 1. Try GPS first
+        // 0. Wait for Window Google logic
+        if (!window.google?.maps?.Geocoder) {
+            // Retry quickly if API not ready
+            const t = setTimeout(() => {
+                // If still failing after retry, we might fallback, but ideally just wait for next render
+            }, 500);
+            return () => clearTimeout(t);
+        }
+
+        // 1. PRIORITY: User Profile ZIP
+        if (user?.postalCode) {
+            console.log("📍 [GEO] Profile ZIP found:", user.postalCode);
+            attemptZipGeocode(user.postalCode);
+            return;
+        }
+
+        // 2. Try GPS (Device Location)
         if (navigator.geolocation) {
             console.log("📍 [GEO] Requesting navigator.geolocation...");
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                     if (import.meta.env.DEV) console.log("📍 [GEO] GPS Success:", coords);
+
+                    setUserLocation(coords);
                     setMapCenter(coords);
                     setFallbackUsed(false);
                     setIsLocating(false);
                     isCenterManualRef.current = true;
+                    setCurrentZoom(15);
                 },
                 (err) => {
-                    console.warn(`📍 [GEO] GPS Denied/Failed (${err.code}): ${err.message}`);
-
-                    // On GPS fail, check ZIP
-                    if (user?.postalCode) {
-                        attemptZipGeocode(user.postalCode);
-                    } else {
-                        applyNationwideFallback("GPS Failed & No ZIP in profile");
-                    }
+                    console.warn("📍 [GEO] GPS Error:", err.code, err.message);
+                    // 3. Fallback if GPS fails and no ZIP
+                    applyNationwideFallback("GPS Denied/Error");
                 },
-                { timeout: 5000, enableHighAccuracy: true }
+                { timeout: 10000, enableHighAccuracy: true }
             );
-        } else if (user?.postalCode) {
-            // No GPS capability, try ZIP
-            attemptZipGeocode(user.postalCode);
         } else {
-            // Absolute failure
-            applyNationwideFallback("No GPS & No ZIP");
+            console.warn("📍 [GEO] No navigator.geolocation support.");
+            applyNationwideFallback("No Geo Support");
         }
-    }, [user?.uid, user?.postalCode, attemptZipGeocode, applyNationwideFallback, isLocating]);
+    }, [isLocating, user, loading, attemptZipGeocode, applyNationwideFallback]);
+
+    // Zoom Controls for Emulator
+    const handleZoomIn = () => {
+        if (mapInstance) {
+            const z = mapInstance.getZoom() || 13;
+            mapInstance.setZoom(z + 1);
+        }
+    };
+
+    const handleZoomOut = () => {
+        if (mapInstance) {
+            const z = mapInstance.getZoom() || 13;
+            mapInstance.setZoom(z - 1);
+        }
+    };
 
     // Safety Timeout: 10 seconds max loading
     useEffect(() => {
@@ -507,6 +543,14 @@ const MapView = () => {
 
         setSelectedPin(sortedVenuePins[startIdx]);
 
+        // Center map slightly above the pin so the InfoWindow (which is above the pin) is visible and not blocked by the top bar
+        if (mapInstance && anchor) {
+            const offset = 0.005; // Roughly shifts center North, pushing pin down
+            // Ideally we'd use projection to shift by pixels, but a small lat offset works for typical zoom levels
+            mapInstance.panTo({ lat: anchor.lat + offset, lng: anchor.lng });
+            isCenterManualRef.current = true;
+        }
+
         logPinDebug(`📍 Marker Click: venuePins length = ${sortedVenuePins.length} (expanded from ${groupPins.length})`);
     };
 
@@ -657,6 +701,57 @@ const MapView = () => {
     };
 
 
+    const handleRecenter = async () => {
+        try {
+            // 1. Check permissions first
+            const permStatus = await Geolocation.checkPermissions();
+
+            if (permStatus.location !== 'granted') {
+                const requested = await Geolocation.requestPermissions();
+                if (requested.location !== 'granted') {
+                    alert("Please enable location permissions to use this feature.");
+                    return;
+                }
+            }
+
+            const position = await Geolocation.getCurrentPosition({
+                enableHighAccuracy: true,
+                timeout: 10000
+            });
+
+            const newCenter = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+
+            setUserLocation(newCenter);
+            setMapCenter(newCenter);
+            setCurrentZoom(16);
+            isCenterManualRef.current = true;
+            setShowRecenterBtn(false);
+
+        } catch (err) {
+            console.error("Recenter failed:", err);
+            // Fallback to basic web API if Capacitor fails (e.g. in browser)
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    const newCenter = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    setMapCenter(newCenter);
+                    setUserLocation(newCenter);
+                    setCurrentZoom(16);
+                    isCenterManualRef.current = true;
+                    setShowRecenterBtn(false);
+                }, (error) => {
+                    alert("Could not retrieve location. Please check GPS settings.");
+                });
+            } else {
+                alert("Location services unavailable.");
+            }
+        }
+    };
+
+
+
     const defaultCenter = mapCenter || { lat: 39.8283, lng: -98.5795 };
 
     return (
@@ -680,28 +775,12 @@ const MapView = () => {
                         </div>
                     )}
                     <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-                    <header className="map-top-bar-original">
-                        <div className="top-bar-side-left">
-                            <button className="map-hamburger-btn" onClick={() => setIsMenuOpen(true)}>
-                                <div className="hamburger-line-small"></div>
-                                <div className="hamburger-line-small"></div>
-                                <div className="hamburger-line-small"></div>
-                            </button>
 
-                        </div>
-                        <div className="map-logo-group" onClick={() => navigate('/')}>
-                            <img src={logoAsset} alt="Logo" className="header-heart-logo" />
-                            <h1 className="map-logo-title-original">MISS ME CONNECTIONS</h1>
-                        </div>
-                        <div className="top-bar-side-right">
-                            <button className={`original-settings-btn ${!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword) ? 'filter-active' : ''}`} onClick={() => setIsFilterOpen(true)}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                                    <path d="M3 17h18v2H3v-2zm0-7h18v2H3v-2zm0-7h18v2H3V3zM5 5v2h2V5H5zm0 7v2h2v-2H5zm12 7v2h2v-2h-2z" />
-                                </svg>
-                                {!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword) && <span className="filter-badge-dot" />}
-                            </button>
-                        </div>
-                    </header>
+                    <MapHeader
+                        onMenuClick={() => setIsMenuOpen(true)}
+                        onFilterClick={() => setIsFilterOpen(true)}
+                        isFilterActive={!!(activeFilters.location || activeFilters.type || activeFilters.date || activeFilters.keyword)}
+                    />
 
                     <FilterMenu
                         isOpen={isFilterOpen}
@@ -711,18 +790,28 @@ const MapView = () => {
                         mapInstance={mapInstance}
                     />
 
+                    {showRecenterBtn && (
+                        <button className="recenter-fab" onClick={handleRecenter}>
+                            📍
+                        </button>
+                    )}
+
+                    <div className="emulator-zoom-controls">
+                        <button className="zoom-btn-fab" onClick={handleZoomIn}>+</button>
+                        <button className="zoom-btn-fab" onClick={handleZoomOut}>-</button>
+                    </div>
+
                     <div className="map-canvas">
                         <GoogleMap
                             defaultCenter={defaultCenter}
                             defaultZoom={13}
                             gestureHandling={'greedy'}
                             disableDefaultUI={false}
-                            zoomControl={true}
-                            zoomControlOptions={{ position: 8 }} // RIGHT_CENTER
+                            zoomControl={false}
                             streetViewControl={false}
                             mapTypeControl={false}
                             fullscreenControl={false}
-                            styles={mapMode === 'dark' ? mapThemeDark : []}
+                            styles={(isLoggedIn && mapMode === 'dark') ? mapThemeDark : []}
                             onClick={handleMapClick}
                             onDragStart={() => isDragging.current = true}
                             onDragEnd={() => setTimeout(() => isDragging.current = false, 50)}
@@ -730,6 +819,14 @@ const MapView = () => {
                                 setCurrentZoom(ev.detail.zoom);
                                 if (isCenterManualRef.current) {
                                     isCenterManualRef.current = false;
+                                }
+
+                                // Show recenter button if map drifts from user location
+                                if (userLocation) {
+                                    const center = ev.detail.center;
+                                    const dist = haversineMeters(center.lat, center.lng, userLocation.lat, userLocation.lng);
+                                    // If we drift more than 50 meters, show button
+                                    setShowRecenterBtn(dist > 50);
                                 }
 
                                 // SYNC VISIBLE PINS FOR BROWSE PAGE

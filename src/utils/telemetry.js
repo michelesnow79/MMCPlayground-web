@@ -61,7 +61,9 @@ const telemetry = {
             ...context
         };
 
-        console.error(`🚨 [ERROR_REPORT]`, payload);
+        if (ENV === 'development') {
+            console.error(`🚨 [ERROR_REPORT]`, payload);
+        }
 
         // Errors are NEVER sampled
         // if (ENV === 'production') {

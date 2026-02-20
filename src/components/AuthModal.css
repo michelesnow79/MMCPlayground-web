@@ -17,9 +17,9 @@
     background: #121214;
     border: 1px solid rgba(0, 240, 255, 0.3);
     border-radius: 24px;
-    padding: 35px 25px;
-    width: 100%;
-    max-width: 400px;
+    padding: 25px 20px;
+    width: 90%;
+    max-width: 350px;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8),
         0 0 20px rgba(0, 240, 255, 0.1);
@@ -109,4 +109,32 @@
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.3);
     color: #fff;
+}
+.auth-modal-text-link {
+    background: none;
+    border: none;
+    color: #888;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 0.8rem;
+}
+
+.auth-modal-overlay {
+    z-index: 99999 !important;
+    pointer-events: auto !important;
+}
+
+.auth-modal-card {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 100000 !important;
+}
+
+/* Ensure buttons are clickable */
+.auth-modal-btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 100001 !important;
 }

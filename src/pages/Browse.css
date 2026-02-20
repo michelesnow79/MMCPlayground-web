@@ -659,3 +659,155 @@ input:checked+.slider:before {
         flex-shrink: 0;
     }
 }
+.browse-join-banner {
+    margin: 10px 16px;
+    background: linear-gradient(90deg, #00f0ff 0%, #00d8e6 100%);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 15px rgba(0, 240, 255, 0.4);
+    cursor: pointer;
+    transform: translateY(0);
+    transition: transform 0.2s;
+}
+
+.browse-join-banner:active {
+    transform: scale(0.98);
+}
+
+.join-icon {
+    font-size: 1.5rem;
+}
+
+.join-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    color: #000;
+}
+
+.join-text strong {
+    font-family: 'Bangers', cursive;
+    font-size: 1.2rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.join-text span {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.join-arrow {
+    font-weight: 900;
+    color: #000;
+}
+
+
+.browse-join-banner-container {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.browse-join-banner-content {
+    background: linear-gradient(135deg, #121214 0%, #1a1a1e 100%);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    max-width: 500px;
+    width: 100%;
+}
+
+.join-banner-title {
+    font-family: 'Bangers', cursive;
+    color: white;
+    font-size: 1.8rem;
+    margin: 0 0 10px 0;
+    letter-spacing: 1px;
+}
+
+.join-banner-subtitle {
+    color: #a0a0ab;
+    font-size: 0.95rem;
+    margin: 0 0 20px 0;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.join-banner-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.join-btn-primary {
+    background: var(--missme-cyan);
+    color: white;
+    border: none;
+    font-family: 'Bangers', cursive;
+    font-size: 1.1rem;
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+    letter-spacing: 0.5px;
+}
+
+.join-btn-primary:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+}
+
+.join-btn-secondary {
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-family: 'Bangers', cursive;
+    font-size: 1.1rem;
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    letter-spacing: 0.5px;
+}
+
+.join-btn-secondary:hover {
+    border-color: white;
+}
+
+/* Ensure Browse Banner is clickable */
+.browse-join-banner-container {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 500 !important; /* Above any map background pseudo-elements */
+    pointer-events: auto !important;
+}
+
+.browse-join-banner-content {
+    background: linear-gradient(135deg, #121214 0%, #1a1a1e 100%);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    max-width: 500px;
+    width: 100%;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 501 !important;
+}
+
+.join-btn-primary, .join-btn-secondary {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 502 !important;
+    cursor: pointer !important;
+}

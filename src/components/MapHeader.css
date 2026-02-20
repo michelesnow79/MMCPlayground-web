@@ -1,0 +1,103 @@
+.map-header-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: max(70px, env(safe-area-inset-top) + 50px);
+    width: 100%;
+    z-index: 5000;
+    /* High enough to sit above map content but below modals */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: max(10px, env(safe-area-inset-top)) 15px 10px 15px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 70%, transparent 100%);
+    pointer-events: none;
+    /* Let clicks pass through the transparent/empty areas */
+}
+
+/* Ensure children (buttons, logos) are clickable */
+.map-header-left,
+.map-header-center,
+.map-header-right {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+}
+
+.map-header-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px;
+}
+
+.map-header-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.map-header-btn.active {
+    border-color: #00f0ff;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.hamburger-line {
+    width: 20px;
+    height: 2px;
+    background-color: white;
+    border-radius: 2px;
+}
+
+.map-header-logo {
+    height: 32px;
+    width: auto;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    margin-right: 8px;
+}
+
+.map-header-title {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(254, 44, 85, 0.5);
+    margin: 0;
+    letter-spacing: 1px;
+    /* Hide on very small screens if needed */
+}
+
+.map-header-center {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.map-header-center:active {
+    transform: scale(0.95);
+}
+
+.filter-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background-color: #00f0ff;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #00f0ff;
+}
+
+@media (max-width: 380px) {
+    .map-header-title {
+        display: none;
+    }
+}

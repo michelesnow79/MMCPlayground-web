@@ -48,12 +48,13 @@ div[role="button"] {
     top: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    /* Remove fixed height to allow padding to dictate size */
     background-color: #000000;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    padding: 0 16px;
+    /* Reduced to 50px as we are scaling down the content */
+    padding: max(50px, env(safe-area-inset-top)) 16px 12px 16px;
     z-index: 2050;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -77,14 +78,27 @@ div[role="button"] {
     filter: drop-shadow(0 0 8px rgba(254, 44, 85, 0.6));
 }
 
+@media (max-width: 768px) {
+    .header-heart-logo {
+        width: 25px;
+    }
+}
+
 .map-logo-title-original {
     font-family: 'Bangers', cursive;
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     color: #ffffff;
     letter-spacing: 1px;
     text-transform: uppercase;
     text-align: center;
     margin: 0;
+}
+
+@media (max-width: 768px) {
+    .map-logo-title-original {
+        font-size: 1.15rem;
+        letter-spacing: 0.5px;
+    }
 }
 
 .original-settings-btn {
@@ -100,7 +114,7 @@ div[role="button"] {
     display: flex;
     align-items: center;
     gap: 15px;
-    flex: 1;
+    flex: 0 0 auto;
 }
 
 .map-search-wrap {
@@ -141,7 +155,7 @@ div[role="button"] {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    flex: 1;
+    flex: 0 0 auto;
 }
 
 .map-hamburger-btn {
@@ -163,10 +177,11 @@ div[role="button"] {
 
 .top-bar-side-left {
     position: absolute;
-    left: 16px;
     display: flex;
     align-items: center;
     gap: 15px;
+    position: relative;
+    left: auto;
 }
 
 .original-search-form {
@@ -198,8 +213,8 @@ div[role="button"] {
 }
 
 .top-bar-side-right {
-    position: absolute;
-    right: 16px;
+    position: relative;
+    right: auto;
 }
 
 /* Original Pin Styles */
@@ -1456,4 +1471,263 @@ div[role="button"] {
 .react-datepicker__day {
     width: auto !important;
     margin: 0 !important;
+}
+
+.recenter-fab {
+    position: absolute;
+    bottom: 180px;
+    /* Above bottom nav */
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    background-color: var(--missme-cyan);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    z-index: 1000;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.recenter-fab:active {}
+
+.post-modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.btn-cancel {
+    flex: 1;
+    background: #252529;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 14px;
+    border-radius: 12px;
+    font-family: 'Bangers', cursive;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.btn-submit {
+    flex: 2;
+    background: var(--missme-cyan);
+    border: none;
+    color: black;
+    padding: 14px;
+    border-radius: 12px;
+    font-family: 'Bangers', cursive;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+/* Map Loading Screen */
+.map-loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.loading-hearts {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.heart-main-asset {
+    width: 60px;
+    height: auto;
+    display: block;
+    animation: pulse-heart 1.2s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(254, 44, 85, 0.4));
+}
+
+.heart-sub-1,
+.heart-sub-2 {
+    font-size: 2.5rem;
+    display: block;
+    animation: pulse-heart 1.2s ease-in-out infinite;
+}
+
+.heart-sub-1 {
+    font-size: 2rem;
+    animation-delay: 0.2s;
+    opacity: 0.8;
+}
+
+.heart-sub-2 {
+    font-size: 2rem;
+    animation-delay: 0.4s;
+    opacity: 0.8;
+}
+
+.loading-content p {
+    font-family: 'Bangers', cursive;
+    font-size: 1.8rem;
+    color: #ffffff;
+    letter-spacing: 2px;
+    margin: 0;
+    text-shadow: 0 0 15px rgba(254, 44, 85, 0.4);
+}
+
+@keyframes pulse-heart {
+    0% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 5px rgba(254, 44, 85, 0.5));
+    }
+
+    50% {
+        transform: scale(1.3);
+        filter: drop-shadow(0 0 20px rgba(254, 44, 85, 0.8));
+    }
+
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 5px rgba(254, 44, 85, 0.5));
+    }
+}
+
+.marker-count-label {
+    background-color: #fe2c55 !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 10px !important;
+    font-weight: 900 !important;
+    font-size: 11px !important;
+    border: 2px solid white !important;
+    margin-top: -30px !important;
+}
+
+.map-fallback-banner {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(18, 18, 20, 0.95);
+    border: 1px solid var(--missme-pink);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    z-index: 1000;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 800;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    animation: bannerFadeIn 0.5s ease;
+}
+
+@keyframes bannerFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+/* FIX: Ensure DatePicker always shows 7 columns properly */
+.react-datepicker__week,
+.react-datepicker__day-names {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    justify-content: center !important;
+}
+
+.react-datepicker__day-name,
+.react-datepicker__day {
+    width: auto !important;
+    margin: 0 !important;
+}
+
+.recenter-fab {
+    position: absolute;
+    bottom: 180px;
+    /* Above bottom nav */
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    background-color: var(--missme-cyan);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    z-index: 1000;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.recenter-fab:active {
+    transform: scale(0.95);
+    background-color: #059bbd;
+}
+
+.emulator-zoom-controls {
+    position: absolute;
+    left: 15px;
+    bottom: 120px;
+    /* Above bottom nav and recenter btn */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.zoom-btn-fab {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #1a1a1e;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 300;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s;
+}
+
+.zoom-btn-fab:hover {
+    background: #2a2a30;
+    border-color: #00f0ff;
+    color: #00f0ff;
+    transform: scale(1.05);
+}
+
+.zoom-btn-fab:active {
+    transform: scale(0.95);
 }

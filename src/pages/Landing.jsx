@@ -58,6 +58,8 @@ const Landing = () => {
                         </button>
                     </div>
 
+
+
                     <div className="speech-bubble-asset-wrap">
                         <img src={speechBubbleImg} alt="Explore for free" className="speech-bubble-img" />
                         <span className="speech-bubble-text">EXPLORE FOR FREE, NO SIGNUP NEEDED!</span>

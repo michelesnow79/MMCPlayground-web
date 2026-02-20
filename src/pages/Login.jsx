@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import logoAsset from '../assets/heart-logo.svg';
 import './Login.css';
@@ -11,7 +11,8 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [postalCode, setPostalCode] = useState('');
-    const [isSignUp, setIsSignUp] = useState(false);
+    const location = useLocation();
+    const [isSignUp, setIsSignUp] = useState(location.state?.mode === 'signup');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [isAgeConfirmed, setIsAgeConfirmed] = useState(false);

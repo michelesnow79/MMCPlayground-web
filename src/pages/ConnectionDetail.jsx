@@ -7,8 +7,10 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './ConnectionDetail.css';
 import ConfirmModal from '../components/ConfirmModal';
+import AuthModal from '../components/AuthModal';
 import { fuzzAndProcessLocation } from '../utils/locationHelper';
 import logoAsset from '../assets/heart-logo.svg';
+import telemetry from '../utils/telemetry';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -57,7 +59,7 @@ const ConnectionDetail = () => {
 
     const handleRate = (val) => {
         if (!user) {
-            navigate('/login');
+            setShowAuthModal(true);
             return;
         }
         if (isSuspended()) {
@@ -112,8 +114,7 @@ const ConnectionDetail = () => {
     const handleReplyClick = (responderUid = null) => {
         console.log(`💬 handleReplyClick called. responderUid: ${responderUid}, user: ${user?.uid}`);
         if (!user) {
-            console.log("💬 Redirecting to login...");
-            navigate('/login');
+            setShowAuthModal(true);
             return;
         }
         setActiveResponderUid(responderUid);
@@ -313,6 +314,13 @@ const ConnectionDetail = () => {
             console.log("MMC DEBUG: Available Pin IDs:", pins.map(p => p.id));
         }
     }, [id, pins]);
+
+    // Track Auth Wall Impression
+    useEffect(() => {
+        if (showAuthModal) {
+            telemetry.trackEvent('auth_wall_shown', { source: 'connection_detail' });
+        }
+    }, [showAuthModal]);
 
     // Google Places Autocomplete for Edit Modal
     React.useEffect(() => {
@@ -799,12 +807,21 @@ const ConnectionDetail = () => {
                                 </div>
                                 <div className="modal-actions">
                                     <button className="modal-btn-cancel" onClick={() => setShowReportModal(false)}>CANCEL</button>
-                                    <button className="modal-btn-confirm report-submit" onClick={handleReportSubmit}>SUBMIT REPORT</button>
+                                    <button className="modal-btn-confirm" onClick={handleReportSubmit}>REPORT POST</button>
                                 </div>
                             </div>
                         </div>
                     )
                 }
+
+                {showAuthModal && (
+                    <AuthModal
+                        onClose={() => setShowAuthModal(false)}
+                        title="CREATE AN ACCOUNT TO CONTINUE"
+                        message="Create an account to save connections, message, and get notified."
+                    />
+                )}
+
 
                 <ConfirmModal
                     isOpen={confirmConfig.isOpen}

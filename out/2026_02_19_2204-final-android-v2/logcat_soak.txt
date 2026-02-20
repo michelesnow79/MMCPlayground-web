@@ -1,0 +1,995 @@
+--------- beginning of main
+02-19 22:04:17.076 D/BluetoothKeystoreService( 1691): new BluetoothKeystoreService
+02-19 22:04:17.084 D/BluetoothAdapterService( 1691): onCreate()
+02-19 22:04:17.088 V/WatchConnectionStateListener( 1691): Keeping watch status to false. connectedDevices={} associatedWatches=[]
+02-19 22:04:17.098 D/BluetoothAdapterService( 1691): setAdapterService() - set service to com.android.bluetooth.btservice.AdapterService@91989f3
+02-19 22:04:17.100 I/BluetoothAdapterState( 1691): OFF : entered 
+02-19 22:04:17.100 D/BluetoothAdapterProperties( 1691): Setting state to OFF
+02-19 22:04:17.100 D/BluetoothAdapterService( 1691): Broadcasting [updateAdapterState(OFF, OFF)] to 0 receivers.
+02-19 22:04:17.100 D/BluetoothAdapterService( 1691): onBind()
+02-19 22:04:17.114 I/ServiceWatcher(  774): [fused] chose new implementation 1000/com.android.location.fused/.FusedLocationService@0
+02-19 22:04:17.116 I/ServiceWatcher(  774): [GeocoderProxy] chose new implementation null
+02-19 22:04:17.116 I/ServiceWatcher(  774): [GnssAssistanceProxy] chose new implementation null
+02-19 22:04:17.116 I/ServiceWatcher(  774): [network] chose new implementation null
+02-19 22:04:17.117 I/ServiceWatcher(  774): [RealLocationTimeZoneProviderProxy] chose new implementation null
+02-19 22:04:17.117 I/ServiceWatcher(  774): [TrustManagerService] chose new implementation null
+02-19 22:04:17.140 W/WiredAccessoryManager(  774): Both input event and extcon are used for audio jack, please just choose one.
+02-19 22:04:17.146 D/ApplicationLoaders(  774): Returning zygote-cached class loader: /system/framework/com.android.location.provider.jar
+02-19 22:04:17.153 D/nativeloader(  774): Configuring clns-shared-21 for other apk /system/priv-app/FusedLocation/FusedLocation.apk. target_sdk_version=36, uses_libraries=, library_path=/system/priv-app/FusedLocation/lib/x86_64:/system/priv-app/FusedLocation/FusedLocation.apk!/lib/x86_64:/system/lib64:/system_ext/lib64, permitted_path=/data:/mnt/expand:/data/user_de/0/com.android.location.fused:/system/priv-app/FusedLocation:/system/lib64:/system_ext/lib64
+--------- beginning of system
+02-19 22:04:17.160 I/PackageWatchdog(  774): Syncing health check requests for packages: {}
+02-19 22:04:17.161 I/ExplicitHealthCheckController(  774): Service not ready to get health check supported packages. Binding...
+02-19 22:04:17.162 I/ExplicitHealthCheckController(  774): Explicit health check service is bound
+02-19 22:04:17.179 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 159 microseconds.
+02-19 22:04:17.196 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:17.200 D/LocalBluetoothProfileManager( 1488): LocalBluetoothProfileManager construction complete
+02-19 22:04:17.203 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:17.203 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.207 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 115 microseconds.
+02-19 22:04:17.209 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:17.221 D/LocalBluetoothProfileManager( 1488): Adding local Hearing Aid profile
+02-19 22:04:17.223 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 113 microseconds.
+02-19 22:04:17.227 W/ndroid.systemui( 1488): userfaultfd: MOVE ioctl seems unsupported: Connection timed out
+02-19 22:04:17.257 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:17.259 I/ConnectivityModuleConnector(  774): Networking module service connected
+02-19 22:04:17.259 I/NetworkStackClient(  774): Network stack service connected
+02-19 22:04:17.260 D/NetworkStackClient(  774): Network stack service registered
+02-19 22:04:17.274 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:17.274 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.274 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.275 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 150 microseconds.
+02-19 22:04:17.276 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:17.276 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.276 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.276 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.276 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.276 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.277 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.277 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.277 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.277 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.277 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 121 microseconds.
+02-19 22:04:17.278 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:17.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:17.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.290 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 11 microseconds.
+02-19 22:04:17.290 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.290 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.291 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 121 microseconds.
+02-19 22:04:17.293 V/BatteryUsageContentProvider( 1766): initialize provider
+02-19 22:04:17.295 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1719 microseconds.
+02-19 22:04:17.299 I/idmap2d ( 1799): Starting
+02-19 22:04:17.309 W/libbinder.BackendUnifiedServiceManager( 1799): Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: idmap
+02-19 22:04:17.311 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:17.311 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.311 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.312 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.312 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.312 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.312 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 118 microseconds.
+02-19 22:04:17.312 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.312 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.312 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.312 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.312 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.323 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:17.323 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.324 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:17.324 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.324 I/ConnectivityModuleConnector(  774): Networking module service connected
+02-19 22:04:17.354 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:17.355 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.355 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.355 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.355 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.355 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.355 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.374 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.375 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 13 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.376 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.377 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.377 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.377 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.377 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.377 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.400 W/Looper  (  774): Slow dispatch took 119ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@ae13ae5> m=0
+02-19 22:04:17.400 I/ServiceWatcher(  774): [GeofenceProxy] chose new implementation null
+02-19 22:04:17.401 I/ServiceWatcher(  774): [HardwareActivityRecognitionProxy] chose new implementation null
+02-19 22:04:17.401 I/ServiceWatcher(  774): [fused] chose new implementation 1000/com.android.location.fused/.FusedLocationService@0
+02-19 22:04:17.401 I/ServiceWatcher(  774): [GeocoderProxy] chose new implementation null
+02-19 22:04:17.401 I/ServiceWatcher(  774): [GnssAssistanceProxy] chose new implementation null
+02-19 22:04:17.401 I/ServiceWatcher(  774): [network] chose new implementation null
+02-19 22:04:17.401 I/ServiceWatcher(  774): [RealLocationTimeZoneProviderProxy] chose new implementation null
+02-19 22:04:17.402 I/ServiceWatcher(  774): [TrustManagerService] chose new implementation null
+02-19 22:04:17.402 I/ServiceWatcher(  774): [GeofenceProxy] chose new implementation null
+02-19 22:04:17.402 I/ServiceWatcher(  774): [HardwareActivityRecognitionProxy] chose new implementation null
+02-19 22:04:17.437 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:17.438 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.438 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.438 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.438 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.438 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.438 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.438 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.448 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:17.449 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.452 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 7 microseconds.
+02-19 22:04:17.535 I/ServiceWatcher(  774): [fused] chose new implementation 1000/com.android.location.fused/.FusedLocationService@0
+02-19 22:04:17.535 W/Looper  (  774): Slow dispatch took 131ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=com.android.internal.content.PackageMonitor$$ExternalSyntheticLambda0@695006b m=0
+02-19 22:04:17.536 I/ServiceWatcher(  774): [GeocoderProxy] chose new implementation null
+02-19 22:04:17.536 W/Looper  (  774): Slow delivery took 242ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=com.android.internal.content.PackageMonitor$$ExternalSyntheticLambda0@153f7c8 m=0
+02-19 22:04:17.536 I/ServiceWatcher(  774): [GnssAssistanceProxy] chose new implementation null
+02-19 22:04:17.537 I/ServiceWatcher(  774): [network] chose new implementation null
+02-19 22:04:17.537 I/ServiceWatcher(  774): [RealLocationTimeZoneProviderProxy] chose new implementation null
+02-19 22:04:17.539 I/ServiceWatcher(  774): [TrustManagerService] chose new implementation null
+02-19 22:04:17.539 I/ServiceWatcher(  774): [GeofenceProxy] chose new implementation null
+02-19 22:04:17.539 I/ServiceWatcher(  774): [HardwareActivityRecognitionProxy] chose new implementation null
+02-19 22:04:17.571 W/Looper  (  774): Slow dispatch took 118ms main app=system_server main=true group=FOREGROUND h=android.app.ActivityThread$H c=android.app.role.RoleManager$OnRoleHoldersChangedListenerDelegate$$ExternalSyntheticLambda0@de01612 m=0
+02-19 22:04:17.578 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:17.578 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:17.578 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.578 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.578 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.578 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 126 microseconds.
+02-19 22:04:17.579 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.580 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 7 microseconds.
+02-19 22:04:17.580 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.580 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.580 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.580 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.580 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.580 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.580 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.580 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.581 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.621 I/ActivityTaskManager(  774): START u0 {flg=0x10000000 xflg=0x4 cmp=com.missmeconnection.app/.MainActivity} with LAUNCH_MULTIPLE from uid 2000 (com.android.shell) result code=-92
+02-19 22:04:17.627 I/WifiClientModeImpl[168886:wlan0](  774): disconnectedstate enter
+02-19 22:04:17.627 W/WifiConnectivityManager(  774): mConnectedSingleSavedNetworkSingleScanScheduleSec is not configured! Using default scan schedule
+02-19 22:04:17.627 W/WifiConnectivityManager(  774): mConnectedSingleSavedNetworkSingleScanType is not configured! Using default scan types
+02-19 22:04:17.627 D/WifiClientModeImpl[168886:wlan0](  774): setupClientMode() ifacename = wlan0
+02-19 22:04:17.631 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 7 microseconds.
+02-19 22:04:17.632 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.648 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:17.648 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.648 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.648 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.652 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:17.652 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:17.653 W/AlarmManager( 1603): Unrecognized alarm listener com.android.networkstack.android.net.ip.IpClientLinkObserver$Dhcp6PdPreferredPrefixAlarmListener@aa9a4ca
+02-19 22:04:17.688 I/WifiVendorHal(  774): Driver: 1.0 Firmware: 1.0
+02-19 22:04:17.690 W/Looper  (  774): Slow dispatch took 150ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@46a0fc5> m=0
+02-19 22:04:17.712 W/BestClock(  774): java.time.DateTimeException: No network time available
+02-19 22:04:17.732 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 8 microseconds.
+02-19 22:04:17.733 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:17.733 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.756 E/RoleControllerServiceImpl(  774): Default/fallback role holder package doesn't qualify for the role, package: com.google.android.gms, role: android.app.role.WALLET, user: 0
+02-19 22:04:17.772 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 38993 microseconds.
+02-19 22:04:17.780 W/AccessibilityManagerService(  774): onSomePackagesChanged: service not initialized, skip the callback.
+02-19 22:04:17.794 W/AccessibilityManagerService(  774): onSomePackagesChanged: service not initialized, skip the callback.
+02-19 22:04:17.808 W/SignedPackage(  774): Cannot get ApplicationInfo for package: com.google.android.devicelockcontroller
+02-19 22:04:17.808 W/BLASTSyncEngine(  774): Sync group 2 timeout
+02-19 22:04:17.808 I/BLASTSyncEngine(  774): Unfinished container: Task{bd984fb #5 type=home A=10189:com.google.android.googlesdksetup nonResizable}
+02-19 22:04:17.808 I/BLASTSyncEngine(  774): Unfinished container: ActivityRecord{163481226 u0 com.google.android.googlesdksetup/.DefaultActivity t5}
+02-19 22:04:17.817 W/BestClock(  774): java.time.DateTimeException: No network time available
+02-19 22:04:17.821 D/WifiDiags(  774): startLogging() iface list is {wlan0} after adding wlan0
+02-19 22:04:17.821 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:17.822 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:17.842 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:17.842 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.842 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.883 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:17.883 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:17.898 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 197 microseconds.
+02-19 22:04:17.899 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:17.899 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.899 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 80 microseconds.
+02-19 22:04:17.901 W/AccessibilityManagerService(  774): onSomePackagesChanged: service not initialized, skip the callback.
+02-19 22:04:17.904 W/Looper  (  774): Slow dispatch took 208ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=com.android.server.servicewatcher.ServiceWatcherImpl$$ExternalSyntheticLambda0@5c73115 m=0
+02-19 22:04:17.906 I/Transition(  774): cleanUpOnFailure for #2
+02-19 22:04:17.909 D/WifiConnectivityHelper(  774): Firmware supported feature set: {0, 3, 4, 27, 28, 29, 31, 35, 38, 39, 40, 47, 48, 50, 51, 52, 55, 56}
+02-19 22:04:17.909 D/WifiConnectivityHelper(  774): Firmware roaming is not supported
+02-19 22:04:17.911 I/WifiClientModeImpl(  774): Primary factory MAC address stored in config store: 02:15:b2:00:00:00
+02-19 22:04:17.911 I/WifiClientModeImpl(  774): Primary factory MAC address retrieved: 02:15:b2:00:00:00
+02-19 22:04:17.933 D/SpaSearchProvider( 1766): onCreate
+02-19 22:04:17.935 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:17.935 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.935 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.935 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:17.935 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:17.951 D/RingerModeProvider( 1766): RingerModeProvider has started.
+02-19 22:04:17.964 I/WifiService(  774): enableNetwork uid=10189 disableOthers=true
+02-19 22:04:17.965 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:17.965 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:17.966 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:17.988 V/WindowManager(  774): Finish Transition (#2): created at 02-19 22:04:12.784 collect-started=1.985ms request-sent=121.141ms started=239.588ms ready=688.78ms sent=5036.403ms commit=112.716ms finished=5124.623ms
+02-19 22:04:18.039 I/SupplicantStaIfaceHalAidlImpl(  774): Keystore migration returned with success=true, statusCode=1
+02-19 22:04:18.041 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:18.042 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.042 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.042 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.077 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.080 D/WifiConfigManager(  774): Enable disabled network: "AndroidWifi" num=0
+02-19 22:04:18.095 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:18.095 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:18.095 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.095 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.095 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.096 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.096 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.096 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.097 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 8 microseconds.
+02-19 22:04:18.097 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.133 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:18.136 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.138 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 7 microseconds.
+02-19 22:04:18.144 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.145 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 312 microseconds.
+02-19 22:04:18.145 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.145 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.148 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:18.148 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.148 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.149 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.149 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.149 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.149 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.149 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.149 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.150 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.150 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.150 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.151 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.151 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.151 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.151 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.152 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.152 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.152 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.188 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:18.188 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.188 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.189 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.189 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.189 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.189 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.189 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.190 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.190 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.190 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.191 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.191 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.191 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.192 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 8 microseconds.
+02-19 22:04:18.192 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.192 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.192 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.195 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:18.195 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.195 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.195 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.195 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 190 microseconds.
+02-19 22:04:18.196 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.196 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 23 microseconds.
+02-19 22:04:18.196 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.197 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.198 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.198 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.198 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.198 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.198 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.198 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.198 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 143 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.199 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 70 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.200 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.201 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.201 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.202 D/WifiClientModeImpl[168886:wlan0](  774): connectToUserSelectNetwork netId 0, uid 10189, package com.google.android.googlesdksetup, forceReconnect = false, isUserSelected = false, attributionTag = null
+02-19 22:04:18.216 D/WifiScoreReport(  774): setShouldReduceNetworkScore=false mNetworkAgent is null? true
+02-19 22:04:18.236 W/libbinder.Binder(  774): Binder transaction to android.net.wifi.IWifiManager code 26 took 3664ms. Data bytes: 156 Reply bytes: 8 Flags: 18
+02-19 22:04:18.240 W/TrustManagerService(  774): EXTRA_USER_HANDLE missing or invalid, value=0
+02-19 22:04:18.248 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:18.248 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.250 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 12 microseconds.
+02-19 22:04:18.251 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.251 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 229 microseconds.
+02-19 22:04:18.252 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:18.252 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.252 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.252 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.252 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.252 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.254 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.255 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.255 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.271 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 6 microseconds.
+02-19 22:04:18.271 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.271 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.271 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.271 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.272 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 130 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 15 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.273 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.274 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.278 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:18.286 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:18.286 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.287 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 467 microseconds.
+02-19 22:04:18.287 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.287 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.287 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.287 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.287 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.288 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 107 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 81 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.289 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.290 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.290 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.290 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.291 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1075 microseconds.
+02-19 22:04:18.291 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.291 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 127 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.292 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.293 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.293 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.299 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.300 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.300 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.300 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.300 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.300 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.300 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.300 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.300 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.300 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 106 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 46 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 62 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.301 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.302 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.302 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.302 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 109 microseconds.
+02-19 22:04:18.303 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.303 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.303 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.303 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.303 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.303 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.303 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.303 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.304 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.304 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.305 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 128 microseconds.
+02-19 22:04:18.305 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.305 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.305 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.316 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 5 microseconds.
+02-19 22:04:18.317 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 3 microseconds.
+02-19 22:04:18.317 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.317 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.317 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.317 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.318 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 117 microseconds.
+02-19 22:04:18.318 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.318 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.318 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 4 microseconds.
+02-19 22:04:18.319 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.319 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.319 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 2 microseconds.
+02-19 22:04:18.319 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.319 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 1 microseconds.
+02-19 22:04:18.319 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.319 D/PermissionMonitor(  774): setLocalNetworkPermissions in onPermissionsChanged took 0 microseconds.
+02-19 22:04:18.319 D/BluetoothSystemServer(  774): BluetoothManagerService: ServiceConnection.onServiceConnected(com.android.bluetooth.btservice.AdapterService, android.os.BinderProxy@e58ef51)
+02-19 22:04:18.335 I/GoogleSdkSetup( 1722): Setting system screen_off_timeout to be 2147483647 ms
+02-19 22:04:18.373 D/BluetoothSystemServer(  774): BluetoothManagerService: MESSAGE_BLUETOOTH_SERVICE_CONNECTED: service=android.os.BinderProxy@e58ef51
+02-19 22:04:18.373 W/UriGrantsManagerService(  774): For security reasons, the system cannot issue a Uri permission grant to content://settings/system/notification_sound [user 0]; use startActivityAsCaller() instead
+02-19 22:04:18.373 W/UriGrantsManagerService(  774): For security reasons, the system cannot issue a Uri permission grant to content://settings/system/notification_sound [user 0]; use startActivityAsCaller() instead
+02-19 22:04:18.374 D/BluetoothSystemServer(  774): BluetoothManagerService: propagateOffToBleOn: Sending request hciInstanceName default
+02-19 22:04:18.376 E/WifiClientModeImpl[168886:wlan0](  774): CMD_START_CONNECT but no requests and not connected, bailing
+02-19 22:04:18.377 W/UriGrantsManagerService(  774): For security reasons, the system cannot issue a Uri permission grant to content://settings/system/notification_sound [user 0]; use startActivityAsCaller() instead
+02-19 22:04:18.378 V/BluetoothAdapterBinder( 1691): registerCallback(android.bluetooth.IBluetoothCallback$Stub$Proxy@e17d929)
+02-19 22:04:18.379 W/UriGrantsManagerService(  774): For security reasons, the system cannot issue a Uri permission grant to content://settings/system/notification_sound [user 0]; use startActivityAsCaller() instead
+02-19 22:04:18.382 D/BluetoothSystemServer(  774): BluetoothManagerService: IBluetoothCallback.setAdapterServiceBinder: android.os.BinderProxy@8997da7
+02-19 22:04:18.384 V/BluetoothAdapterBinder( 1691): offToBleOn(false, default )
+02-19 22:04:18.395 D/BluetoothAdapterService( 1691): init() instance = default
+02-19 22:04:18.397 I/BluetoothAdapterService( 1691): offToBleOn() - Enable called with quiet mode status =  false hci_instance_name = default
+02-19 22:04:18.428 D/BluetoothSystemServer(  774): BluetoothManagerService: Broadcasting setAdapterServiceBinder() to 3 receivers.
+02-19 22:04:18.429 D/BluetoothAdapter(  774): onBluetoothServiceUp: android.os.BinderProxy@8997da7
+02-19 22:04:18.444 W/ActivityThread( 1691): Failed to find provider info for bluetooth_legacy.provider (user not unlocked)
+02-19 22:04:18.445 D/BluetoothDataMigration( 1691): Legacy migration skipped: no migration app installed
+02-19 22:04:18.445 D/BluetoothAdapter( 1691): onBluetoothServiceUp: com.android.bluetooth.btservice.AdapterServiceBinder@c5a446b
+02-19 22:04:18.472 D/BluetoothAdapter( 1488): onBluetoothServiceUp: android.os.BinderProxy@609b5b
+02-19 22:04:18.484 I/AdapterServiceConfig( 1691): init: profile= GATT, enabled=true
+02-19 22:04:18.493 W/ActivityThread( 1722): Failed to find provider info for com.google.settings (user not unlocked)
+02-19 22:04:18.519 E/GoogleSettings( 1722): Can't set key network_location_opt_in in content://com.google.settings/partner
+02-19 22:04:18.519 E/GoogleSettings( 1722): java.lang.IllegalArgumentException: Unknown URL content://com.google.settings/partner
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.content.ContentResolver.insert(ContentResolver.java:2207)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.content.ContentResolver.insert(ContentResolver.java:2173)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at com.google.android.gsf.GoogleSettingsContract$NameValueTable.putString(GoogleSettingsContract.java:63)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at com.google.android.gsf.GoogleSettingsContract$Partner.putString(GoogleSettingsContract.java:118)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at com.google.android.gsf.GoogleSettingsContract$Partner.putInt(GoogleSettingsContract.java:130)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at com.google.android.googlesdksetup.DefaultActivity.provisionLocation(DefaultActivity.java:37)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at com.android.emulatorprovisionlib.ProvisionActivity.doProvision(ProvisionActivity.java:108)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at com.android.emulatorprovisionlib.ProvisionActivity.onCreate(ProvisionActivity.java:55)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.Activity.performCreate(Activity.java:9306)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.Activity.performCreate(Activity.java:9284)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1541)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4480)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4699)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:224)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:133)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:103)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2961)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.os.Handler.dispatchMessage(Handler.java:132)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.os.Looper.dispatchMessage(Looper.java:333)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.os.Looper.loopOnce(Looper.java:263)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.os.Looper.loop(Looper.java:367)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at android.app.ActivityThread.main(ActivityThread.java:9287)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at java.lang.reflect.Method.invoke(Native Method)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+02-19 22:04:18.519 E/GoogleSettings( 1722): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+02-19 22:04:18.527 W/libbinder.BackendUnifiedServiceManager( 1825): Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: window
+02-19 22:04:18.528 W/Looper  (  774): Slow dispatch took 284ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@3d90f50> m=0
+02-19 22:04:18.598 D/BatteryStateDatabase( 1766): initialize battery states database
+02-19 22:04:18.628 I/GoogleSdkSetup( 1722): Successfully set device_provisioned to 1
+02-19 22:04:18.646 I/AdapterServiceConfig( 1691): init: profile= A2DP, enabled=true
+02-19 22:04:18.646 I/AdapterServiceConfig( 1691): init: profile= A2DP_SINK, enabled=false
+02-19 22:04:18.646 I/AdapterServiceConfig( 1691): init: profile= AVRCP, enabled=true
+02-19 22:04:18.646 I/AdapterServiceConfig( 1691): init: profile= AVRCP_CONTROLLER, enabled=false
+02-19 22:04:18.646 I/AdapterServiceConfig( 1691): init: profile= LE_AUDIO_BROADCAST_ASSISTANT, enabled=false
+02-19 22:04:18.654 W/Looper  (  774): Slow dispatch took 105ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@96691b2> m=0
+02-19 22:04:18.660 D/BootAnimation(  656): Playing files = /product/media/bootanimation.zip/part3, Requested repeat = 0, playUntilComplete = false
+02-19 22:04:18.662 I/ActivityManager(  774): Test idle failed due to f9e130f ?:com.android.settings/1000 not runnable because EMPTY
+02-19 22:04:18.671 I/AdapterServiceConfig( 1691): init: profile= BATTERY, enabled=false
+02-19 22:04:18.691 D/AccessibilityManagerService(  774): switchUser, userId to switch: 0
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= CSIP_SET_COORDINATOR, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= HAP_CLIENT, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= HEADSET, enabled=true
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= HEADSET_CLIENT, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= HEARING_AID, enabled=true
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= HID_DEVICE, enabled=true
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= HID_HOST, enabled=true
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= LE_CALL_CONTROL, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= MAP, enabled=true
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= MAP_CLIENT, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= MCP_SERVER, enabled=true
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= OPP, enabled=true
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= PAN, enabled=true
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= PBAP, enabled=true
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= PBAP_CLIENT, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= SAP, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= VOLUME_CONTROL, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= LE_AUDIO, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= LE_AUDIO_BROADCAST, enabled=false
+02-19 22:04:18.695 I/AdapterServiceConfig( 1691): init: profile= VAPS_SERVER, enabled=true
+02-19 22:04:18.743 D/AdbSettingsObserver(  774): onChange content://settings/global/adb_enabled
+02-19 22:04:18.768 W/BroadcastLoopers(  774): Found previously unknown looper Thread[AudioService Broadcast,5,main]
+02-19 22:04:18.787 W/Binder  (  774): Outgoing transactions from this process must be FLAG_ONEWAY
+02-19 22:04:18.787 W/Binder  (  774): java.lang.Throwable
+02-19 22:04:18.787 W/Binder  (  774): 	at android.os.BinderProxy.transact(BinderProxy.java:560)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.bluetooth.IBluetooth$Stub$Proxy.getProfile(IBluetooth.java:4209)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.bluetooth.BluetoothAdapter.lambda$getProfile$40(BluetoothAdapter.java:3813)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.bluetooth.BluetoothAdapter$$ExternalSyntheticLambda2.applyOrThrow(D8$$SyntheticClass:0)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.bluetooth.BluetoothUtils$RemoteExceptionIgnoringFunction.apply(BluetoothUtils.java:404)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.bluetooth.BluetoothAdapter.callServiceIfEnabled(BluetoothAdapter.java:1113)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.bluetooth.BluetoothAdapter.getProfile(BluetoothAdapter.java:3813)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.bluetooth.BluetoothAdapter.getProfileProxy(BluetoothAdapter.java:3259)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.bluetooth.BluetoothAdapter.getProfileProxy(BluetoothAdapter.java:3208)
+02-19 22:04:18.787 W/Binder  (  774): 	at com.android.server.telecom.bluetooth.BluetoothDeviceManager.<init>(BluetoothDeviceManager.java:310)
+02-19 22:04:18.787 W/Binder  (  774): 	at com.android.server.telecom.TelecomSystem.<init>(TelecomSystem.java:285)
+02-19 22:04:18.787 W/Binder  (  774): 	at com.android.server.telecom.components.TelecomService.initializeTelecomSystem(TelecomService.java:315)
+02-19 22:04:18.787 W/Binder  (  774): 	at com.android.server.telecom.components.TelecomService$1.createTelecomService(TelecomService.java:96)
+02-19 22:04:18.787 W/Binder  (  774): 	at com.android.server.telecom.TelecomLoaderService$TelecomServiceConnection.onServiceConnected(TelecomLoaderService.java:69)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.content.ServiceConnection.onServiceConnected(ServiceConnection.java:75)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.app.LoadedApk$ServiceDispatcher.doConnected(LoadedApk.java:2334)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.app.LoadedApk$ServiceDispatcher$RunConnection.run(LoadedApk.java:2370)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.os.Handler.handleCallback(Handler.java:1070)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.os.Handler.dispatchMessage(Handler.java:125)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.os.Looper.dispatchMessage(Looper.java:333)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.os.Looper.loopOnce(Looper.java:263)
+02-19 22:04:18.787 W/Binder  (  774): 	at android.os.Looper.loop(Looper.java:367)
+02-19 22:04:18.787 W/Binder  (  774): 	at com.android.server.SystemServer.run(SystemServer.java:1081)
+02-19 22:04:18.787 W/Binder  (  774): 	at com.android.server.SystemServer.main(SystemServer.java:711)
+02-19 22:04:18.787 W/Binder  (  774): 	at java.lang.reflect.Method.invoke(Native Method)
+02-19 22:04:18.787 W/Binder  (  774): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+02-19 22:04:18.787 W/Binder  (  774): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:907)
+02-19 22:04:18.818 W/BatteryUsageContentProvider( 1766): create content provider from null
+02-19 22:04:18.860 D/CompatChangeReporter( 1722): Compat change id reported: 377864165; UID 10189; state: ENABLED
+02-19 22:04:18.861 D/DesktopExperienceFlags( 1722): Toggle override initialized to: false
+02-19 22:04:18.861 D/DesktopModeFlags( 1722): Toggle override initialized to: OVERRIDE_UNSET
+02-19 22:04:18.868 I/Telecom (  774): SystemStateHelper: Registering broadcast receiver: android.content.IntentFilter@d964f2b: TS.init@AAA
+02-19 22:04:18.889 I/Telecom (  774): SystemStateHelper: Registering broadcast receiver: android.content.IntentFilter@3a8b307: TS.init@AAA
+02-19 22:04:18.896 D/SettingsSliceProvider( 1766): init
+02-19 22:04:18.897 D/SettingsSliceProvider( 1766): onCreateSliceProvider
+02-19 22:04:18.917 I/InputManager(  774): Enabling motion classifier because user switched: feature enabled, long press timeout = 400 ms
+02-19 22:04:18.917 I/InputProcessor(  774): Enabling motion classifier
+02-19 22:04:18.933 I/InputProcessor(  774): HAL android.hardware.input.processor.IInputProcessor/default is not declared
+02-19 22:04:18.968 I/CameraManagerGlobal( 1488): Connecting to camera service
+02-19 22:04:18.984 W/libbinder.BackendUnifiedServiceManager( 1837): Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: user
+02-19 22:04:18.990 D/ControlsListingControllerImpl( 1488): Initializing
+02-19 22:04:19.009 I/Telecom (  774): TelecomMetricsController: TMC.m1: TS.init@AAA
+02-19 22:04:19.032 W/Looper  (  774): Slow dispatch took 205ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@cfec8d0> m=0
+02-19 22:04:19.041 W/ActivityTaskManager(  774): callingPackage for (uid=-1, pid=0) has no WPC
+02-19 22:04:19.042 V/WindowManager(  774): DesktopModeLaunchParamsModifier: phase= 0 task=null activity=null display-area-token-from-option=DefaultTaskDisplayArea@141519776 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141519776 task null, skipping
+02-19 22:04:19.042 V/WindowManager(  774): TaskLaunchParamsModifier:phase=0 task=null activity=null display-area-token-from-option=DefaultTaskDisplayArea@141519776 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141519776
+02-19 22:04:19.043 W/ActivityStartInterceptor(  774): Starting home with component specified, uid=0
+02-19 22:04:19.046 V/GrammaticalInflectionUtils(  774): AttributionSource: android.content.AttributionSource@bc41b6f8 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+02-19 22:04:19.049 W/TransitionChain(  774): Combining startHomeAct into #3(CLOSE|R|0x0) from AR.finish-app-request
+02-19 22:04:19.050 V/WindowManager(  774): DesktopModeLaunchParamsModifier: phase= 0 task=null activity=ActivityRecord{89170657 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity display-area-token-from-option=DefaultTaskDisplayArea@141519776 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141519776 task null, skipping
+02-19 22:04:19.051 V/WindowManager(  774): TaskLaunchParamsModifier:phase=0 task=null activity=ActivityRecord{89170657 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t-1} display-area-token-from-option=DefaultTaskDisplayArea@141519776 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141519776
+02-19 22:04:19.051 V/WindowManager(  774): DesktopModeLaunchParamsModifier: phase= 3 task=null activity=ActivityRecord{89170657 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t-1} display-area-token-from-option=DefaultTaskDisplayArea@141519776 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141519776 task null, skipping
+02-19 22:04:19.051 V/WindowManager(  774): TaskLaunchParamsModifier:phase=3 task=null activity=ActivityRecord{89170657 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t-1} display-area-token-from-option=DefaultTaskDisplayArea@141519776 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141519776 non-freeform-task-display-area display-area=DefaultTaskDisplayArea@141519776 skip-bounds-fullscreen
+02-19 22:04:19.068 V/WindowManager(  774): DesktopModeLaunchParamsModifier: phase= 3 task=Task{cb821de #6 type=home I=com.google.android.apps.nexuslauncher/.NexusLauncherActivity} activity=ActivityRecord{89170657 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t-1} display-area-token-from-option=DefaultTaskDisplayArea@141519776 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141519776 not entering desktop mode, skipping
+02-19 22:04:19.080 V/WindowManager(  774): TaskLaunchParamsModifier:phase=3 task=Task{cb821de #6 type=home I=com.google.android.apps.nexuslauncher/.NexusLauncherActivity} activity=ActivityRecord{89170657 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t-1} display-area-token-from-option=DefaultTaskDisplayArea@141519776 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141519776 non-freeform-task-display-area display-area=DefaultTaskDisplayArea@141519776 skip-bounds-fullscreen
+02-19 22:04:19.019 W/binder:774_7(  774): type=1400 audit(0.0:11): avc:  denied  { read } for  name="u:object_r:system_user_mode_emulation_prop:s0" dev="tmpfs" ino=354 scontext=u:r:system_server:s0 tcontext=u:object_r:system_user_mode_emulation_prop:s0 tclass=file permissive=0
+02-19 22:04:19.105 I/BluetoothMetricsLogger( 1691): setCounterMetricsAlarm()
+02-19 22:04:19.108 I/ActivityTaskManager(  774): START u0 {act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity (has extras)} with LAUNCH_SINGLE_TASK from uid 0 (BAL_ALLOW_ALLOWLISTED_UID) result code=0
+02-19 22:04:19.110 D/DeferredSmsMmsRestoreService( 1717): startIfFilesExist: no files to restore
+02-19 22:04:19.110 D/DeferredSmsMmsRestoreService( 1717): addAllSharedPrefToLocalLog
+02-19 22:04:19.124 I/Telecom (  774): TelecomMetricsController: TMC.m2: TS.init@AAA
+02-19 22:04:19.145 W/libc    (  774): Access denied finding property "persist.debug.user_mode_emulation"
+02-19 22:04:19.156 W/BluetoothMetricsLogger( 1691): MetricsLogger is creating a new Bloomfilter file
+02-19 22:04:19.162 V/GrammaticalInflectionUtils(  774): AttributionSource: android.content.AttributionSource@bc41b6f8 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+02-19 22:04:19.177 W/Looper  (  774): Slow dispatch took 122ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@c37cbf9> m=0
+02-19 22:04:19.178 W/ActivityManager(  774): com.google.android.apps.nexuslauncher inode == 0 or app uninstalled with keep-data
+02-19 22:04:19.178 W/ActivityManager(  774): com.google.android.gms inode == 0 or app uninstalled with keep-data
+02-19 22:04:19.193 D/Zygote  (  508): Forked child process 1845
+02-19 22:04:19.221 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_shortcut_target_service, current:{}, new:{com.google.android.marvin.talkback/com.google.android.marvin.talkback.TalkBackService}
+02-19 22:04:19.224 D/ControlsListingControllerImpl( 1488): ServiceConfig reloaded, count: 0
+02-19 22:04:19.226 D/ControlsFavoritePersistenceWrapper( 1488): No favorites, returning empty list
+02-19 22:04:19.243 W/ActivityManager(  774): Slow operation: 72ms so far, now at startProcess: returned from zygote!
+02-19 22:04:19.253 I/Zygote  ( 1845): Process 1845 created for com.google.android.apps.nexuslauncher
+02-19 22:04:19.256 I/s.nexuslauncher( 1845): Using CollectorTypeCMC GC.
+02-19 22:04:19.256 W/s.nexuslauncher( 1845): Unexpected CPU variant for x86: x86_64.
+02-19 22:04:19.256 W/s.nexuslauncher( 1845): Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, goldmont-without-sha-xsaves, tremont, kabylake, alderlake, default
+02-19 22:04:19.258 V/UserSystemPackageInstaller(  774): dumpPackageAllowlistProblems(): using mode d
+02-19 22:04:19.276 D/nativeloader( 1845): Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+02-19 22:04:19.288 W/ActivityManager(  774): Slow operation: 127ms so far, now at startProcess: done updating battery stats
+02-19 22:04:19.288 W/ActivityManager(  774): Slow operation: 127ms so far, now at startProcess: building log message
+02-19 22:04:19.288 I/ActivityManager(  774): Start proc 1845:com.google.android.apps.nexuslauncher/u0a191 for top-activity {com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity}
+02-19 22:04:19.289 W/ActivityManager(  774): Slow operation: 127ms so far, now at startProcess: starting to update pids map
+02-19 22:04:19.289 I/DomainSelectionResolver( 1717): make useOem=true
+02-19 22:04:19.289 I/DomainSelectionResolver( 1717): DomainSelectionResolver created: componentName=[]
+02-19 22:04:19.293 W/ActivityManager(  774): Slow operation: 132ms so far, now at startProcess: done updating pids map
+02-19 22:04:19.323 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_qs_targets, current:{}, new:{}
+02-19 22:04:19.324 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_button_targets, current:{}, new:{}
+02-19 22:04:19.324 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_gesture_targets, current:{}, new:{}
+02-19 22:04:19.324 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_key_gesture_targets, current:{}, new:{}
+02-19 22:04:19.325 V/AccessibilityManagerService(  774): onUserStateChangedLocked for userId: 0, forceUpdate: false
+02-19 22:04:19.325 D/AccessibilityManagerService(  774): Ignoring non-encryption-aware service ComponentInfo{com.android.systemui.accessibility.accessibilitymenu/com.android.systemui.accessibility.accessibilitymenu.AccessibilityMenuService}
+02-19 22:04:19.325 D/AccessibilityManagerService(  774): Ignoring non-encryption-aware service ComponentInfo{com.google.android.apps.accessibility.voiceaccess/com.google.android.apps.accessibility.voiceaccess.JustSpeakService}
+02-19 22:04:19.328 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_shortcut_target_service, current:{com.google.android.marvin.talkback/com.google.android.marvin.talkback.TalkBackService}, new:{com.google.android.marvin.talkback/com.google.android.marvin.talkback.TalkBackService}
+02-19 22:04:19.328 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_button_targets, current:{}, new:{}
+02-19 22:04:19.328 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_gesture_targets, current:{}, new:{}
+02-19 22:04:19.328 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_qs_targets, current:{}, new:{}
+02-19 22:04:19.328 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_key_gesture_targets, current:{}, new:{}
+02-19 22:04:19.328 W/MagnificationConnectionManager(  774): requestConnection duplicated request: connect=false, mConnectionState=DISCONNECTED
+02-19 22:04:19.336 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_button_targets, current:{}, new:{}
+02-19 22:04:19.337 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_qs_targets, current:{}, new:{}
+02-19 22:04:19.339 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_gesture_targets, current:{}, new:{}
+02-19 22:04:19.340 I/Telecom (  774): CallAudioRouteController: calculateSupportedRouteMaskInit: is wired headset plugged in - false: TS.init@AAA
+02-19 22:04:19.340 I/Telecom (  774): CallAudioRouteController: calculateSupportedRouteMaskInit: is device list size: 2: TS.init@AAA
+02-19 22:04:19.340 I/Telecom (  774): CallAudioRouteController: calculateSupportedRouteMaskInit: audio route type from audio device info: 3: TS.init@AAA
+02-19 22:04:19.340 I/Telecom (  774): CallAudioRouteController: calculateSupportedRouteMaskInit: audio route type from audio device info: 0: TS.init@AAA
+02-19 22:04:19.340 I/Telecom (  774): AudioRoute$Factory: createRetry; type=TYPE_SPEAKER, address=null, retryCount=2: TS.init@AAA
+02-19 22:04:19.340 I/AS.AudioDeviceBroker(  774): getAvailableCommunicationDevices: no EARPIECE!
+02-19 22:04:19.340 W/AudioManager(  774): getAvailableCommunicationDevices: no EARPIECE!
+02-19 22:04:19.340 I/Telecom (  774): AudioRoute$Factory: type: 2: TS.init@AAA
+02-19 22:04:19.342 W/libbinder.BackendUnifiedServiceManager( 1854): Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: trust
+02-19 22:04:19.348 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: updateAudioRoutes: add devices? true: ARC.oADA@AAE
+02-19 22:04:19.369 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: updateAudioRoutes: audioDeviceInfo: AudioDeviceInfo: type: speaker addr:  id: 2, audioRouteType: 3: ARC.oADA@AAE
+02-19 22:04:19.376 I/Telecom (  774): CallAudioRouteController: createSpeakerRoute: route already created. Skipping.: ARC.oADA@AAE
+02-19 22:04:19.393 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: updateAudioRoutes: audioDeviceInfo: AudioDeviceInfo: type: telephony_tx addr:  id: 5, audioRouteType: 0: ARC.oADA@AAE
+02-19 22:04:19.394 V/AccessibilityUserState(  774): updateShortcutTargets: type:accessibility_button_targets, current:{}, new:{}
+02-19 22:04:19.397 I/Telecom (  774): TelecomRinger: Using parsed default ring vibration.: TS.init@AAA
+02-19 22:04:19.404 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: updateAudioRoutes: skipping route.: ARC.oADA@AAE
+02-19 22:04:19.405 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: updateAudioRoutes: audioDeviceInfo: AudioDeviceInfo: type: mic addr: bottom id: 8, audioRouteType: 0: ARC.oADA@AAE
+02-19 22:04:19.405 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: Ignore non sink device.: ARC.oADA@AAE
+02-19 22:04:19.405 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: updateAudioRoutes: audioDeviceInfo: AudioDeviceInfo: type: telephony_rx addr:  id: 10, audioRouteType: 0: ARC.oADA@AAE
+02-19 22:04:19.406 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: Ignore non sink device.: ARC.oADA@AAE
+02-19 22:04:19.406 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: updateAudioRoutes: audioDeviceInfo: AudioDeviceInfo: type: remote_submix addr: 0 id: 14, audioRouteType: 0: ARC.oADA@AAE
+02-19 22:04:19.406 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: Ignore non sink device.: ARC.oADA@AAE
+02-19 22:04:19.406 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: updateAudioRoutes: audioDeviceInfo: AudioDeviceInfo: type: fm_tuner addr:  id: 12, audioRouteType: 0: ARC.oADA@AAE
+02-19 22:04:19.419 W/ActivityManager(  774): Slow operation: 65ms so far, now at attachApplicationLocked: after updateOomAdjLocked
+02-19 22:04:19.470 I/Telecom (  774): CallAudioRouteController$AudioRoutesCallback: Ignore non sink device.: ARC.oADA@AAE
+02-19 22:04:19.491 I/Telecom (  774): CallAudioModeStateMachine: Audio focus entering UNFOCUSED state
+02-19 22:04:19.495 D/ConnectivityService(  774): requestNetwork for uid/pid:1001/1717 activeRequest: null callbackRequest: 32 [NetworkRequest [ TRACK_SYSTEM_DEFAULT id=32, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED RequestorUid: 1001 RequestorPkg: com.android.phone UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|NC
+02-19 22:04:19.507 W/BluetoothMetricsLogger( 1691): MetricsLogger is creating a new medical device Bloomfilter file
+02-19 22:04:19.509 D/ApplicationLoaders( 1845): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+02-19 22:04:19.509 D/ApplicationLoaders( 1845): Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+02-19 22:04:19.520 W/Looper  (  774): Slow dispatch took 122ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@d1c83f3> m=0
+02-19 22:04:19.570 I/Telecom (  774): CallAudioModeStateMachine: Message received: null.: TS.init->CAMSM.pM_1@AAA
+02-19 22:04:19.571 D/ConnectivityService(  774): NetReassign [no changes] [c 0] [a 0] [i 0]
+02-19 22:04:19.617 W/system_server(  774): Suspending all threads took: 21.024ms
+02-19 22:04:19.633 W/Looper  (  774): Slow dispatch took 101ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@6e15de0> m=0
+02-19 22:04:19.648 I/LockSettingsService(  774): Reporting device setup complete to IGateKeeperService
+02-19 22:04:19.663 E/AppOps  (  774): package com.android.server.telecom.callsequencing.voip not found, can't check for attributionTag null
+02-19 22:04:19.663 E/AppOps  (  774): Bad call made by uid 1000. Package "com.android.server.telecom.callsequencing.voip" does not belong to uid 1000.
+02-19 22:04:19.664 E/AppOps  (  774): Cannot noteOperation: non-application UID 1000
+02-19 22:04:19.664 E/VoipCallMonitor$1(  774): No completion listener supplied for this service!
+02-19 22:04:19.668 I/Telecom (  774): CallsManager: onUserSwitch: userHandle=UserHandle{0}: TS.init@AAA
+02-19 22:04:19.668 I/Telecom (  774): CallsManager: reloadMissedCallsOfUser: userHandle=UserHandle{0}: TS.init@AAA
+02-19 22:04:19.669 I/Telecom (  774): MissedCallNotifierImpl: reloadFromDatabase: user=0: TS.init@AAA
+02-19 22:04:19.670 I/Telecom (  774): MissedCallNotifierImpl: reloadFromDatabase: Boot not yet complete -- call log db may not be available. Deferring loading until boot complete for user 0: TS.init@AAA
+02-19 22:04:19.673 D/ConnectivityService(  774): requestNetwork for uid/pid:1001/1717 activeRequest: null callbackRequest: 33 [NetworkRequest [ TRACK_SYSTEM_DEFAULT id=33, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED RequestorUid: 1001 RequestorPkg: com.android.phone UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|NC
+02-19 22:04:19.673 D/libbinder.PermissionCache(  653): checking android.permission.ACCESS_KEYGUARD_SECURE_STORAGE for uid=1000 => granted (16184 us)
+02-19 22:04:19.675 I/gatekeeperd(  653): cold boot: clearing state
+02-19 22:04:19.714 D/nativeloader( 1845): Configuring clns-shared-9 for other apk /system_ext/priv-app/NexusLauncherRelease/NexusLauncherRelease.apk. target_sdk_version=36, uses_libraries=, library_path=/system_ext/priv-app/NexusLauncherRelease/lib/x86_64:/system/lib64:/system_ext/lib64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.apps.nexuslauncher:/system_ext/priv-app/NexusLauncherRelease:/system/lib64:/system_ext/lib64
+02-19 22:04:19.738 I/Telecom (  774): CallsManager: onUserSwitch: userHandle=UserHandle{0}: TS.init@AAA
+02-19 22:04:19.753 W/ContextImpl( 1845): Failed to ensure /data/user/0/com.google.android.apps.nexuslauncher/cache
+02-19 22:04:19.753 W/ContextImpl( 1845): android.system.ErrnoException: mkdir failed: ENOENT (No such file or directory)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at libcore.io.Linux.mkdir(Native Method)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at libcore.io.ForwardingOs.mkdir(ForwardingOs.java:502)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at libcore.io.BlockGuardOs.mkdir(BlockGuardOs.java:257)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at libcore.io.ForwardingOs.mkdir(ForwardingOs.java:502)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.system.Os.mkdir(Os.java:473)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.app.ContextImpl.ensurePrivateDirExists(ContextImpl.java:854)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.app.ContextImpl.ensurePrivateCacheDirExists(ContextImpl.java:846)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.app.ContextImpl.getCacheDir(ContextImpl.java:961)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.app.ActivityThread.setupGraphicsSupport(ActivityThread.java:7745)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8031)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2690)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.os.Handler.dispatchMessage(Handler.java:132)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.os.Looper.dispatchMessage(Looper.java:333)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.os.Looper.loopOnce(Looper.java:263)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.os.Looper.loop(Looper.java:367)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at android.app.ActivityThread.main(ActivityThread.java:9287)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at java.lang.reflect.Method.invoke(Native Method)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+02-19 22:04:19.753 W/ContextImpl( 1845): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+02-19 22:04:19.755 W/ContextImpl( 1845): Failed to update user.inode_cache
+02-19 22:04:19.755 W/ContextImpl( 1845): android.system.ErrnoException: stat failed: ENOENT (No such file or directory)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at libcore.io.Linux.stat(Native Method)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at libcore.io.ForwardingOs.stat(ForwardingOs.java:857)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at libcore.io.BlockGuardOs.stat(BlockGuardOs.java:421)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at libcore.io.ForwardingOs.stat(ForwardingOs.java:857)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.app.AndroidForwardingOs.stat(AndroidForwardingOs.java:134)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.system.Os.stat(Os.java:918)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.app.ContextImpl.ensurePrivateDirExists(ContextImpl.java:869)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.app.ContextImpl.ensurePrivateCacheDirExists(ContextImpl.java:846)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.app.ContextImpl.getCacheDir(ContextImpl.java:961)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.app.ActivityThread.setupGraphicsSupport(ActivityThread.java:7745)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8031)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2690)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.os.Handler.dispatchMessage(Handler.java:132)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.os.Looper.dispatchMessage(Looper.java:333)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.os.Looper.loopOnce(Looper.java:263)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.os.Looper.loop(Looper.java:367)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at android.app.ActivityThread.main(ActivityThread.java:9287)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at java.lang.reflect.Method.invoke(Native Method)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+02-19 22:04:19.755 W/ContextImpl( 1845): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+02-19 22:04:19.760 D/BluetoothKeystoreService( 1691): init isCommonCriteriaMode: false
+02-19 22:04:19.761 I/BluetoothKeystoreService( 1691): ComputeDataThread: create, doEncrypt: true
+02-19 22:04:19.761 I/BluetoothKeystoreService( 1691): ComputeDataThread: create, doEncrypt: false
+02-19 22:04:19.779 I/Telecom (  774): CallsManager: reloadMissedCallsOfUser: userHandle=UserHandle{0}: TS.init@AAA
+02-19 22:04:19.779 I/Telecom (  774): MissedCallNotifierImpl: reloadFromDatabase: user=0: TS.init@AAA
+02-19 22:04:19.786 V/GraphicsEnvironment( 1845): Currently set values for:
+02-19 22:04:19.786 V/GraphicsEnvironment( 1845):   angle_gl_driver_selection_pkgs=[]
+02-19 22:04:19.786 V/GraphicsEnvironment( 1845):   angle_gl_driver_selection_values=[]
+02-19 22:04:19.786 V/GraphicsEnvironment( 1845): com.google.android.apps.nexuslauncher is not listed in per-application setting
+02-19 22:04:19.786 V/GraphicsEnvironment( 1845): ANGLE allowlist from config: com.dreamgames.royalmatch com.dts.freefiremax com.dxx.firenow com.gramgames.mergedragons com.ludo.king com.mojang.minecraftpe com.my.defense com.nintendo.zaka com.os.airforce com.playrix.fishdomdd.gplay io.teslatech.callbreak jp.konami.prospia net.peakgames.toonblast
+02-19 22:04:19.786 V/GraphicsEnvironment( 1845): No special selections for ANGLE, returning default driver choice
+02-19 22:04:19.787 V/GraphicsEnvironment( 1845): Neither updatable production driver nor prerelease driver is supported.
+02-19 22:04:19.791 D/BluetoothKeystoreService( 1691): start
+02-19 22:04:19.793 I/BluetoothKeystoreService( 1691): ComputeDataThread: run, doEncrypt: true
+02-19 22:04:19.845 I/BluetoothKeystoreService( 1691): ComputeDataThread: run, doEncrypt: false
+02-19 22:04:19.845 D/ConnectivityService(  774): NetReassign [no changes] [c 0] [a 0] [i 0]
+02-19 22:04:19.849 D/BluetoothKeystoreService( 1691): loadConfigData
+02-19 22:04:19.883 W/Looper  (  774): Slow dispatch took 121ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@d485d04> m=0
+02-19 22:04:19.907 I/BluetoothKeystoreService( 1691): Interrupted while operating.
+02-19 22:04:19.907 I/BluetoothKeystoreService( 1691): ComputeDataThread: Stop, doEncrypt: true
+02-19 22:04:19.917 E/ashmem  ( 1766): Pinning is deprecated since Android Q. Please use trim or other methods.
+02-19 22:04:19.922 D/SpaEnvironment( 1766): reset
+02-19 22:04:19.933 I/BluetoothKeystoreService( 1691): Interrupted while operating.
+02-19 22:04:19.933 I/BluetoothKeystoreService( 1691): ComputeDataThread: Stop, doEncrypt: false
+02-19 22:04:19.934 I/Telecom (  774): TelecomServiceImpl: resolveHiddenDependenciesTwo' is disabled: TS.init@AAA
+02-19 22:04:19.935 I/Telecom (  774): Class: TelecomSystem.INSTANCE being set
+02-19 22:04:19.962 D/BluetoothKeystoreService( 1691): getCompareResult: 0
+02-19 22:04:19.987 I/Telecom (  774): PhoneAccountRegistrar: getSimCallManager: SimCallManager for subId -1 queried, returning: null: TSI.gSCM(a)@AAI
+02-19 22:04:19.995 E/ashmem  ( 1691): Pinning is deprecated since Android Q. Please use trim or other methods.
+02-19 22:04:19.997 D/BluetoothAdapterService( 1691): Loading JNI Library
+02-19 22:04:19.999 E/Telecom (  774): TelecomPulledAtom: the atom file not found: TSI.gSCM(a)@AAI
+02-19 22:04:19.999 E/Telecom (  774): java.nio.file.NoSuchFileException: /data/user_de/0/com.android.server.telecom/files/api_stats
+02-19 22:04:19.999 E/Telecom (  774): 	at sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:220)
+02-19 22:04:19.999 E/Telecom (  774): 	at java.nio.file.Files.newByteChannel(Files.java:371)
+02-19 22:04:19.999 E/Telecom (  774): 	at java.nio.file.Files.newByteChannel(Files.java:422)
+02-19 22:04:19.999 E/Telecom (  774): 	at java.nio.file.Files.readAllBytes(Files.java:3214)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.telecom.metrics.TelecomPulledAtom.loadAtomsFromFile(TelecomPulledAtom.java:94)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.telecom.metrics.TelecomPulledAtom.<init>(TelecomPulledAtom.java:58)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.telecom.metrics.ApiStats.<init>(ApiStats.java:177)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.telecom.metrics.TelecomMetricsController.getApiStats(TelecomMetricsController.java:83)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.telecom.TelecomServiceImpl.logEvent(TelecomServiceImpl.java:4030)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.telecom.TelecomServiceImpl.-$$Nest$mlogEvent(TelecomServiceImpl.java:0)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.telecom.TelecomServiceImpl$1.getSimCallManager(TelecomServiceImpl.java:908)
+02-19 22:04:19.999 E/Telecom (  774): 	at android.telecom.TelecomManager.getSimCallManager(TelecomManager.java:1337)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.telecom.TelecomLoaderService$TelecomServiceConnection.onServiceConnected(TelecomLoaderService.java:81)
+02-19 22:04:19.999 E/Telecom (  774): 	at android.content.ServiceConnection.onServiceConnected(ServiceConnection.java:75)
+02-19 22:04:19.999 E/Telecom (  774): 	at android.app.LoadedApk$ServiceDispatcher.doConnected(LoadedApk.java:2334)
+02-19 22:04:19.999 E/Telecom (  774): 	at android.app.LoadedApk$ServiceDispatcher$RunConnection.run(LoadedApk.java:2370)
+02-19 22:04:19.999 E/Telecom (  774): 	at android.os.Handler.handleCallback(Handler.java:1070)
+02-19 22:04:19.999 E/Telecom (  774): 	at android.os.Handler.dispatchMessage(Handler.java:125)
+02-19 22:04:19.999 E/Telecom (  774): 	at android.os.Looper.dispatchMessage(Looper.java:333)
+02-19 22:04:19.999 E/Telecom (  774): 	at android.os.Looper.loopOnce(Looper.java:263)
+02-19 22:04:19.999 E/Telecom (  774): 	at android.os.Looper.loop(Looper.java:367)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.SystemServer.run(SystemServer.java:1081)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.server.SystemServer.main(SystemServer.java:711)
+02-19 22:04:19.999 E/Telecom (  774): 	at java.lang.reflect.Method.invoke(Native Method)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+02-19 22:04:19.999 E/Telecom (  774): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:907)
+02-19 22:04:20.005 W/ContextImpl( 1845): Failed to ensure /data/user/0/com.google.android.apps.nexuslauncher/files
+02-19 22:04:20.005 W/ContextImpl( 1845): android.system.ErrnoException: mkdir failed: ENOENT (No such file or directory)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at libcore.io.Linux.mkdir(Native Method)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at libcore.io.ForwardingOs.mkdir(ForwardingOs.java:502)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at libcore.io.BlockGuardOs.mkdir(BlockGuardOs.java:257)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at libcore.io.ForwardingOs.mkdir(ForwardingOs.java:502)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.system.Os.mkdir(Os.java:473)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.app.ContextImpl.ensurePrivateDirExists(ContextImpl.java:854)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.app.ContextImpl.ensurePrivateDirExists(ContextImpl.java:840)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.app.ContextImpl.getFilesDir(ContextImpl.java:888)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.content.ContextWrapper.getFilesDir(ContextWrapper.java:288)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at com.android.quickstep.QuickstepProcessInitializer.init(go/retraceme f3a19d912c87c27267cfbc05ba0bc7b202ab72a6648bd76225f5f7e128d94583:40)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at k5.c.init(go/retraceme f3a19d912c87c27267cfbc05ba0bc7b202ab72a6648bd76225f5f7e128d94583:1)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at com.android.launcher3.LauncherApplication.onCreate(go/retraceme f3a19d912c87c27267cfbc05ba0bc7b202ab72a6648bd76225f5f7e128d94583:12)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1396)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8139)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2690)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.os.Handler.dispatchMessage(Handler.java:132)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.os.Looper.dispatchMessage(Looper.java:333)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.os.Looper.loopOnce(Looper.java:263)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.os.Looper.loop(Looper.java:367)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at android.app.ActivityThread.main(ActivityThread.java:9287)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at java.lang.reflect.Method.invoke(Native Method)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:566)
+02-19 22:04:20.005 W/ContextImpl( 1845): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+02-19 22:04:20.014 W/Looper  (  774): Slow dispatch took 1672ms main app=system_server main=true group=FOREGROUND h=android.app.ActivityThread$H c=android.app.LoadedApk$ServiceDispatcher$RunConnection@58f921e m=0
+02-19 22:04:20.015 I/QuickstepProtoLogGroup( 1845): Initializing ProtoLog.
+02-19 22:04:20.060 I/CredentialManager(  774): CredentialManagerServiceImpl constructed for: com.google.android.gms/.auth.api.credentials.credman.service.PasswordAndPasskeyService
+02-19 22:04:20.061 I/CredentialManager(  774): newServiceInfoLocked, mInfo null, com.google.android.gms/com.google.android.gms.auth.api.credentials.credman.service.PasswordAndPasskeyService
+02-19 22:04:20.080 E/CredentialManager(  774): Unable to add serviceInfo : 
+02-19 22:04:20.080 E/CredentialManager(  774): android.content.pm.PackageManager$NameNotFoundException: ComponentInfo{com.google.android.gms/com.google.android.gms.auth.api.credentials.credman.service.PasswordAndPasskeyService}
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.service.credentials.CredentialProviderInfoFactory.getServiceInfoOrThrow(CredentialProviderInfoFactory.java:366)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.service.credentials.CredentialProviderInfoFactory.create(CredentialProviderInfoFactory.java:94)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at com.android.server.credentials.CredentialManagerServiceImpl.newServiceInfoLocked(CredentialManagerServiceImpl.java:101)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at com.android.server.credentials.CredentialManagerServiceImpl.<init>(CredentialManagerServiceImpl.java:60)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at com.android.server.credentials.CredentialManagerService.newServiceListLocked(CredentialManagerService.java:196)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at com.android.server.infra.AbstractMasterSystemService.getServiceListForUserLocked(AbstractMasterSystemService.java:635)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at com.android.server.infra.AbstractMasterSystemService.updateCachedServiceListMultiModeLocked(AbstractMasterSystemService.java:752)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at com.android.server.infra.AbstractMasterSystemService.updateCachedServiceListLocked(AbstractMasterSystemService.java:721)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at com.android.server.infra.AbstractMasterSystemService.updateCachedServiceLocked(AbstractMasterSystemService.java:679)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at com.android.server.infra.AbstractMasterSystemService$SettingsObserver.onChange(AbstractMasterSystemService.java:1391)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.database.ContentObserver.onChange(ContentObserver.java:202)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.database.ContentObserver.onChange(ContentObserver.java:224)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.database.ContentObserver.onChange(ContentObserver.java:236)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.database.ContentObserver.lambda$dispatchChange$1(ContentObserver.java:332)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.database.ContentObserver.$r8$lambda$_30FqRqKC3pUku8T3BsVPQAFotM(Unknown Source:0)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.database.ContentObserver$$ExternalSyntheticLambda1.run(D8$$SyntheticClass:0)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.os.Handler.handleCallback(Handler.java:1070)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.os.Handler.dispatchMessage(Handler.java:125)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.os.Looper.dispatchMessage(Looper.java:333)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.os.Looper.loopOnce(Looper.java:263)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.os.Looper.loop(Looper.java:367)
+02-19 22:04:20.080 E/CredentialManager(  774): 	at android.os.HandlerThread.run(HandlerThread.java:139)
+02-19 22:04:20.081 E/SpeechRecognitionManagerServiceImpl(  774): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSpeechRecognitionService
+02-19 22:04:20.101 E/SearchUiPerUserService(  774): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiSearchUiService
+02-19 22:04:20.102 I/DisplayManager( 1845): Choreographer implicitly registered for the refresh rate.
+02-19 22:04:20.104 E/AutofillManagerServiceImpl(  774): Bad service name: com.google.android.gms/.autofill.service.AutofillService
+02-19 22:04:20.105 E/RemoteAugmentedAutofillService(  774): Bad service name for flags 1048704: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiAugmentedAutofillService
+02-19 22:04:20.106 E/MusicRecognitionManagerPerUserService(  774): Bad service name: com.google.android.googlequicksearchbox/com.google.android.apps.search.soundsearch.service.SoundSearchService
+02-19 22:04:20.121 W/Looper  ( 1488): Slow dispatch took 1153ms SysUiBg app=com.android.systemui main=false group=FOREGROUND h=android.os.Handler c=com.android.systemui.statusbar.policy.FlashlightControllerImpl$$ExternalSyntheticLambda0@a43112b m=0
+02-19 22:04:20.121 D/ControlsListingControllerImpl( 1488): Subscribing callback, service count: 0
+02-19 22:04:20.137 D/DesktopExperienceFlags( 1766): Toggle override initialized to: false
+02-19 22:04:20.152 W/Looper  (  774): Slow dispatch took 210ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@35ff9da> m=0
+02-19 22:04:20.191 V/NotificationHistory(  774): Attempted to add notif for locked/gone/disabled user 0
+02-19 22:04:20.193 W/Looper  (  774): Slow dispatch took 173ms main app=system_server main=true group=FOREGROUND h=com.android.server.notification.NotificationManagerService$WorkerHandler c=com.android.server.notification.NotificationManagerService$PostNotificationRunnable@a396d3a m=0
+02-19 22:04:20.198 D/UnlockComponentFactory( 1845): instantiateActivity() com.google.android.apps.nexuslauncher.NexusLauncherActivity isUserLocked: true
+02-19 22:04:20.206 W/PinnerService(  774): Could not find pinlist.meta for "/system_ext/priv-app/NexusLauncherRelease/NexusLauncherRelease.apk": pinning as blob
+02-19 22:04:20.209 I/system_server(  774): Background young concurrent mark compact GC freed 17MB AllocSpace bytes, 17(452KB) LOS objects, 42% free, 26MB/45MB, paused 28.935ms,55.574ms total 2.117s
+02-19 22:04:20.215 I/ServiceWatcher(  774): [network] chose new implementation null
+02-19 22:04:20.215 I/ServiceWatcher(  774): [fused] chose new implementation 1000/com.android.location.fused/.FusedLocationService@0
+02-19 22:04:20.215 I/ServiceWatcher(  774): [GnssAssistanceProxy] chose new implementation null
+02-19 22:04:20.216 D/UnlockComponentFactory( 1845): instantiateActivity() com.google.android.apps.nexuslauncher.unlock.LauncherPostBootActivity
+02-19 22:04:20.216 I/ServiceWatcher(  774): [GeocoderProxy] chose new implementation null
+02-19 22:04:20.216 I/ServiceWatcher(  774): [HardwareActivityRecognitionProxy] chose new implementation null
+02-19 22:04:20.216 D/DesktopExperienceFlags( 1845): Toggle override initialized to: false
+02-19 22:04:20.216 I/ServiceWatcher(  774): [GeofenceProxy] chose new implementation null
+02-19 22:04:20.216 I/ServiceWatcher(  774): [TrustManagerService] chose new implementation null
+02-19 22:04:20.216 I/ServiceWatcher(  774): [RealLocationTimeZoneProviderProxy] chose new implementation null
+02-19 22:04:20.217 D/AdbService(  774): setAdbEnabled(true), mIsAdbUsbEnabled=false, mIsAdbWifiEnabled=false, transportType=0
+02-19 22:04:20.228 E/ashmem  ( 1845): Pinning is deprecated since Android Q. Please use trim or other methods.
+02-19 22:04:20.254 W/ActivityManager(  774): Slow operation: 75ms so far, now at finishAttachApplicationInner: after dispatching broadcasts
+02-19 22:04:20.257 D/BatteryUsageBroadcastReceiver( 1766): onReceive:android.intent.action.BATTERY_LEVEL_CHANGED
+02-19 22:04:20.289 D/CompatChangeReporter( 1845): Compat change id reported: 377864165; UID 10191; state: ENABLED
+02-19 22:04:20.289 D/DesktopModeFlags( 1845): Toggle override initialized to: OVERRIDE_UNSET
+02-19 22:04:20.305 D/LockSettingsService(  774): Clearing FRP credential tied to user 0
+02-19 22:04:20.363 W/AlarmManager( 1488): Unrecognized alarm listener com.android.systemui.keyguard.KeyguardSliceProvider$$ExternalSyntheticLambda2@bc211a0
+02-19 22:04:20.368 W/FileUtils(  774): Failed to chmod(/data/misc/apexdata/com.android.wifi/WifiConfigStore.xml, 384): 
+02-19 22:04:20.368 W/FileUtils(  774): android.system.ErrnoException: chmod failed: ENOENT (No such file or directory)
+02-19 22:04:20.368 W/FileUtils(  774): 	at libcore.io.Linux.chmod(Native Method)
+02-19 22:04:20.368 W/FileUtils(  774): 	at libcore.io.ForwardingOs.chmod(ForwardingOs.java:166)
+02-19 22:04:20.368 W/FileUtils(  774): 	at libcore.io.BlockGuardOs.chmod(BlockGuardOs.java:83)
+02-19 22:04:20.368 W/FileUtils(  774): 	at android.system.Os.chmod(Os.java:119)
+02-19 22:04:20.368 W/FileUtils(  774): 	at com.android.server.wifi.util.FileUtils.chmod(FileUtils.java:44)
+02-19 22:04:20.368 W/FileUtils(  774): 	at com.android.server.wifi.WifiConfigStore$StoreFile.writeBufferedRawData(WifiConfigStore.java:864)
+02-19 22:04:20.368 W/FileUtils(  774): 	at com.android.server.wifi.WifiConfigStore.writeBufferedData(WifiConfigStore.java:431)
+02-19 22:04:20.368 W/FileUtils(  774): 	at com.android.server.wifi.WifiConfigStore.write(WifiConfigStore.java:386)
+02-19 22:04:20.368 W/FileUtils(  774): 	at com.android.server.wifi.WifiConfigManager.writeBufferedData(WifiConfigManager.java:4030)
+02-19 22:04:20.368 W/FileUtils(  774): 	at com.android.server.wifi.WifiConfigManager.-$$Nest$mwriteBufferedData(WifiConfigManager.java:0)
+02-19 22:04:20.368 W/FileUtils(  774): 	at com.android.server.wifi.WifiConfigManager$1.onAlarm(WifiConfigManager.java:147)
+02-19 22:04:20.368 W/FileUtils(  774): 	at android.app.AlarmManager$ListenerWrapper.run(AlarmManager.java:375)
+02-19 22:04:20.368 W/FileUtils(  774): 	at android.os.Handler.handleCallback(Handler.java:1070)
+02-19 22:04:20.368 W/FileUtils(  774): 	at android.os.Handler.dispatchMessage(Handler.java:125)
+02-19 22:04:20.368 W/FileUtils(  774): 	at com.android.server.wifi.RunnerHandler.dispatchMessage(RunnerHandler.java:131)
+02-19 22:04:20.368 W/FileUtils(  774): 	at android.os.Looper.dispatchMessage(Looper.java:333)
+02-19 22:04:20.368 W/FileUtils(  774): 	at android.os.Looper.loopOnce(Looper.java:263)
+02-19 22:04:20.368 W/FileUtils(  774): 	at android.os.Looper.loop(Looper.java:367)
+02-19 22:04:20.368 W/FileUtils(  774): 	at android.os.HandlerThread.run(HandlerThread.java:139)
+02-19 22:04:20.390 D/ZenModeController( 1488): Added callback class com.android.systemui.keyguard.KeyguardSliceProvider
+02-19 22:04:20.407 W/Looper  (  774): Slow dispatch took 122ms main app=system_server main=true group=FOREGROUND h=android.os.Handler c=android.database.ContentObserver$$ExternalSyntheticLambda1@46ef3cc m=0
+02-19 22:04:20.408 I/ContentCaptureManagerService(  774): Updating for user 0: disabled=false
+02-19 22:04:20.409 E/ContentCapturePerUserService(  774): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiContentCaptureService
+02-19 22:04:20.409 E/ContentCapturePerUserService(  774): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiContentCaptureService
+02-19 22:04:20.409 E/ContentCapturePerUserService(  774): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiContentCaptureService
+02-19 22:04:20.409 I/ContentSuggestionsManagerService(  774): Updating for user 0: disabled=false
+02-19 22:04:20.409 E/ContentSuggestionsPerUserService(  774): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiContentSuggestionsService
+02-19 22:04:20.410 I/AutofillManagerService(  774): Updating for user 0: disabled=false
+02-19 22:04:20.431 D/AdbService(  774): Broadcasting enable = true, type = 0
+02-19 22:04:20.431 W/Looper  (  774): Slow dispatch took 215ms android.fg app=system_server main=false group=FOREGROUND h=android.os.Handler c=<recycled PooledLambda@ae13ae5> m=0
+02-19 22:04:20.435 D/WifiConfigStore(  774): Writing to stores completed in 81 ms.
+02-19 22:04:20.435 E/AutofillManagerServiceImpl(  774): Bad service name: com.google.android.gms/.autofill.service.AutofillService
+02-19 22:04:20.435 E/RemoteAugmentedAutofillService(  774): Bad service name for flags 1048704: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiAugmentedAutofillService
+02-19 22:04:20.436 E/AutofillManagerServiceImpl(  774): Bad service name: com.google.android.gms/.autofill.service.AutofillService
+02-19 22:04:20.436 E/RemoteAugmentedAutofillService(  774): Bad service name for flags 1048704: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiAugmentedAutofillService
