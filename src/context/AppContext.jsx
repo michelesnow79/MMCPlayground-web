@@ -27,6 +27,7 @@ import { auth, db } from '../firebase';
 import { logPinDebug } from '../utils/logger';
 import { getStateAndCountryFromZip } from '../utils/locationHelper';
 import telemetry from '../utils/telemetry';
+import { initPushNotifications, clearPushToken } from '../utils/pushNotifications';
 
 const AppContext = createContext();
 
@@ -88,6 +89,8 @@ export const AppProvider = ({ children }) => {
                         isAdmin: safeUserData.isAdmin || firebaseUser.email === 'MissMe@missmeconnection.com',
                     });
                     setIsLoggedIn(true);
+                    // 🔔 Register device for push notifications
+                    initPushNotifications(firebaseUser.uid);
                 } else {
                     setUser(null);
                     setIsLoggedIn(false);
@@ -359,6 +362,8 @@ export const AppProvider = ({ children }) => {
 
     const logout = async () => {
         try {
+            // 🔔 Clear FCM token before signing out so no pushes go to logged-out device
+            if (user?.uid) await clearPushToken(user.uid);
             await signOut(auth);
             // Proactive state purge to prevent stale UI ghosting
             setUser(null);
