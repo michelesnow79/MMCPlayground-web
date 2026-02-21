@@ -112,12 +112,14 @@ const ConnectionDetail = () => {
     // ALLOW MULTIPLE REPLIES (Chat Style) - No longer forcing edit mode on existing reply
     // ALLOW MULTIPLE REPLIES (Chat Style)
     const handleReplyClick = (responderUid = null) => {
-        console.log(`💬 handleReplyClick called. responderUid: ${responderUid}, user: ${user?.uid}`);
         if (!user) {
             setShowAuthModal(true);
             return;
         }
-        setActiveResponderUid(responderUid);
+        // For non-owners, always use their own uid — never null
+        const effectiveResponderUid = responderUid ?? (pin?.ownerUid !== user.uid ? user.uid : null);
+        console.log(`💬 handleReplyClick called. effectiveResponderUid: ${effectiveResponderUid}, user: ${user.uid}`);
+        setActiveResponderUid(effectiveResponderUid);
         setShowReplyModal(true);
     };
 
@@ -537,7 +539,7 @@ const ConnectionDetail = () => {
                             ) : (
                                 /* NON-OWNER (User or Admin) -> Can Reply */
                                 <>
-                                    <button className="btn-cyan-glow-reply" onClick={() => handleReplyClick()}>
+                                    <button className="btn-cyan-glow-reply" onClick={() => handleReplyClick(user?.uid)}>
                                         {myThread ? 'REPLY TO CONVERSATION' : 'REPLY TO PIN'}
                                     </button>
 

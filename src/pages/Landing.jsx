@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import SideMenu from '../components/SideMenu';
+import { useApp } from '../context/AppContext';
 import './Landing.css';
 
 // Importing assets
@@ -19,6 +20,7 @@ import { isWeb } from '../utils/platform';
 
 const Landing = () => {
     const navigate = useNavigate();
+    const { isLoggedIn, user } = useApp();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
     return (
@@ -50,12 +52,25 @@ const Landing = () => {
                     <p className="figma-tagline">YOU LIVED THE MOMENT - HERE'S YOUR CHANCE TO FIND THE CONNECTION!</p>
 
                     <div className="figma-actions">
-                        <button className="figma-btn-pink" onClick={() => navigate('/login')}>
-                            LOG IN OR SIGN UP
-                        </button>
-                        <button className="figma-btn-pink" onClick={() => navigate('/map')}>
-                            EXPLORE
-                        </button>
+                        {isLoggedIn ? (
+                            <>
+                                <button className="figma-btn-pink" onClick={() => navigate('/account')}>
+                                    MY ACCOUNT
+                                </button>
+                                <button className="figma-btn-pink" onClick={() => navigate('/map')}>
+                                    EXPLORE
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button className="figma-btn-pink" onClick={() => navigate('/login')}>
+                                    LOG IN OR SIGN UP
+                                </button>
+                                <button className="figma-btn-pink" onClick={() => navigate('/map')}>
+                                    EXPLORE
+                                </button>
+                            </>
+                        )}
                     </div>
 
 

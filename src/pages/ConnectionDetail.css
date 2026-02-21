@@ -774,7 +774,9 @@
     box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9);
     width: 98%;
     max-width: 650px;
-    height: 85vh;
+    /* Use dvh so keyboard shrinks the panel properly on mobile */
+    height: 85dvh;
+    max-height: 100dvh;
     display: flex;
     flex-direction: column;
     animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -956,14 +958,17 @@
     font-size: 0.95rem;
 }
 
-/* Long Composer Area */
+/* Long Composer Area - pinned to bottom, never scrolls away */
 .letter-composer-area {
     background: #111;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 24px;
+    padding: 16px 24px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    /* Never grows to push content offscreen; history area is the flex:1 */
+    flex-shrink: 0;
 }
 
 .composer-header {
@@ -978,18 +983,21 @@
 
 .letter-textarea {
     width: 100%;
-    min-height: 200px;
+    min-height: 90px;
+    max-height: 180px;
     background: #000;
     border: 1px solid #333;
     border-radius: 12px;
     color: white;
-    padding: 18px;
+    padding: 14px 18px;
     font-family: 'Nunito', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1rem;
     line-height: 1.5;
     outline: none;
-    resize: vertical;
+    resize: none;
+    overflow-y: auto;
     transition: border-color 0.2s;
+    box-sizing: border-box;
 }
 
 .letter-textarea:focus {
@@ -1052,13 +1060,33 @@
 
 @media (max-width: 480px) {
     .expansive-reply-panel {
-        height: 100vh;
+        /* Full screen on mobile, keyboard aware */
+        height: 100dvh;
+        max-height: 100dvh;
         width: 100vw;
         border-radius: 0;
     }
 
+    /* Overlay needs no padding on mobile - panel is full screen */
+    .modal-overlay {
+        padding: 0;
+        align-items: flex-end;
+    }
+
     .letter-textarea {
-        min-height: 150px;
+        min-height: 70px;
+        max-height: 120px;
+        font-size: 0.95rem;
+    }
+
+    .composer-actions {
+        flex-direction: row;
+    }
+
+    .letter-send-btn,
+    .letter-cancel-btn {
+        flex: 1;
+        text-align: center;
     }
 }
 
