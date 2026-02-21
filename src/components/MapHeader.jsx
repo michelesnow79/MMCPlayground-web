@@ -18,7 +18,7 @@ const MapHeader = ({ onMenuClick, onFilterClick, isFilterActive }) => {
 
             <div className="map-header-center" onClick={() => navigate('/')}>
                 <img src={logoAsset} alt="Logo" className="map-header-logo" />
-                <h1 className="map-header-title">MISS ME CONNECT</h1>
+                <h1 className="map-header-title">MISS ME CONNECTION</h1>
             </div>
 
             <div className="map-header-right">
