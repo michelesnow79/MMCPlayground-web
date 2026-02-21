@@ -15,7 +15,7 @@ initializeApp();
  *  3. Look up recipient's FCM token from their user document.
  *  4. Send a push notification.
  */
-exports.onNewMessage = onDocumentCreated(
+exports.onNotificationCreate = onDocumentCreated(
     "threads/{threadId}/messages/{messageId}",
     async (event) => {
         const db = getFirestore();
