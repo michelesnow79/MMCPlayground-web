@@ -34,6 +34,10 @@ service cloud.firestore {
                     // User must be one of the participants
                     && request.resource.data.participants.hasAny([request.auth.uid])
                     
+                    // Integrity: responderUid must be a non-empty string (not null)
+                    && request.resource.data.responderUid is string
+                    && request.resource.data.responderUid.size() > 0
+                    
                     // Enforce canonical ID pattern: pinId_responderUid
                     && threadId == string(request.resource.data.pinId) + "_" + request.resource.data.responderUid
                     
@@ -78,8 +82,11 @@ service cloud.firestore {
         // CREATE:
         // Case A: Thread Exists -> Check existing participants using hasAny
         // Case B: New Thread (Batch) -> Check future thread participants using hasAny
+        // CRITICAL: senderUid must always equal the authenticated user
         allow create: if isSignedIn()
                       && request.resource.data.senderUid == request.auth.uid
+                      && request.resource.data.content is string
+                      && request.resource.data.content.size() > 0
                       && request.resource.data.content.size() <= 2000
                       && (
                         (exists(/databases/$(database)/documents/threads/$(threadId)) && 

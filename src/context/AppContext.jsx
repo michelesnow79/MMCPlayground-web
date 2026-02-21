@@ -700,20 +700,20 @@ export const AppProvider = ({ children }) => {
             // I am the owner
             if (!targetResponderUid) {
                 console.error("❌ addReply Aborted: Owner must specify target responderUid to reply.");
-                return;
+                throw new Error("This connection doesn't have a valid recipient yet. No responder UID found.");
             }
         }
 
         if (targetResponderUid === resolvedOwnerUid) {
             console.error("❌ addReply Aborted: Responder cannot be the owner.");
-            return;
+            throw new Error("Cannot send a message to yourself.");
         }
 
         const participants = [resolvedOwnerUid, targetResponderUid];
 
-        if (participants.includes(undefined) || participants.includes(null)) {
+        if (participants.includes(undefined) || participants.includes(null) || participants.some(p => typeof p !== 'string' || p.trim() === '')) {
             console.error("❌ addReply Integrity Error: Participants array contains invalid values:", participants);
-            return;
+            throw new Error("This connection doesn't have a valid recipient yet.");
         }
 
         const threadId = `${pinId}_${targetResponderUid}`;

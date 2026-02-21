@@ -761,14 +761,35 @@ const ConnectionDetail = () => {
                                                 if (isSendingReply) return;
                                                 if (!replyText.trim()) return;
 
+                                                // GUARD: owner must have selected a conversation (non-null responderUid)
+                                                if (pin.ownerUid === user?.uid && !activeResponderUid) {
+                                                    setConfirmConfig({
+                                                        isOpen: true,
+                                                        title: 'NO RECIPIENT',
+                                                        message: "This connection doesn't have a valid recipient yet. Please open a specific conversation from the list above before replying.",
+                                                        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false })),
+                                                        confirmText: 'OK',
+                                                        type: 'info'
+                                                    });
+                                                    return;
+                                                }
+
+                                                const savedText = replyText;
                                                 try {
                                                     setIsSendingReply(true);
-                                                    const text = replyText;
                                                     setReplyText('');
-                                                    await addReply(pin.id, text, activeResponderUid);
+                                                    await addReply(pin.id, savedText, activeResponderUid);
                                                 } catch (err) {
                                                     console.error("Reply failed:", err);
-                                                    alert("Failed to send message: " + err.message);
+                                                    setReplyText(savedText); // restore text so user doesn't lose it
+                                                    setConfirmConfig({
+                                                        isOpen: true,
+                                                        title: 'MESSAGE FAILED',
+                                                        message: err.message || 'Failed to send message. Please try again.',
+                                                        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false })),
+                                                        confirmText: 'OK',
+                                                        type: 'info'
+                                                    });
                                                 } finally {
                                                     setIsSendingReply(false);
                                                 }
