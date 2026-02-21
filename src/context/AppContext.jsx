@@ -229,7 +229,10 @@ export const AppProvider = ({ children }) => {
                 callback(msgs);
             },
             (err) => {
-                console.error("❌ Messages listener error:", err);
+                console.error("❌ Messages listener error:", err.code, err.message);
+                console.error("❌   collection path: threads/" + threadId + "/messages");
+                console.error("❌   threadId:", threadId);
+                console.error("❌   user.uid at listen time:", user?.uid ?? 'null');
                 callback([]);
             }
         );
@@ -793,20 +796,25 @@ export const AppProvider = ({ children }) => {
             // Let's check existence first. We can afford one read.
             const threadSnap = await getDoc(threadRef);
 
-            // ── DIAGNOSTIC LOGS (remove after confirming fix) ──────────────
+            // ── DIAGNOSTIC LOGS ────────────────────────────────────────────
             console.log("🔍 THREAD ID:", threadRef.id);
-            console.log("🔍 AUTH UID:", user.uid);
-            console.log("🔍 PIN OWNER UID:", resolvedOwnerUid);
+            console.log("🔍 AUTH UID:", user?.uid);
+            console.log("🔍 PIN ID:", pinId, typeof pinId);
+            console.log("🔍 PIN OWNER UID (resolvedOwnerUid):", resolvedOwnerUid);
             console.log("🔍 TARGET RESPONDER UID:", targetResponderUid);
+            console.log("🔍 PARTICIPANTS:", [resolvedOwnerUid, targetResponderUid]);
             console.log("🔍 THREAD EXISTS:", threadSnap.exists());
             console.log("🔍 THREAD CREATE DATA:", JSON.stringify({
                 pinId: threadData.pinId,
                 ownerUid: threadData.ownerUid,
+                ownerEmail: threadData.ownerEmail,
                 responderUid: threadData.responderUid,
                 participants: threadData.participants,
-                ownerEmail: threadData.ownerEmail,
+                lastSenderUid: threadData.lastSenderUid,
+                // serverTimestamp fields omitted (not serialisable)
             }));
-            // ─────────────────────────────────────────────────────────────────
+            console.log("🔍 THREAD UPDATE DATA (if exists branch):", JSON.stringify(updateData));
+            // ──────────────────────────────────────────────────────────────
 
             if (!threadSnap.exists()) {
                 batch.set(threadRef, threadData);
@@ -815,10 +823,15 @@ export const AppProvider = ({ children }) => {
             }
             batch.set(messageRef, messageData);
 
-            await batch.commit();
-            telemetry.endTimer('reply_send');
-            telemetry.trackEvent('reply_send_success');
-            console.log(`✅ SUCCESS: Atomic write for thread ${threadId} and message ${msgId}`);
+            try {
+                await batch.commit();
+                telemetry.endTimer('reply_send');
+                telemetry.trackEvent('reply_send_success');
+                console.log(`✅ SUCCESS: Atomic write for thread ${threadId} and message ${msgId}`);
+            } catch (commitErr) {
+                console.error("❌ FIRESTORE WRITE FAILED:", commitErr?.code, commitErr?.message, commitErr);
+                throw commitErr;
+            }
         } catch (err) {
             telemetry.trackEvent('reply_send_fail', { error: err.code });
             telemetry.trackError(err, { source: 'addReply' });
