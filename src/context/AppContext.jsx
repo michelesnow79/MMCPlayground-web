@@ -793,6 +793,21 @@ export const AppProvider = ({ children }) => {
             // Let's check existence first. We can afford one read.
             const threadSnap = await getDoc(threadRef);
 
+            // ── DIAGNOSTIC LOGS (remove after confirming fix) ──────────────
+            console.log("🔍 THREAD ID:", threadRef.id);
+            console.log("🔍 AUTH UID:", user.uid);
+            console.log("🔍 PIN OWNER UID:", resolvedOwnerUid);
+            console.log("🔍 TARGET RESPONDER UID:", targetResponderUid);
+            console.log("🔍 THREAD EXISTS:", threadSnap.exists());
+            console.log("🔍 THREAD CREATE DATA:", JSON.stringify({
+                pinId: threadData.pinId,
+                ownerUid: threadData.ownerUid,
+                responderUid: threadData.responderUid,
+                participants: threadData.participants,
+                ownerEmail: threadData.ownerEmail,
+            }));
+            // ─────────────────────────────────────────────────────────────────
+
             if (!threadSnap.exists()) {
                 batch.set(threadRef, threadData);
             } else {
