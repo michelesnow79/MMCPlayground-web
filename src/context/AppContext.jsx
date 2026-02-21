@@ -693,16 +693,23 @@ export const AppProvider = ({ children }) => {
             return;
         }
 
-        // --- RESOLVE OWNER UID ---
-        let resolvedOwnerUid = pin.ownerUid;
+        // --- RESOLVE OWNER UID via FRESH FIRESTORE READ ---
+        // CRITICAL: The security rule does get(pins/pinId).data.ownerUid at write time.
+        // We must use the live Firestore value — not the React state cache — to guarantee
+        // our payload ownerUid matches exactly what the rule sees.
+        const pinDocRef = doc(db, 'pins', String(pinId));
+        const pinDocSnap = await getDoc(pinDocRef);
+        if (!pinDocSnap.exists()) {
+            console.error(`❌ addReply Aborted: Pin ${pinId} not found in Firestore.`);
+            throw new Error("This connection no longer exists.");
+        }
+        const livePinData = pinDocSnap.data();
+        const resolvedOwnerUid = livePinData.ownerUid;
+        console.log("🔍 LIVE PIN ownerUid (from Firestore):", resolvedOwnerUid);
+        console.log("🔍 CACHED pin.ownerUid (from React state):", pin.ownerUid);
         if (!resolvedOwnerUid) {
-            if (user.email.toLowerCase() === (pin.ownerEmail || '').toLowerCase()) {
-                resolvedOwnerUid = user.uid;
-                console.log("⚠️ addReply: resolvedOwnerUid missing on pin, using current user as owner (match by email).");
-            } else {
-                console.error("❌ addReply Aborted: Pin has no ownerUid and user is not owner.");
-                return;
-            }
+            console.error("❌ addReply Aborted: Live Firestore pin has no ownerUid field.");
+            throw new Error("This connection doesn't have a valid owner.");
         }
 
         // --- RESOLVE RESPONDER UID ---
