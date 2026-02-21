@@ -20,8 +20,10 @@ service cloud.firestore {
     // --- THREADS AND MESSAGES ---
     match /threads/{threadId} {
       // 1. READ: Explicit OR check matching the new query
-      allow read: if isSignedIn() 
-                  && (request.auth.uid == resource.data.ownerUid || request.auth.uid == resource.data.responderUid);
+      allow read: if isSignedIn()
+                  && (resource == null
+                      || request.auth.uid == resource.data.ownerUid
+                      || request.auth.uid == resource.data.responderUid);
 
       // 2. CREATE: Strict Integrity (New threads only)
       allow create: if isSignedIn() 
@@ -76,7 +78,8 @@ service cloud.firestore {
 
       match /messages/{messageId} {
         // READ: Allow if parent thread participant (using safe hasAny)
-        allow read: if isSignedIn() 
+        allow read: if isSignedIn()
+                    && exists(/databases/$(database)/documents/threads/$(threadId))
                     && get(/databases/$(database)/documents/threads/$(threadId)).data.participants.hasAny([request.auth.uid]);
 
         // CREATE:

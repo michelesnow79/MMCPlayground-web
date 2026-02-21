@@ -218,24 +218,52 @@ export const AppProvider = ({ children }) => {
     // Helper to subscribe to messages for a specific thread
     const subscribeToThread = (threadId, callback) => {
         if (!db || !threadId) return () => { };
-        const q = query(
-            collection(db, 'threads', threadId, 'messages'),
-            orderBy('createdAt', 'asc')
-        );
-        return onSnapshot(
-            q,
-            (snapshot) => {
-                const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                callback(msgs);
-            },
-            (err) => {
-                console.error("❌ Messages listener error:", err.code, err.message);
-                console.error("❌   collection path: threads/" + threadId + "/messages");
-                console.error("❌   threadId:", threadId);
-                console.error("❌   user.uid at listen time:", user?.uid ?? 'null');
-                callback([]);
+
+        let unsub = () => { };
+        let active = true;
+
+        (async () => {
+            try {
+                const threadRef = doc(db, 'threads', threadId);
+                const snap = await getDoc(threadRef);
+                if (!active) return;
+
+                if (!snap.exists()) {
+                    console.log(`🔍 subscribeToThread: Thread ${threadId} does not exist yet. Not listening.`);
+                    callback([]);
+                    return;
+                }
+
+                const q = query(
+                    collection(db, 'threads', threadId, 'messages'),
+                    orderBy('createdAt', 'asc')
+                );
+
+                unsub = onSnapshot(
+                    q,
+                    (snapshot) => {
+                        if (!active) return;
+                        const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                        callback(msgs);
+                    },
+                    (err) => {
+                        if (!active) return;
+                        console.error("❌ Messages listener error:", err.code, err.message);
+                        console.error("❌   collection path: threads/" + threadId + "/messages");
+                        console.error("❌   threadId:", threadId);
+                        console.error("❌   user.uid at listen time:", user?.uid ?? 'null');
+                        callback([]);
+                    }
+                );
+            } catch (err) {
+                console.error("❌ Error initiating thread listener:", err);
             }
-        );
+        })();
+
+        return () => {
+            active = false;
+            unsub();
+        };
     };
 
     // 3.5 Notifications Listener
