@@ -128,7 +128,7 @@ const Browse = () => {
 
                     <div className="browse-logo-group" onClick={() => navigate('/')}>
                         <img src={logoAsset} alt="Logo" className="header-heart-logo-browse" />
-                        <h1 className="browse-logo-text">MISS ME CONNECTIONS</h1>
+                        <h1 className="browse-logo-text">MISS ME CONNECTION</h1>
                     </div>
 
                     <div className="top-bar-right">
