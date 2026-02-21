@@ -8,6 +8,9 @@ import telemetry from './utils/telemetry.js'
 // Start boot timer
 telemetry.startTimer('app_boot');
 
+// VERSION STAMP — remove after confirming correct deployment
+console.log('%cMMC WEB BUILD 2c56b4c — 2026-02-21', 'color:#00f0ff;font-weight:bold;font-size:14px');
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
