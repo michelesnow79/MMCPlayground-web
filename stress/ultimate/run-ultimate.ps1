@@ -1,289 +1,254 @@
 # =====================================================================
-# MMC ULTIMATE TORTURE TEST - Windows PowerShell
-# One command. All phases. Never stops early.
-#
-# Usage:
-#   .\stress\ultimate\run-ultimate.ps1
-#   .\stress\ultimate\run-ultimate.ps1 -BaseURL http://localhost:5173
-#   .\stress\ultimate\run-ultimate.ps1 -SkipSoak -SkipAndroid
-#
-# Flags:
-#   -BaseURL       Web app URL       (default: http://localhost:5173)
-#   -SkipK6        Skip API load     (default: false)
-#   -SkipWeb       Skip Playwright   (default: false)
-#   -SkipAndroid   Skip Android      (default: false)
-#   -SkipSecurity  Skip Security     (default: false)
-#   -SoakMinutes   Soak duration     (default: 60)
+# MMC ULTIMATE TORTURE TEST - Windows PowerShell 5
+# .\stress\ultimate\run-ultimate.ps1
 # =====================================================================
 param(
-    [string]$BaseURL      = $env:BASE_URL ?? "http://localhost:5173",
+    [string]$BaseURL     = "",
     [switch]$SkipK6,
     [switch]$SkipWeb,
     [switch]$SkipAndroid,
     [switch]$SkipSecurity,
-    [int]$SoakMinutes     = 60,
-    [int]$PwWorkers       = 20
+    [int]$SoakMinutes    = 60,
+    [int]$PwWorkers      = 20
 )
 
-$Timestamp = Get-Date -Format "yyyy_MM_dd_HHmm"
-$OutDir    = "stress\out\$Timestamp\ultimate"
+if (-not $BaseURL) {
+    if ($env:BASE_URL) { $BaseURL = $env:BASE_URL } else { $BaseURL = "http://localhost:5173" }
+}
+
+$Timestamp  = Get-Date -Format "yyyy_MM_dd_HHmm"
+$OutDir     = "stress\out\$Timestamp\ultimate"
+$ScriptRoot = "stress\ultimate"
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+$ReportFile = Join-Path $OutDir "ultimate-report.md"
 
-$ReportFile  = Join-Path $OutDir "ultimate-report.md"
-$ScriptRoot  = "stress\ultimate"
-
-# Phase results
-$K6Status       = "SKIP"
-$WebStatus      = "SKIP"
-$AndroidStatus  = "SKIP"
-$PushStatus     = "SKIP"
-$SecStatus      = "SKIP"
-
-$K6ErrorRate  = "N/A"
-$K6P95        = "N/A"
-$WebPasses    = 0
-$WebFails     = 0
+$K6Status      = "SKIP"
+$WebStatus     = "SKIP"
+$AndroidStatus = "SKIP"
+$PushStatus    = "SKIP"
+$SecStatus     = "SKIP"
+$K6ErrorRate   = "N/A"
+$K6P95         = "N/A"
+$WebPasses     = 0
+$WebFails      = 0
 
 Write-Host ""
-Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "║     MMC ULTIMATE TORTURE TEST — $(Get-Date -Format 'HH:mm')              ║" -ForegroundColor Magenta
-Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
-Write-Host "Output: $OutDir" -ForegroundColor Cyan
+Write-Host "============================================================" -ForegroundColor Magenta
+Write-Host "  MMC ULTIMATE TORTURE TEST" -ForegroundColor Magenta
+Write-Host "  Started: $(Get-Date -Format 'HH:mm')" -ForegroundColor Magenta
+Write-Host "============================================================" -ForegroundColor Magenta
+Write-Host "Output : $OutDir" -ForegroundColor Cyan
 Write-Host "BaseURL: $BaseURL" -ForegroundColor Cyan
 Write-Host ""
 
-# ─── In-Progress Report ──────────────────────────────────────────────────────
-"# 🧪 MMC Ultimate Torture Test Report" | Set-Content $ReportFile
-"**Date:** $(Get-Date -Format 'yyyy-MM-dd HH:mm') | **Status:** ⏳ IN PROGRESS" | Add-Content $ReportFile
-"" | Add-Content $ReportFile
+"# MMC Ultimate Torture Test - IN PROGRESS" | Set-Content $ReportFile
+"Started: $(Get-Date)" | Add-Content $ReportFile
 
-# ─── A. API Load (k6) ────────────────────────────────────────────────────────
+# ===========================================================
+# PHASE A: k6 API Load
+# ===========================================================
 if (-not $SkipK6) {
-    Write-Host "═══════════════════════════════════════" -ForegroundColor DarkMagenta
-    Write-Host "  PHASE A — API Load (k6)" -ForegroundColor Yellow
-    Write-Host "═══════════════════════════════════════"
-    $K6Out   = Join-Path $OutDir "k6"
+    Write-Host "--- PHASE A: k6 API Load ---" -ForegroundColor Yellow
+    $K6Out  = Join-Path $OutDir "k6"
     New-Item -ItemType Directory -Force -Path $K6Out | Out-Null
-    $K6Json  = Join-Path $K6Out "k6-summary.json"
-    $K6Log   = Join-Path $K6Out "k6.log"
+    $K6Json = Join-Path $K6Out "k6-summary.json"
+    $K6Log  = Join-Path $K6Out "k6.log"
 
-    try {
-        $k6cmd = Get-Command k6 -ErrorAction Stop
+    $k6Exists = $null
+    try { $k6Exists = Get-Command k6 -ErrorAction Stop } catch { }
+
+    if ($k6Exists) {
         $env:BASE_URL = $BaseURL
-        k6 run "$ScriptRoot\k6\ultimate-load.js" --out json="$K6Json" 2>&1 | Tee-Object -FilePath $K6Log
-        # Parse results
+        $k6result = k6 run "$ScriptRoot\k6\ultimate-load.js" "--out" "json=$K6Json" 2>&1
+        $k6result | Out-File $K6Log -Encoding utf8
+        $k6result | Write-Host
+
         if (Test-Path $K6Json) {
-            $K6Data = Get-Content $K6Json -Raw -ErrorAction SilentlyContinue
-            # Look for threshold pass markers
-            $ThreshFail = Select-String -InputObject $K6Data -Pattern '"thresholds_exceeded":true' -Quiet
-            $K6Status = if ($ThreshFail) { "FAIL" } else { "PASS" }
+            $raw = Get-Content $K6Json -Raw -ErrorAction SilentlyContinue
+            if ($raw -and ($raw -match '"thresholds_exceeded":true')) {
+                $K6Status = "FAIL"
+            } else {
+                $K6Status = "PASS"
+            }
         } else {
             $K6Status = "PASS"
         }
-    } catch {
-        Write-Host "WARN: k6 not installed or failed: $_" -ForegroundColor Yellow
+    } else {
+        Write-Host "WARN: k6 not found. Skipping k6 phase." -ForegroundColor Yellow
         $K6Status = "WARN"
     }
     Write-Host "k6 status: $K6Status"
 }
 
-# ─── B. Web UI (Playwright) ──────────────────────────────────────────────────
+# ===========================================================
+# PHASE B: Playwright Web UI
+# ===========================================================
 if (-not $SkipWeb) {
     Write-Host ""
-    Write-Host "═══════════════════════════════════════" -ForegroundColor DarkMagenta
-    Write-Host "  PHASE B — Web UI (Playwright)" -ForegroundColor Yellow
-    Write-Host "═══════════════════════════════════════"
-    $PwOut    = Join-Path $OutDir "playwright"
+    Write-Host "--- PHASE B: Playwright Web UI ---" -ForegroundColor Yellow
+    $PwOut  = Join-Path $OutDir "playwright"
     New-Item -ItemType Directory -Force -Path $PwOut | Out-Null
-    $PwJson   = Join-Path $PwOut "results.json"
-    $PwLog    = Join-Path $PwOut "playwright.log"
+    $PwLog  = Join-Path $PwOut "playwright.log"
+    $PwJson = Join-Path $PwOut "results.json"
 
     try {
-        # Server health check
-        try {
-            $ping = Invoke-WebRequest -Uri $BaseURL -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
-            Write-Host "Server reachable at $BaseURL" -ForegroundColor Green
-        } catch {
-            Write-Host "WARN: Server not reachable at $BaseURL — Playwright may fail." -ForegroundColor Yellow
-        }
-
-        $env:BASE_URL          = $BaseURL
-        $env:PLAYWRIGHT_WORKERS = $PwWorkers
-        npx playwright test --config="$ScriptRoot\playwright\playwright.config.js" --reporter=json 2>&1 |
-            Tee-Object -FilePath $PwLog
-        Copy-Item "$ScriptRoot\playwright\playwright-results.json" -Destination $PwJson -ErrorAction SilentlyContinue
-
-        if (Test-Path $PwJson) {
-            $PwData    = Get-Content $PwJson -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
-            $WebPasses = ($PwData.suites | ForEach-Object { $_.specs } | Where-Object { $_.ok }).Count
-            $WebFails  = ($PwData.suites | ForEach-Object { $_.specs } | Where-Object { -not $_.ok }).Count
-        }
-        $WebStatus = if ($WebFails -gt 0) { "WARN" } else { "PASS" }
+        $reachable = Invoke-WebRequest -Uri $BaseURL -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
+        Write-Host "Server OK at $BaseURL" -ForegroundColor Green
     } catch {
-        Write-Host "WARN: Playwright run failed: $_" -ForegroundColor Yellow
-        $WebStatus = "WARN"
+        Write-Host "WARN: Server not reachable - Playwright may auto-start it." -ForegroundColor Yellow
     }
-    Write-Host "Playwright status: $WebStatus (Pass: $WebPasses | Fail: $WebFails)"
+
+    $env:BASE_URL            = $BaseURL
+    $env:PLAYWRIGHT_WORKERS  = "$PwWorkers"
+    $pwConfig                = "$ScriptRoot\playwright\playwright.config.js"
+
+    $pwResult = npx playwright test "--config=$pwConfig" "--reporter=json" 2>&1
+    $pwResult | Out-File $PwLog -Encoding utf8
+    $pwResult | Write-Host
+
+    $srcJson = "$ScriptRoot\playwright\playwright-results.json"
+    if (Test-Path $srcJson) {
+        Copy-Item $srcJson -Destination $PwJson -Force
+    }
+
+    if (Test-Path $PwJson) {
+        $parseErr = $null
+        $PwData = Get-Content $PwJson -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        if ($PwData) {
+            $allSpecs  = $PwData.suites | ForEach-Object { $_.specs }
+            $WebPasses = ($allSpecs | Where-Object { $_.ok -eq $true }).Count
+            $WebFails  = ($allSpecs | Where-Object { $_.ok -eq $false }).Count
+        }
+    }
+
+    if ($WebFails -gt 0) { $WebStatus = "WARN" } else { $WebStatus = "PASS" }
+    Write-Host "Playwright status: $WebStatus (Pass:$WebPasses Fail:$WebFails)"
 }
 
-# ─── C. Android Ultimate ─────────────────────────────────────────────────────
+# ===========================================================
+# PHASE C+D: Android + Push
+# ===========================================================
 if (-not $SkipAndroid) {
     Write-Host ""
-    Write-Host "═══════════════════════════════════════" -ForegroundColor DarkMagenta
-    Write-Host "  PHASE C+D — Android + Push Validation" -ForegroundColor Yellow
-    Write-Host "═══════════════════════════════════════"
-    try {
-        & "$ScriptRoot\android\android-ultimate.ps1" -OutDir $OutDir
-        $AndroidJson = Join-Path $OutDir "android\android-summary.json"
-        if (Test-Path $AndroidJson) {
-            $AData         = Get-Content $AndroidJson -Raw | ConvertFrom-Json
-            $AndroidStatus = $AData.status
-            $PushStatus    = $AData.push_validation.status
-        } else {
-            $AndroidStatus = "WARN"
-            $PushStatus    = "WARN"
-        }
-    } catch {
-        Write-Host "WARN: Android runner error: $_" -ForegroundColor Yellow
+    Write-Host "--- PHASE C+D: Android Soak + Push Validation ---" -ForegroundColor Yellow
+    $androidScript = "$ScriptRoot\android\android-ultimate.ps1"
+    $androidResult = & $androidScript -OutDir $OutDir 2>&1
+    $androidResult | Write-Host
+
+    $AndroidJson = Join-Path $OutDir "android\android-summary.json"
+    if (Test-Path $AndroidJson) {
+        $AData = Get-Content $AndroidJson -Raw | ConvertFrom-Json
+        $AndroidStatus = $AData.status
+        $PushStatus    = $AData.push_validation.status
+    } else {
         $AndroidStatus = "WARN"
         $PushStatus    = "WARN"
     }
-    Write-Host "Android status: $AndroidStatus | Push status: $PushStatus"
+    Write-Host "Android: $AndroidStatus | Push: $PushStatus"
 }
 
-# ─── E. Security ──────────────────────────────────────────────────────────────
+# ===========================================================
+# PHASE E: Security
+# ===========================================================
 if (-not $SkipSecurity) {
     Write-Host ""
-    Write-Host "═══════════════════════════════════════" -ForegroundColor DarkMagenta
-    Write-Host "  PHASE E — Security Checks" -ForegroundColor Yellow
-    Write-Host "═══════════════════════════════════════"
-    try {
-        & "$ScriptRoot\security\security-check.ps1" -OutDir $OutDir
-        $SecJson = Join-Path $OutDir "security\security-summary.json"
-        if (Test-Path $SecJson) {
-            $SData     = Get-Content $SecJson -Raw | ConvertFrom-Json
-            $SecStatus = $SData.status
-        } else {
-            $SecStatus = "WARN"
-        }
-    } catch {
-        Write-Host "WARN: Security check error: $_" -ForegroundColor Yellow
+    Write-Host "--- PHASE E: Security Checks ---" -ForegroundColor Yellow
+    $secScript = "$ScriptRoot\security\security-check.ps1"
+    $secResult = & $secScript -OutDir $OutDir 2>&1
+    $secResult | Write-Host
+
+    $SecJson = Join-Path $OutDir "security\security-summary.json"
+    if (Test-Path $SecJson) {
+        $SData     = Get-Content $SecJson -Raw | ConvertFrom-Json
+        $SecStatus = $SData.status
+    } else {
         $SecStatus = "WARN"
     }
-    Write-Host "Security status: $SecStatus"
+    Write-Host "Security: $SecStatus"
 }
 
-# ─── Final Status Logic ───────────────────────────────────────────────────────
+# ===========================================================
+# Final Status
+# ===========================================================
 $FinalStatus = "PASS"
 if ($AndroidStatus -eq "FAIL" -or $K6Status -eq "FAIL" -or $SecStatus -eq "FAIL") {
     $FinalStatus = "FAIL"
-} elseif ($AndroidStatus -eq "WARN" -or $WebStatus -eq "WARN" -or $PushStatus -eq "WARN" -or $SecStatus -eq "WARN") {
+} elseif ($AndroidStatus -eq "WARN" -or $WebStatus -eq "WARN" -or $PushStatus -eq "WARN" -or $SecStatus -eq "WARN" -or $K6Status -eq "WARN") {
     $FinalStatus = "WARN"
 }
 
-$StatusColor = switch ($FinalStatus) { "FAIL" { "Red" } "WARN" { "Yellow" } default { "Green" } }
+# ===========================================================
+# Read data for report
+# ===========================================================
+$AData2  = $null
+$SData2  = $null
+if (Test-Path (Join-Path $OutDir "android\android-summary.json")) {
+    $AData2 = Get-Content (Join-Path $OutDir "android\android-summary.json") -Raw | ConvertFrom-Json
+}
+if (Test-Path (Join-Path $OutDir "security\security-summary.json")) {
+    $SData2 = Get-Content (Join-Path $OutDir "security\security-summary.json") -Raw | ConvertFrom-Json
+}
 
-# ─── Write Final Report ───────────────────────────────────────────────────────
-$AData    = if (Test-Path (Join-Path $OutDir "android\android-summary.json")) { Get-Content (Join-Path $OutDir "android\android-summary.json") -Raw | ConvertFrom-Json } else { $null }
-$SData    = if (Test-Path (Join-Path $OutDir "security\security-summary.json")) { Get-Content (Join-Path $OutDir "security\security-summary.json") -Raw | ConvertFrom-Json } else { $null }
-$ColdAvg  = if ($AData) { $AData.cold_start_avg_ms } else { "N/A" }
-$Cycles   = if ($AData) { $AData.soak_cycles_completed } else { "N/A" }
-$Crash    = if ($AData) { $AData.crash_detected } else { "N/A" }
-$Anr      = if ($AData) { $AData.anr_detected } else { "N/A" }
-$Vulns    = if ($SData) { $SData.npm_high_critical_vulns } else { "N/A" }
-$CspOk    = if ($SData) { $SData.csp_present } else { "N/A" }
+$ColdAvg = if ($AData2) { $AData2.cold_start_avg_ms } else { "N/A" }
+$Cycles  = if ($AData2) { $AData2.soak_cycles_completed } else { "N/A" }
+$Crash   = if ($AData2) { $AData2.crash_detected } else { "N/A" }
+$Anr     = if ($AData2) { $AData2.anr_detected } else { "N/A" }
+$Vulns   = if ($SData2) { $SData2.npm_high_critical_vulns } else { "N/A" }
+$CspOk   = if ($SData2) { $SData2.csp_present } else { "N/A" }
 
-@"
-# 🧪 MMC Ultimate Torture Test Report
+# ===========================================================
+# Write Report
+# ===========================================================
+$lines = @(
+    "# MMC Ultimate Torture Test Report",
+    "",
+    "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm') | Final Status: $FinalStatus",
+    "Output: $OutDir",
+    "",
+    "## A - API Load (k6)",
+    "Status: $K6Status | p95: $K6P95 | Error Rate: $K6ErrorRate",
+    "Logs: $OutDir\k6\k6.log",
+    "",
+    "## B - Web UI (Playwright)",
+    "Status: $WebStatus | Passed: $WebPasses | Failed: $WebFails",
+    "Report: $OutDir\playwright\",
+    "",
+    "## C - Android Stability",
+    "Status: $AndroidStatus | Soak Cycles: $Cycles | Crash: $Crash | ANR: $Anr | Cold Start Avg: ${ColdAvg}ms",
+    "Logcat: $OutDir\android\logcat.txt",
+    "",
+    "## D - Push Notification Validation",
+    "Status: $PushStatus",
+    "",
+    "## E - Security",
+    "Status: $SecStatus | High/Critical Vulns: $Vulns | CSP Present: $CspOk",
+    "Audit: $OutDir\security\npm-audit.json",
+    "",
+    "## Final Result: $FinalStatus",
+    "FAIL = Android crash/ANR OR API threshold OR security critical.",
+    "WARN = Web failures or minor issues.",
+    "PASS = All critical checks green.",
+    "",
+    "Generated: $(Get-Date)"
+)
+$lines | Set-Content $ReportFile
 
-**Date:** $(Get-Date -Format 'yyyy-MM-dd HH:mm') | **Final Status:** $FinalStatus
-**Output Folder:** $OutDir
+# ===========================================================
+# Summary
+# ===========================================================
+$col = "Green"
+if ($FinalStatus -eq "FAIL") { $col = "Red" } elseif ($FinalStatus -eq "WARN") { $col = "Yellow" }
 
----
-
-## A — API Load (k6)
-
-| Metric | Value |
-|--------|-------|
-| Status | $K6Status |
-| p95 | $K6P95 |
-| Error Rate | $K6ErrorRate |
-
-> k6 logs: ``$OutDir\k6\k6.log``
-
----
-
-## B — Web UI (Playwright)
-
-| Metric | Value |
-|--------|-------|
-| Status | $WebStatus |
-| Passed | $WebPasses |
-| Failed | $WebFails |
-
-> Playwright report: ``$OutDir\playwright\``
-
----
-
-## C — Android Stability
-
-| Metric | Value |
-|--------|-------|
-| Status | $AndroidStatus |
-| Soak Cycles | $Cycles |
-| Crash Detected | $Crash |
-| ANR Detected | $Anr |
-| Cold Start Avg | ${ColdAvg}ms |
-
-> Logcat: ``$OutDir\android\logcat.txt``
-> Monkey: ``$OutDir\android\monkey-output.txt``
-
----
-
-## D — Push Notification Validation
-
-| Item | Value |
-|------|-------|
-| Status | $PushStatus |
-
-> Push notes in android-summary.json
-
----
-
-## E — Security
-
-| Check | Value |
-|-------|-------|
-| Status | $SecStatus |
-| High/Critical Vulns | $Vulns |
-| CSP Present | $CspOk |
-
-> npm audit: ``$OutDir\security\npm-audit.json``
-
----
-
-## ✅ Final Result: $FinalStatus
-
-> **FAIL** = Android crash/ANR OR API threshold breach OR security critical.
-> **WARN** = Web failures, minor issues, or skipped sections.
-> **PASS** = All critical checks green.
-
----
-*Generated by run-ultimate.ps1 | MMC Ultimate Suite*
-"@ | Set-Content $ReportFile
-
-# ─── Summary Banner ───────────────────────────────────────────────────────────
 Write-Host ""
-Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor $StatusColor
-Write-Host "║  FINAL STATUS: $FinalStatus$((' ' * (47 - $FinalStatus.Length)))║" -ForegroundColor $StatusColor
-Write-Host "╠══════════════════════════════════════════════════════════════╣" -ForegroundColor $StatusColor
-Write-Host "║  API (k6):      $($K6Status.PadRight(45))║" -ForegroundColor $StatusColor
-Write-Host "║  Web (PW):      $($WebStatus.PadRight(45))║" -ForegroundColor $StatusColor
-Write-Host "║  Android:       $($AndroidStatus.PadRight(45))║" -ForegroundColor $StatusColor
-Write-Host "║  Push:          $($PushStatus.PadRight(45))║" -ForegroundColor $StatusColor
-Write-Host "║  Security:      $($SecStatus.PadRight(45))║" -ForegroundColor $StatusColor
-Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor $StatusColor
+Write-Host "============================================================" -ForegroundColor $col
+Write-Host "  FINAL STATUS: $FinalStatus" -ForegroundColor $col
+Write-Host "  API (k6)  : $K6Status" -ForegroundColor $col
+Write-Host "  Web (PW)  : $WebStatus  (Pass:$WebPasses Fail:$WebFails)" -ForegroundColor $col
+Write-Host "  Android   : $AndroidStatus  (Crash:$Crash ANR:$Anr)" -ForegroundColor $col
+Write-Host "  Push      : $PushStatus" -ForegroundColor $col
+Write-Host "  Security  : $SecStatus  (Vulns:$Vulns CSP:$CspOk)" -ForegroundColor $col
+Write-Host "============================================================" -ForegroundColor $col
 Write-Host ""
-Write-Host "📁 Output: $OutDir" -ForegroundColor Cyan
-Write-Host "📄 Report: $ReportFile" -ForegroundColor Cyan
+Write-Host "Output: $OutDir" -ForegroundColor Cyan
+Write-Host "Report: $ReportFile" -ForegroundColor Cyan
 Write-Host ""

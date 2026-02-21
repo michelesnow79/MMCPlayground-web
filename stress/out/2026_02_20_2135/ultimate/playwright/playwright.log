@@ -1,0 +1,98 @@
+﻿[dotenv@17.3.1] injecting env (0) from ..\..\.env.stress -- tip: ≡ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+{
+  "config": {
+    "configFile": "C:\\Users\\Michele\\MMCPlayground\\missmeconnection\\stress\\ultimate\\playwright\\playwright.config.js",
+    "rootDir": "C:/Users/Michele/MMCPlayground/missmeconnection/stress/ultimate/playwright/tests",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Michele/MMCPlayground/missmeconnection/stress/ultimate/playwright/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "C:/Users/Michele/MMCPlayground/missmeconnection/stress/ultimate/playwright/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 90000
+      },
+      {
+        "outputDir": "C:/Users/Michele/MMCPlayground/missmeconnection/stress/ultimate/playwright/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "C:/Users/Michele/MMCPlayground/missmeconnection/stress/ultimate/playwright/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 90000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 20,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:5173",
+      "reuseExistingServer": true,
+      "timeout": 120000,
+      "stdout": "pipe",
+      "stderr": "pipe",
+      "cwd": "../../../"
+    }
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "Error: Playwright Test did not expect test.describe() to be called here.\nMost common reasons include:\n- You are calling test.describe() in a configuration file.\n- You are calling test.describe() in a file that is imported by the configuration file.\n- You have two different versions of @playwright/test. This usually happens\n  when one of the dependencies in your package.json depends on @playwright/test.",
+      "stack": "Error: Playwright Test did not expect test.describe() to be called here.\nMost common reasons include:\n- You are calling test.describe() in a configuration file.\n- You are calling test.describe() in a file that is imported by the configuration file.\n- You have two different versions of @playwright/test. This usually happens\n  when one of the dependencies in your package.json depends on @playwright/test.\n    at TestTypeImpl._currentSuite (C:\\Users\\Michele\\MMCPlayground\\missmeconnection\\stress\\ultimate\\playwright\\node_modules\\playwright\\lib\\common\\testType.js:75:13)\n    at TestTypeImpl._describe (C:\\Users\\Michele\\MMCPlayground\\missmeconnection\\stress\\ultimate\\playwright\\node_modules\\playwright\\lib\\common\\testType.js:115:24)\n    at Function.describe (C:\\Users\\Michele\\MMCPlayground\\missmeconnection\\stress\\ultimate\\playwright\\node_modules\\playwright\\lib\\transform\\transform.js:282:12)\n    at Object.<anonymous> (C:\\Users\\Michele\\MMCPlayground\\missmeconnection\\stress\\ultimate\\playwright\\tests\\ultimate.spec.js:16:6)",
+      "location": {
+        "file": "C:\\Users\\Michele\\MMCPlayground\\missmeconnection\\stress\\ultimate\\playwright\\tests\\ultimate.spec.js",
+        "column": 6,
+        "line": 16
+      },
+      "snippet": "\u001b[90m   at \u001b[39multimate.spec.js:16\n\n\u001b[0m \u001b[90m 14 |\u001b[39m\n \u001b[90m 15 |\u001b[39m \u001b[90m// ΓöÇΓöÇΓöÇ A. Logged-Out Browse + Auth Wall ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 16 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'(Logged-Out) Browse + Auth Wall'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 17 |\u001b[39m     test(\u001b[32m'Landing page loads and has CTA buttons'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 18 |\u001b[39m         \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 19 |\u001b[39m         \u001b[36mawait\u001b[39m waitForAppReady(page)\u001b[33m;\u001b[39m\u001b[0m"
+    },
+    {
+      "message": "Error: No tests found",
+      "stack": "Error: No tests found"
+    }
+  ],
+  "stats": {
+    "startTime": "2026-02-21T02:36:00.326Z",
+    "duration": 8757.220999999998,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

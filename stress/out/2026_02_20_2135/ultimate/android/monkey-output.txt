@@ -1,0 +1,90 @@
+  bash arg: -p
+  bash arg: com.missmeconnection.app
+  bash arg: --throttle
+  bash arg: 50
+  bash arg: --pct-syskeys
+  bash arg: 0
+  bash arg: --pct-touch
+  bash arg: 40
+  bash arg: --pct-motion
+  bash arg: 30
+  bash arg: --pct-nav
+  bash arg: 10
+  bash arg: --ignore-crashes
+  bash arg: --ignore-timeouts
+  bash arg: 20000
+args: [-p, com.missmeconnection.app, --throttle, 50, --pct-syskeys, 0, --pct-touch, 40, --pct-motion, 30, --pct-nav, 10, --ignore-crashes, --ignore-timeouts, 20000]
+ arg: "-p"
+ arg: "com.missmeconnection.app"
+ arg: "--throttle"
+ arg: "50"
+ arg: "--pct-syskeys"
+ arg: "0"
+ arg: "--pct-touch"
+ arg: "40"
+ arg: "--pct-motion"
+ arg: "30"
+ arg: "--pct-nav"
+ arg: "10"
+ arg: "--ignore-crashes"
+ arg: "--ignore-timeouts"
+ arg: "20000"
+data="com.missmeconnection.app"
+arg="--throttle" mCurArgData="null" mNextArg=3 argwas="--throttle" nextarg="50"
+data="50"
+arg="--pct-syskeys" mCurArgData="null" mNextArg=5 argwas="--pct-syskeys" nextarg="0"
+data="0"
+arg="--pct-touch" mCurArgData="null" mNextArg=7 argwas="--pct-touch" nextarg="40"
+data="40"
+arg="--pct-motion" mCurArgData="null" mNextArg=9 argwas="--pct-motion" nextarg="30"
+data="30"
+arg="--pct-nav" mCurArgData="null" mNextArg=11 argwas="--pct-nav" nextarg="10"
+data="10"
+arg="--ignore-crashes" mCurArgData="null" mNextArg=13 argwas="--ignore-crashes" nextarg="--ignore-timeouts"
+arg="--ignore-timeouts" mCurArgData="null" mNextArg=14 argwas="--ignore-timeouts" nextarg="20000"
+** No activities found to run, monkey aborted.
+  bash arg: -p
+  bash arg: com.missmeconnection.app
+  bash arg: --throttle
+  bash arg: 100
+  bash arg: --pct-syskeys
+  bash arg: 0
+  bash arg: --pct-touch
+  bash arg: 35
+  bash arg: --pct-motion
+  bash arg: 25
+  bash arg: --pct-nav
+  bash arg: 10
+  bash arg: --ignore-crashes
+  bash arg: --ignore-timeouts
+  bash arg: 50000
+args: [-p, com.missmeconnection.app, --throttle, 100, --pct-syskeys, 0, --pct-touch, 35, --pct-motion, 25, --pct-nav, 10, --ignore-crashes, --ignore-timeouts, 50000]
+ arg: "-p"
+ arg: "com.missmeconnection.app"
+ arg: "--throttle"
+ arg: "100"
+ arg: "--pct-syskeys"
+ arg: "0"
+ arg: "--pct-touch"
+ arg: "35"
+ arg: "--pct-motion"
+ arg: "25"
+ arg: "--pct-nav"
+ arg: "10"
+ arg: "--ignore-crashes"
+ arg: "--ignore-timeouts"
+ arg: "50000"
+data="com.missmeconnection.app"
+arg="--throttle" mCurArgData="null" mNextArg=3 argwas="--throttle" nextarg="100"
+data="100"
+arg="--pct-syskeys" mCurArgData="null" mNextArg=5 argwas="--pct-syskeys" nextarg="0"
+data="0"
+arg="--pct-touch" mCurArgData="null" mNextArg=7 argwas="--pct-touch" nextarg="35"
+data="35"
+arg="--pct-motion" mCurArgData="null" mNextArg=9 argwas="--pct-motion" nextarg="25"
+data="25"
+arg="--pct-nav" mCurArgData="null" mNextArg=11 argwas="--pct-nav" nextarg="10"
+data="10"
+arg="--ignore-crashes" mCurArgData="null" mNextArg=13 argwas="--ignore-crashes" nextarg="--ignore-timeouts"
+arg="--ignore-timeouts" mCurArgData="null" mNextArg=14 argwas="--ignore-timeouts" nextarg="50000"
+** No activities found to run, monkey aborted.

@@ -1,0 +1,32 @@
+# Cold start times (ms)
+Run 1: 0ms
+Run 2: 0ms
+Run 3: 0ms
+Run 4: 0ms
+Run 5: 0ms
+Run 6: 0ms
+Run 7: 0ms
+Run 8: 0ms
+Run 9: 0ms
+Run 10: 0ms
+Run 11: 0ms
+Run 12: 0ms
+Run 13: 0ms
+Run 14: 0ms
+Run 15: 0ms
+Run 16: 0ms
+Run 17: 0ms
+Run 18: 0ms
+Run 19: 0ms
+Run 20: 0ms
+Run 21: 0ms
+Run 22: 0ms
+Run 23: 0ms
+Run 24: 0ms
+Run 25: 0ms
+Run 26: 0ms
+Run 27: 0ms
+Run 28: 0ms
+Run 29: 0ms
+Run 30: 0ms
+Cold start avg: 0ms

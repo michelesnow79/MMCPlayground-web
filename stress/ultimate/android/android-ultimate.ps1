@@ -60,9 +60,18 @@ adb shell monkey -p $Package --throttle 100 --pct-syskeys 0 --pct-touch 35 --pct
 Write-Host "Phase 2 done."
 
 $MonkeyContent = Get-Content $MonkeyOut -Raw -ErrorAction SilentlyContinue
-if ($MonkeyContent -match "CRASH|ANR|FATAL EXCEPTION") {
-    Write-Host "WARN: Crash/ANR in Monkey output." -ForegroundColor Red
-    $CrashDetected = $true
+if ($MonkeyContent) {
+    # Only flag real crash events — not the "--ignore-crashes" argument echo
+    $realCrashes = ($MonkeyContent -split "`n") | Where-Object {
+        ($_ -match "CRASH|ANR|FATAL EXCEPTION") -and
+        ($_ -notmatch "\-\-ignore-crashes|\-\-ignore-timeouts|bash arg|mCurArgData")
+    }
+    if ($realCrashes.Count -gt 0) {
+        Write-Host "WARN: Real Crash/ANR detected in Monkey output." -ForegroundColor Red
+        $CrashDetected = $true
+    } else {
+        Write-Host "Monkey completed. No real crashes detected." -ForegroundColor Green
+    }
 }
 
 # ─── Soak Test ───────────────────────────────────────────────────────────────
