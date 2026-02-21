@@ -57,6 +57,9 @@ const ConnectionDetail = () => {
         type: 'danger'
     });
 
+    // Auth wall modal — was referenced at lines 840/842 but never declared (runtime TypeError fix)
+    const [showAuthModal, setShowAuthModal] = React.useState(false);
+
     const handleRate = (val) => {
         if (!user) {
             setShowAuthModal(true);
@@ -763,12 +766,19 @@ const ConnectionDetail = () => {
                                                 if (isSendingReply) return;
                                                 if (!replyText.trim()) return;
 
+                                                // GUARD: must be logged in
+                                                if (!user) {
+                                                    console.error("SEND clicked with no user — showing auth modal");
+                                                    setShowAuthModal(true);
+                                                    return;
+                                                }
+
                                                 // GUARD: owner must have selected a conversation (non-null responderUid)
-                                                if (pin.ownerUid === user?.uid && !activeResponderUid) {
+                                                if (pin.ownerUid === user.uid && !activeResponderUid) {
                                                     setConfirmConfig({
                                                         isOpen: true,
                                                         title: 'NO RECIPIENT',
-                                                        message: "This connection doesn't have a valid recipient yet. Please open a specific conversation from the list above before replying.",
+                                                        message: "Please open a specific conversation from the list above before replying.",
                                                         onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false })),
                                                         confirmText: 'OK',
                                                         type: 'info'
@@ -781,9 +791,11 @@ const ConnectionDetail = () => {
                                                     setIsSendingReply(true);
                                                     setReplyText('');
                                                     await addReply(pin.id, savedText, activeResponderUid);
+                                                    // Success: close the modal
+                                                    setShowReplyModal(false);
                                                 } catch (err) {
-                                                    console.error("Reply failed:", err);
-                                                    setReplyText(savedText); // restore text so user doesn't lose it
+                                                    console.error("Reply failed:", err.code || '', err.message);
+                                                    setReplyText(savedText); // restore text — do not lose user's input
                                                     setConfirmConfig({
                                                         isOpen: true,
                                                         title: 'MESSAGE FAILED',

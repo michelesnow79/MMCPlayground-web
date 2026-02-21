@@ -74,13 +74,23 @@ export const AppProvider = ({ children }) => {
             if (import.meta.env.DEV) {
                 console.log(`🔐 AUTH_STATE_CHANGE: [User: ${firebaseUser ? "LOGGED_IN" : "LOGGED_OUT"}]`);
             }
-            try {
-                if (firebaseUser) {
+            if (firebaseUser) {
+                // EDIT D: Set logged-in state IMMEDIATELY from Firebase Auth —
+                // do NOT wait for Firestore. A Firestore failure must never log the user out.
+                setUser({
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    name: firebaseUser.email.split('@')[0].toUpperCase(),
+                    isAdmin: firebaseUser.email === 'MissMe@missmeconnection.com',
+                });
+                setIsLoggedIn(true);
+                setLoading(false);
+
+                // Hydrate from Firestore in the background — failure here cannot flip isLoggedIn
+                try {
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
                     const userData = userDoc.exists() ? userDoc.data() : {};
-
                     const { uid: _uid, email: _email, ...safeUserData } = userData;
-
                     setUser({
                         ...safeUserData,
                         uid: firebaseUser.uid,
@@ -88,16 +98,16 @@ export const AppProvider = ({ children }) => {
                         name: safeUserData.name || firebaseUser.email.split('@')[0].toUpperCase(),
                         isAdmin: safeUserData.isAdmin || firebaseUser.email === 'MissMe@missmeconnection.com',
                     });
-                    setIsLoggedIn(true);
-                    // 🔔 Register device for push notifications
-                    initPushNotifications(firebaseUser.uid);
-                } else {
-                    setUser(null);
-                    setIsLoggedIn(false);
+                } catch (firestoreErr) {
+                    console.error("Firestore user hydration failed (auth state unchanged):", firestoreErr);
+                    // Do NOT setIsLoggedIn(false) — user IS authenticated via Firebase Auth
                 }
-            } catch (err) {
-                console.error("Auth sync error:", err);
-            } finally {
+
+                // 🔔 Register device for push notifications
+                initPushNotifications(firebaseUser.uid);
+            } else {
+                setUser(null);
+                setIsLoggedIn(false);
                 setLoading(false);
             }
         });
@@ -660,9 +670,10 @@ export const AppProvider = ({ children }) => {
     // responderUid: Optional. If sending as owner, specify who you are replying to. 
     // If sending as participant, omit (defaults to current user).
     const addReply = async (pinId, content, responderUid = null) => {
+        // EDIT B: throw instead of silent return — caller's catch block depends on this
         if (!user) {
             console.error("❌ addReply Failed: User not logged in.");
-            return;
+            throw new Error("You must be logged in to send a message.");
         }
 
         // 1. Guards
