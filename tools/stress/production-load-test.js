@@ -68,7 +68,7 @@ const USERS = getUsers();
 const DURATION_S = getDuration();
 const RPS_PER_USER = getRPS();
 const PATTERN = getPattern();
-const IS_LIVE = !config.projectId.includes('demo') && !config.projectId.includes('emulator');
+const IS_LIVE = !(config.projectId || '').includes('demo') && !(config.projectId || '').includes('emulator');
 
 // Safety Caps
 const TOTAL_MSG_CAP = Math.min(USERS * RPS_PER_USER * DURATION_S * 1.5, 20000);
@@ -83,8 +83,12 @@ async function startLoadTest() {
         console.log(`🛑 Max Msgs: ${TOTAL_MSG_CAP}`);
     }
 
-    if (!isLight && IS_LIVE && process.env.CONFIRM_PROD !== 'YES' && !isJSON) {
-        console.error("\n🛑 SAFETY REJECTED: Standard load tests on LIVE projects require CONFIRM_PROD=YES");
+    if (!isLight && IS_LIVE && process.env.CONFIRM_PROD !== 'YES') {
+        if (isJSON) {
+            console.error(JSON.stringify({ error: "SAFETY REJECTED: CONFIRM_PROD=YES required" }));
+        } else {
+            console.error("\n🛑 SAFETY REJECTED: Standard load tests on LIVE projects require CONFIRM_PROD=YES");
+        }
         process.exit(1);
     }
 
@@ -93,17 +97,22 @@ async function startLoadTest() {
         succeeded: 0,
         errors: [],
         latencies: [],
-        observed: 0,
+        observedIds: new Set(),
+        duplicates: 0,
         startTime: Date.now(),
         endTime: null,
         pattern: PATTERN,
-        users: USERS
+        users: USERS,
+        missing: 0,
+        threadsCreated: 0,
+        msgsCreated: 0,
+        watchedThreadIds: new Set(),
+        succeededInWatched: 0
     };
 
     const killSwitch = { active: false, reason: "" };
 
     // Initialize Firebase apps for participants
-    // To scale, we use a pool of responder auths
     const ownerApp = initializeApp(config, `owner-${Date.now()}`);
     const ownerAuth = getAuth(ownerApp);
     const ownerDb = getFirestore(ownerApp);
@@ -113,41 +122,74 @@ async function startLoadTest() {
     try {
         if (!isJSON) console.log(`⏳ Initializing ${USERS} user(s)...`);
 
-        // 1. Create Owner
-        const ts = Date.now();
-        const pw = `StressPass_${ts}!`;
-        const ownerEmail = `STRESS_OWNER_${ts}@load.local`;
-        const ownerRes = await createUserWithEmailAndPassword(ownerAuth, ownerEmail, pw);
-        const ownerUid = ownerRes.user.uid;
+        // 1. Create/Login Participant Pool
+        // Use a semaphore to ensure only one auth attempt every 2s (bypass too-many-requests)
+        let lastAuthTime = 0;
+        const authSemaphore = async () => {
+            const now = Date.now();
+            const delay = Math.max(0, lastAuthTime + 2000 - now);
+            if (delay > 0) await new Promise(r => setTimeout(r, delay));
+            lastAuthTime = Date.now();
+        };
+
+        const loginOrCreate = async (auth, email, password) => {
+            await authSemaphore();
+            try {
+                const res = await signInWithEmailAndPassword(auth, email, password);
+                return res.user.uid;
+            } catch (e) {
+                if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+                    try {
+                        const res = await createUserWithEmailAndPassword(auth, email, password);
+                        return res.user.uid;
+                    } catch (e2) {
+                        if (e2.code === 'auth/too-many-requests') {
+                            if (!isJSON) console.log(`⚠️ Auth Hard Throttled. Waiting 30s...`);
+                            await new Promise(r => setTimeout(r, 30000));
+                            return (await signInWithEmailAndPassword(auth, email, password)).user.uid;
+                        }
+                        throw e2;
+                    }
+                }
+                throw e;
+            }
+        };
+
+        const dayTs = "LOCKED_STRESS_V1";
+        const pw = `StressPass_Locked!`;
+        const ownerEmail = `STRESS_OWNER_SHARED@load.local`;
+
+        if (!isJSON) console.log(`⏳ Authenticating owner...`);
+        const ownerUid = await loginOrCreate(ownerAuth, ownerEmail, pw);
 
         // 2. Create Pin
-        const pinId = `STRESS_PIN_${ts}`;
-        await setDoc(doc(ownerDb, "pins", pinId), {
-            title: `STRESS LOAD ${PATTERN}`,
+        const runId = Date.now();
+        const pinRefId = `STRESS_PIN_${PATTERN}_${runId}`;
+
+        await setDoc(doc(ownerDb, "pins", pinRefId), {
+            title: `STRESS LOAD ${PATTERN} ${runId}`,
             ownerUid,
             ownerEmail,
             createdAt: serverTimestamp()
         });
 
-        // 3. Create Responders & Threads
-        // For FANIN: 1 Responder, 1 Thread (but USERS concurrent workers)
-        // For FANOUT: (USERS) Responders, (USERS) Threads
+        // 3. Create/Login Responders & Threads
         const numResponders = PATTERN === 'fanin' ? 1 : USERS;
 
         for (let i = 0; i < numResponders; i++) {
-            const rApp = initializeApp(config, `resp-${i}-${ts}`);
+            if (!isJSON && numResponders > 1) console.log(`⏳ Initializing responder ${i + 1}/${numResponders}...`);
+            const rApp = initializeApp(config, `resp-${i}-${dayTs}`);
             const rAuth = getAuth(rApp);
             const rDb = getFirestore(rApp);
-            const rEmail = `STRESS_RESP_${i}_${ts}@load.local`;
+            const rEmail = `STRESS_RESP_${i}_SHARED@load.local`;
 
-            const rRes = await createUserWithEmailAndPassword(rAuth, rEmail, pw);
-            const rUid = rRes.user.uid;
+            const rUid = await loginOrCreate(rAuth, rEmail, pw);
 
-            const threadId = `${pinId}_${rUid}`;
+            const threadId = `${pinRefId}_${rUid}`;
             const threadRef = doc(rDb, "threads", threadId);
 
             await setDoc(threadRef, {
-                pinId,
+                pinId: pinRefId,
                 ownerUid,
                 ownerEmail,
                 responderUid: rUid,
@@ -172,15 +214,22 @@ async function startLoadTest() {
         const threadIds = responders.map(r => r.threadId);
 
         const setupListener = (tid) => {
-            const q = query(collection(ownerDb, "threads", tid, "messages"), orderBy("createdAt", "desc"), limit(1));
+            stats.watchedThreadIds.add(tid);
+            // Removed limit(1) to ensure all messages are captured for accounting
+            const q = query(collection(ownerDb, "threads", tid, "messages"), orderBy("createdAt", "asc"));
             return onSnapshot(q, (snap) => {
                 snap.docChanges().forEach(change => {
                     if (change.type === 'added') {
+                        const msgId = change.doc.id;
                         const data = change.doc.data();
                         if (data.sentAtLocal) {
-                            stats.observed++;
-                            const latency = Date.now() - data.sentAtLocal;
-                            if (latency >= 0) stats.latencies.push(latency);
+                            if (stats.observedIds.has(msgId)) {
+                                stats.duplicates++;
+                            } else {
+                                stats.observedIds.add(msgId);
+                                const latency = Date.now() - data.sentAtLocal;
+                                if (latency >= 0) stats.latencies.push(latency);
+                            }
                         }
                     }
                 });
@@ -190,7 +239,7 @@ async function startLoadTest() {
         if (PATTERN === 'fanin') {
             unsubs.push(setupListener(responders[0].threadId));
         } else {
-            // Cap listeners at 20 for stability in one process, or one for each if small
+            // Cap listeners at 20 for stability in one process
             const maxListeners = Math.min(responders.length, 20);
             for (let i = 0; i < maxListeners; i++) {
                 unsubs.push(setupListener(responders[i].threadId));
@@ -228,6 +277,9 @@ async function startLoadTest() {
 
                     await batch.commit();
                     stats.succeeded++;
+                    if (stats.watchedThreadIds.has(r.threadId)) {
+                        stats.succeededInWatched++;
+                    }
                 } catch (err) {
                     stats.errors.push({ code: err.code, message: err.message, ts: Date.now() });
                     if (stats.errors.length > CONSECUTIVE_ERROR_LIMIT) {
@@ -250,8 +302,8 @@ async function startLoadTest() {
         await Promise.all(workers);
         stats.endTime = Date.now();
 
-        // Wait a bit for final listener packets
-        await new Promise(r => setTimeout(r, 2000));
+        // Wait a bit for final listener packets (10s for total sync at scale)
+        await new Promise(r => setTimeout(r, 10000));
         unsubs.forEach(u => u());
 
         // 6. Report
@@ -262,13 +314,20 @@ async function startLoadTest() {
         const p95 = sortedLatencies[Math.floor(sortedLatencies.length * 0.95)] || 0;
         const p99 = sortedLatencies[Math.floor(sortedLatencies.length * 0.99)] || 0;
 
+        const observedCount = stats.observedIds.size;
+        // Logic: If we are only watching a subset of threads (fanout), 'missing' is based on that subset.
+        const relevantSucceeded = PATTERN === 'fanin' ? stats.succeeded : stats.succeededInWatched;
+        const missingCount = Math.max(0, relevantSucceeded - observedCount);
+
         if (isJSON) {
             console.log(JSON.stringify({
                 pattern: PATTERN,
                 users: USERS,
                 attempted: stats.attempted,
                 succeeded: stats.succeeded,
-                observed: stats.observed,
+                observed: observedCount,
+                missing: missingCount,
+                duplicates: stats.duplicates,
                 throughput,
                 p50, p95, p99,
                 errorCount: stats.errors.length,
@@ -282,8 +341,10 @@ async function startLoadTest() {
                 "Pattern": PATTERN,
                 "Users": USERS,
                 "Throughput (msg/s)": throughput,
-                "Success Rate": `${((stats.succeeded / stats.attempted) * 100).toFixed(2)}%`,
-                "Observed Rate": `${((stats.observed / stats.succeeded) * 100).toFixed(2)}%`,
+                "Succeeded": stats.succeeded,
+                "Observed (Unique)": observedCount,
+                "Missing": missingCount,
+                "Duplicates": stats.duplicates,
                 "p50 Latency (ms)": p50,
                 "p95 Latency (ms)": p95,
                 "p99 Latency (ms)": p99,
@@ -296,13 +357,18 @@ async function startLoadTest() {
                 console.table(errMap);
             }
 
-            console.log(`\nOVERALL: ${stats.succeeded > 0 && (stats.succeeded / stats.attempted) > 0.8 ? '✅ PASS' : '❌ FAIL'}`);
+            console.log(`\nOVERALL: ${stats.succeeded > 0 && (stats.succeeded / stats.attempted) > 0.8 && missingCount === 0 ? '✅ PASS' : '❌ FAIL'}`);
         }
 
-        process.exit(stats.succeeded > 0 && (stats.succeeded / stats.attempted) > 0.8 ? 0 : 1);
+        process.exit(stats.succeeded > 0 && (stats.succeeded / stats.attempted) > 0.8 && missingCount === 0 ? 0 : 1);
 
     } catch (e) {
-        if (!isJSON) console.error("\n❌ Test Failed:", e.message);
+        if (isJSON) {
+            console.error(JSON.stringify({ error: e.message, status: "FAILED" }));
+        } else {
+            console.error("\n❌ Test Failed:", e.message);
+            console.error(e.stack);
+        }
         process.exit(1);
     }
 }
