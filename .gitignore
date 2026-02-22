@@ -28,3 +28,4 @@ site_*.png
 # System
 .git
 .DS_Store
+contents.xcworkspacedata
