@@ -10,6 +10,8 @@ telemetry.startTimer('app_boot');
 
 
 
+console.log('🟢 MAIN.JSX RUNNING');
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>

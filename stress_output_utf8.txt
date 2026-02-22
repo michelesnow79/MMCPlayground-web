@@ -1,0 +1,40 @@
+﻿
+> missmeconnection@0.0.0 stress:light
+> node tools/stress/production-load-test.js --mode=light
+
+[dotenv@17.3.1] injecting env (8) from .env -- tip: ≡ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+
+≡ƒÜÇ PRODUCTION SAFE LOAD TEST [Mode: LIGHT]
+≡ƒæÑ Users: 2 | ΓÅ▒∩╕Å Duration: 30s | ≡ƒ¢æ Cap: 500 msgs
+≡ƒôì Project: mmcplayground
+
+≡ƒöÉ NAMED ACCOUNTS FOR ANDROID LOG-IN:
+≡ƒôº Owner: stress_owner_1771717652888@mmc.local
+≡ƒôº Resp:  stress_responder_1771717652888@mmc.local
+≡ƒöæ Pass:  StressPass_1771717652888! (Use for both)
+----------------------------------------
+Creating accounts & Pin...
+Γ£à Pin Created: STRESS_TEST_PIN_1771717652888
+Γ£à Thread ID:  STRESS_TEST_PIN_1771717652888_FceFbITDnxdWX6yuKmFngwb8vqw1
+----------------------------------------
+≡ƒô¿ Phase: Sustained Send + Listeners...
+
+========================================
+≡ƒôè LOAD TEST SUMMARY
+========================================
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé (index)          Γöé Values    Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé Attempted Sends  Γöé 28        Γöé
+Γöé Succeeded Sends  Γöé 28        Γöé
+Γöé Success Rate     Γöé '100.00%' Γöé
+Γöé p50 Latency (ms) Γöé 0         Γöé
+Γöé p95 Latency (ms) Γöé 0         Γöé
+Γöé p99 Latency (ms) Γöé 0         Γöé
+Γöé Duplicates       Γöé 0         Γöé
+Γöé Threads Created  Γöé 1         Γöé
+Γöé Total Msgs       Γöé 28        Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+OVERALL: Γ£à PASS
+

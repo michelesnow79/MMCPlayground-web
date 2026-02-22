@@ -28,15 +28,15 @@ function App() {
     const initNativeFeatures = async () => {
       if (Capacitor.isNativePlatform()) {
         try {
+          // Hide splash screen immediately so we can see what's happening
+          await SplashScreen.hide();
+
           // Make status bar dark and transparent for that premium look
           await StatusBar.setStyle({ style: Style.Dark });
           await StatusBar.setBackgroundColor({ color: '#1a1a1b' });
 
           // Initialize Notifications
           await registerNotifications();
-
-          // Hide splash screen once app is ready
-          await SplashScreen.hide();
         } catch (e) {
           console.warn('Capacitor plugin failed to init:', e);
         }

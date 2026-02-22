@@ -10,7 +10,11 @@
     "preview": "vite preview",
     "mobile:sync": "npm run build && npx cap sync",
     "mobile:open:android": "npx cap open android",
-    "mobile:open:ios": "npx cap open ios"
+    "mobile:open:ios": "npx cap open ios",
+    "stress:proof": "node tools/stress/proof.js",
+    "stress:light": "node tools/stress/production-load-test.js --mode=light",
+    "stress": "node tools/stress/production-load-test.js",
+    "stress:cleanup": "node tools/stress/cleanup-stress.js"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
