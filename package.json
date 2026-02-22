@@ -14,6 +14,7 @@
     "stress:proof": "node tools/stress/proof.js",
     "stress:light": "node tools/stress/production-load-test.js --mode=light",
     "stress": "node tools/stress/production-load-test.js",
+    "stress:scale": "node tools/stress/scale.js",
     "stress:cleanup": "node tools/stress/cleanup-stress.js"
   },
   "dependencies": {

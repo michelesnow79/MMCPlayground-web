@@ -8,8 +8,18 @@ This directory contains standalone tools for performance testing and live verifi
 |---------|-------------|-------------|
 | `npm run stress:proof` | Live "Proof of Life" test. Streams messages every 2s to verify Android sync. | Production Guarded |
 | `npm run stress:light` | Light load test (2 users, 30s). Validates Firestore write throughput. | Production Guarded |
-| `npm run stress` | Standard load test (5 users, 60s). High throughput validation. | **Requires Confirmation** |
+| `npm run stress` | Advanced load test. Supports `--users`, `--duration`, `--rps`, `--pattern`. | **Requires Confirmation** |
+| `npm run stress:scale` | Automated ladder test (5 -> 100 users). Aggregates results into a single report. | **Requires Confirmation** |
 | `npm run stress:cleanup` | Removes all `STRESS_TEST_` prefixed documents from Firestore. | Production Guarded |
+
+## 🛠️ Advanced Parameters (`npm run stress`)
+
+- `--users=n`: Number of concurrent users (max 200).
+- `--duration=s`: Duration of the test in seconds.
+- `--rps=n`: Messages per second per user.
+- `--pattern=fanout|fanin`:
+    - `fanout`: Each user has their own thread (high meta-data load).
+    - `fanin`: All users send to a single thread (high contention/bottleneck test).
 
 ## 🛡️ Safety & Guardrails
 

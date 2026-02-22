@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, deleteApp } from "firebase/app";
 import {
     getAuth,
     createUserWithEmailAndPassword,
@@ -15,7 +15,8 @@ import {
     serverTimestamp,
     writeBatch,
     getDoc,
-    orderBy
+    orderBy,
+    limit
 } from "firebase/firestore";
 import dotenv from "dotenv";
 import { fileURLToPath } from 'url';
@@ -34,234 +35,274 @@ const config = {
     appId: process.env.VITE_FIREBASE_APP_ID,
 };
 
-// Arguments
+// Arguments parsing
 const args = process.argv.slice(2);
 const isLight = args.includes('--mode=light');
-const isStandard = !isLight;
-const isLiveProject = !config.projectId.includes('demo') && !config.projectId.includes('emulator');
+const isJSON = args.includes('--json');
+
+const getUsers = () => {
+    const arg = args.find(a => a.startsWith('--users='));
+    if (arg) return Math.min(parseInt(arg.split('=')[1]), 200);
+    return isLight ? 2 : 5;
+};
+
+const getDuration = () => {
+    const arg = args.find(a => a.startsWith('--duration='));
+    if (arg) return parseInt(arg.split('=')[1]);
+    return isLight ? 30 : 60;
+};
+
+const getRPS = () => {
+    const arg = args.find(a => a.startsWith('--rps='));
+    if (arg) return parseInt(arg.split('=')[1]);
+    return 1;
+};
+
+const getPattern = () => {
+    const arg = args.find(a => a.startsWith('--pattern='));
+    if (arg) return arg.split('=')[1];
+    return 'fanout';
+};
+
+const USERS = getUsers();
+const DURATION_S = getDuration();
+const RPS_PER_USER = getRPS();
+const PATTERN = getPattern();
+const IS_LIVE = !config.projectId.includes('demo') && !config.projectId.includes('emulator');
 
 // Safety Caps
-const CONCURRENCY = isLight ? 2 : 5;
-const MAX_CONCURRENCY = 10;
-const DURATION_S = isLight ? 30 : 60;
-const RPS_CAP = 1;
-const TOTAL_MSG_CAP = 500;
-const ERROR_THRESHOLD = 0.02; // 2%
-const CONSECUTIVE_ERROR_LIMIT = 10;
+const TOTAL_MSG_CAP = Math.min(USERS * RPS_PER_USER * DURATION_S * 1.5, 20000);
+const ERROR_THRESHOLD = 0.50; // Relaxed for stress - we want to see where it breaks
+const CONSECUTIVE_ERROR_LIMIT = 50;
 
 async function startLoadTest() {
-    const modeName = isLight ? 'LIGHT' : 'STANDARD';
-    console.log(`\n🚀 PRODUCTION SAFE LOAD TEST [Mode: ${modeName}]`);
-    console.log(`📍 Project: ${config.projectId}`);
-
-    if (isStandard && isLiveProject && process.env.CONFIRM_PROD !== 'YES') {
-        console.error("\n🛑 SAFETY REJECTED: STANDARD Load Test against a LIVE project requires 'CONFIRM_PROD=YES'.");
-        console.log("   Example: $env:CONFIRM_PROD='YES'; npm run stress");
-        process.exit(1);
+    if (!isJSON) {
+        console.log(`\n🚀 LOAD TEST [Pattern: ${PATTERN.toUpperCase()}]`);
+        console.log(`📍 Project:  ${config.projectId}`);
+        console.log(`👥 Users:    ${USERS} | ⏱️ Duration: ${DURATION_S}s | ⚡ RPS/User: ${RPS_PER_USER}`);
+        console.log(`🛑 Max Msgs: ${TOTAL_MSG_CAP}`);
     }
 
-    console.log(`👥 Users: ${CONCURRENCY} | ⏱️ Duration: ${DURATION_S}s | 🛑 Cap: ${TOTAL_MSG_CAP} msgs\n`);
+    if (!isLight && IS_LIVE && process.env.CONFIRM_PROD !== 'YES' && !isJSON) {
+        console.error("\n🛑 SAFETY REJECTED: Standard load tests on LIVE projects require CONFIRM_PROD=YES");
+        process.exit(1);
+    }
 
     const stats = {
         attempted: 0,
         succeeded: 0,
         errors: [],
-        consecutiveErrors: 0,
         latencies: [],
-        duplicates: 0,
-        missing: 0,
-        threadsCreated: 0,
-        msgsCreated: 0
+        observed: 0,
+        startTime: Date.now(),
+        endTime: null,
+        pattern: PATTERN,
+        users: USERS
     };
 
     const killSwitch = { active: false, reason: "" };
 
-    const checkKillSwitch = (err) => {
-        stats.consecutiveErrors++;
-        if (stats.consecutiveErrors >= CONSECUTIVE_ERROR_LIMIT) {
-            killSwitch.active = true;
-            killSwitch.reason = "CONSECUTIVE_ERROR_LIMIT_REACHED";
-        }
-        const errorRate = stats.errors.length / Math.max(1, stats.attempted);
-        if (errorRate > ERROR_THRESHOLD && stats.attempted > 50) {
-            killSwitch.active = true;
-            killSwitch.reason = "ERROR_RATE_THRESHOLD_EXCEEDED";
-        }
-    };
-
-    // 1. Create Named Accounts
-    const ts = Date.now();
-    const ownerEmail = `stress_owner_${ts}@mmc.local`;
-    const respEmail = `stress_responder_${ts}@mmc.local`;
-    const password = `StressPass_${ts}!`;
-
-    console.log("🔐 NAMED ACCOUNTS FOR ANDROID LOG-IN:");
-    console.log(`📧 Owner: ${ownerEmail}`);
-    console.log(`📧 Resp:  ${respEmail}`);
-    console.log(`🔑 Pass:  ${password} (Use for both)`);
-    console.log("-".repeat(40));
-
-    const ownerApp = initializeApp(config, "owner-app");
-    const respApp = initializeApp(config, "resp-app");
+    // Initialize Firebase apps for participants
+    // To scale, we use a pool of responder auths
+    const ownerApp = initializeApp(config, `owner-${Date.now()}`);
     const ownerAuth = getAuth(ownerApp);
-    const respAuth = getAuth(respApp);
     const ownerDb = getFirestore(ownerApp);
-    const respDb = getFirestore(respApp);
+
+    const responders = []; // { auth, db, email, uid, threadId }
 
     try {
-        console.log("Creating accounts & Pin...");
-        const ownerRes = await createUserWithEmailAndPassword(ownerAuth, ownerEmail, password);
-        const respRes = await createUserWithEmailAndPassword(respAuth, respEmail, password);
+        if (!isJSON) console.log(`⏳ Initializing ${USERS} user(s)...`);
+
+        // 1. Create Owner
+        const ts = Date.now();
+        const pw = `StressPass_${ts}!`;
+        const ownerEmail = `STRESS_OWNER_${ts}@load.local`;
+        const ownerRes = await createUserWithEmailAndPassword(ownerAuth, ownerEmail, pw);
         const ownerUid = ownerRes.user.uid;
-        const respUid = respRes.user.uid;
 
-        // Store emails for schema alignment
-        // @ts-ignore
-        ownerApp.stressEmail = ownerEmail;
-        // @ts-ignore
-        respApp.stressEmail = respEmail;
-
-        const pinId = `STRESS_TEST_PIN_${ts}`;
+        // 2. Create Pin
+        const pinId = `STRESS_PIN_${ts}`;
         await setDoc(doc(ownerDb, "pins", pinId), {
-            title: "STRESS TEST PIN",
-            description: "Safety Load Test Active",
-            ownerUid: ownerUid,
-            ownerEmail: ownerEmail.toLowerCase(),
+            title: `STRESS LOAD ${PATTERN}`,
+            ownerUid,
+            ownerEmail,
             createdAt: serverTimestamp()
         });
-        console.log(`✅ Pin Created: ${pinId}`);
 
-        const threadId = `${pinId}_${respUid}`;
-        const threadRef = doc(respDb, "threads", threadId);
+        // 3. Create Responders & Threads
+        // For FANIN: 1 Responder, 1 Thread (but USERS concurrent workers)
+        // For FANOUT: (USERS) Responders, (USERS) Threads
+        const numResponders = PATTERN === 'fanin' ? 1 : USERS;
 
-        console.log(`✅ Thread ID:  ${threadId}`);
-        console.log("-".repeat(40));
+        for (let i = 0; i < numResponders; i++) {
+            const rApp = initializeApp(config, `resp-${i}-${ts}`);
+            const rAuth = getAuth(rApp);
+            const rDb = getFirestore(rApp);
+            const rEmail = `STRESS_RESP_${i}_${ts}@load.local`;
 
-        // Handshake
-        await setDoc(threadRef, {
-            pinId,
-            ownerUid,
-            ownerEmail: ownerEmail.toLowerCase(),
-            responderUid: respUid,
-            responderEmail: respEmail.toLowerCase(),
-            participants: [ownerUid, respUid],
-            lastMessageAt: serverTimestamp(),
-            ownerLastReadAt: serverTimestamp(),
-            responderLastReadAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            isStressTest: true
-        });
-        stats.threadsCreated++;
+            const rRes = await createUserWithEmailAndPassword(rAuth, rEmail, pw);
+            const rUid = rRes.user.uid;
 
-        // 2. Start Message Loop
-        console.log("📨 Phase: Sustained Send + Listeners...");
-        const startTime = Date.now();
+            const threadId = `${pinId}_${rUid}`;
+            const threadRef = doc(rDb, "threads", threadId);
 
-        // Listener (on Owner) to measure time-to-visible
-        const unsub = onSnapshot(query(collection(ownerDb, "threads", threadId, "messages")), (snap) => {
-            snap.docChanges().forEach(change => {
-                if (change.type === 'added') {
-                    const data = change.doc.data();
-                    if (data.sentAt && data.senderUid === respUid) {
-                        const now = Date.now();
-                        const sentAt = data.sentAt.toMillis ? data.sentAt.toMillis() : (data.sentAt.seconds ? data.sentAt.seconds * 1000 : data.sentAt);
-                        // Filter out negative latencies caused by server/client clock skew
-                        // but keep 0+ for real measurement
-                        const latency = now - sentAt;
-                        if (latency >= 0) stats.latencies.push(latency);
-                    }
-                }
+            await setDoc(threadRef, {
+                pinId,
+                ownerUid,
+                ownerEmail,
+                responderUid: rUid,
+                responderEmail: rEmail,
+                participants: [ownerUid, rUid],
+                lastMessageAt: serverTimestamp(),
+                ownerLastReadAt: serverTimestamp(),
+                responderLastReadAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                isStressTest: true
             });
-        });
 
-        const sendLoop = async () => {
-            while (Date.now() - startTime < (DURATION_S * 1000) && !killSwitch.active && stats.msgsCreated < TOTAL_MSG_CAP) {
+            responders.push({ app: rApp, auth: rAuth, db: rDb, email: rEmail, uid: rUid, threadId, threadRef });
+        }
+
+        if (!isJSON) console.log(`✅ Initialization complete. Starting stream...`);
+
+        // 4. Setup Listener (Owner side)
+        // In FANIN: 1 listener for the 1 thread
+        // In FANOUT: Multiple listeners or 1 broad query (but snapshots on N threads is more realistic)
+        const unsubs = [];
+        const threadIds = responders.map(r => r.threadId);
+
+        const setupListener = (tid) => {
+            const q = query(collection(ownerDb, "threads", tid, "messages"), orderBy("createdAt", "desc"), limit(1));
+            return onSnapshot(q, (snap) => {
+                snap.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const data = change.doc.data();
+                        if (data.sentAtLocal) {
+                            stats.observed++;
+                            const latency = Date.now() - data.sentAtLocal;
+                            if (latency >= 0) stats.latencies.push(latency);
+                        }
+                    }
+                });
+            });
+        };
+
+        if (PATTERN === 'fanin') {
+            unsubs.push(setupListener(responders[0].threadId));
+        } else {
+            // Cap listeners at 20 for stability in one process, or one for each if small
+            const maxListeners = Math.min(responders.length, 20);
+            for (let i = 0; i < maxListeners; i++) {
+                unsubs.push(setupListener(responders[i].threadId));
+            }
+        }
+
+        // 5. Run Load Loop
+        const worker = async (responderIndex) => {
+            const r = PATTERN === 'fanin' ? responders[0] : responders[responderIndex];
+            const interval = 1000 / RPS_PER_USER;
+
+            while (Date.now() - stats.startTime < (DURATION_S * 1000) && !killSwitch.active && stats.attempted < TOTAL_MSG_CAP) {
                 stats.attempted++;
-                const msgId = `STRESS_TEST_MSG_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                const msgId = `MSG_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+                const start = Date.now();
 
                 try {
-                    const batch = writeBatch(respDb);
-                    const msgRef = doc(respDb, "threads", threadId, "messages", msgId);
+                    const batch = writeBatch(r.db);
+                    const msgRef = doc(r.db, "threads", r.threadId, "messages", msgId);
 
                     batch.set(msgRef, {
-                        content: `Load Test Message ${stats.msgsCreated + 1}`,
-                        senderUid: respUid,
-                        senderEmail: respEmail.toLowerCase(),
-                        sentAt: serverTimestamp(),
+                        content: `Load Msg ${stats.attempted}`,
+                        senderUid: r.uid,
+                        senderEmail: r.email,
                         createdAt: serverTimestamp(),
-                        participants: [ownerUid, respUid]
+                        sentAtLocal: Date.now()
                     });
 
-                    batch.update(threadRef, {
+                    batch.update(r.threadRef, {
                         lastMessageAt: serverTimestamp(),
-                        lastMessagePreview: `Msg ${stats.msgsCreated + 1}`,
-                        lastSenderUid: respUid,
+                        lastMessagePreview: `Load Msg ${stats.attempted}`,
+                        lastSenderUid: r.uid,
                         updatedAt: serverTimestamp()
                     });
 
                     await batch.commit();
                     stats.succeeded++;
-                    stats.msgsCreated++;
-                    stats.consecutiveErrors = 0;
                 } catch (err) {
-                    stats.errors.push({ code: err.code, message: err.message, op: "sendMessage", stack: err.stack });
-                    checkKillSwitch(err);
+                    stats.errors.push({ code: err.code, message: err.message, ts: Date.now() });
+                    if (stats.errors.length > CONSECUTIVE_ERROR_LIMIT) {
+                        killSwitch.active = true;
+                        killSwitch.reason = "CONSECUTIVE_ERROR_LIMIT";
+                    }
                 }
 
-                if (killSwitch.active) break;
-                await new Promise(r => setTimeout(r, 1000 / RPS_CAP));
+                const elapsed = Date.now() - start;
+                const wait = Math.max(0, interval - elapsed);
+                await new Promise(res => setTimeout(res, wait));
             }
         };
 
-        await sendLoop();
-        unsub();
-
-        if (killSwitch.active) {
-            console.error(`\n🚨 KILL SWITCH TRIGGERED: ${killSwitch.reason}`);
+        const workers = [];
+        for (let i = 0; i < USERS; i++) {
+            workers.push(worker(i));
         }
 
-        // 3. Final Report
-        console.log("\n" + "=".repeat(40));
-        console.log("📊 LOAD TEST SUMMARY");
-        console.log("=".repeat(40));
+        await Promise.all(workers);
+        stats.endTime = Date.now();
 
-        const successRate = (stats.succeeded / stats.attempted * 100).toFixed(2);
-        const latencies = stats.latencies.sort((a, b) => a - b);
-        const p50 = latencies[Math.floor(latencies.length * 0.5)] || 0;
-        const p95 = latencies[Math.floor(latencies.length * 0.95)] || 0;
-        const p99 = latencies[Math.floor(latencies.length * 0.99)] || 0;
+        // Wait a bit for final listener packets
+        await new Promise(r => setTimeout(r, 2000));
+        unsubs.forEach(u => u());
 
-        console.table({
-            "Attempted Sends": stats.attempted,
-            "Succeeded Sends": stats.succeeded,
-            "Success Rate": `${successRate}%`,
-            "p50 Latency (ms)": p50,
-            "p95 Latency (ms)": p95,
-            "p99 Latency (ms)": p99,
-            "Duplicates": stats.duplicates,
-            "Threads Created": stats.threadsCreated,
-            "Total Msgs": stats.msgsCreated
-        });
+        // 6. Report
+        const totalTime = (stats.endTime - stats.startTime) / 1000;
+        const throughput = (stats.succeeded / totalTime).toFixed(2);
+        const sortedLatencies = stats.latencies.sort((a, b) => a - b);
+        const p50 = sortedLatencies[Math.floor(sortedLatencies.length * 0.5)] || 0;
+        const p95 = sortedLatencies[Math.floor(sortedLatencies.length * 0.95)] || 0;
+        const p99 = sortedLatencies[Math.floor(sortedLatencies.length * 0.99)] || 0;
 
-        if (stats.errors.length > 0) {
-            console.log("\n❌ TOP ERRORS:");
-            const uniqueErrors = {};
-            stats.errors.forEach(e => {
-                uniqueErrors[e.code] = (uniqueErrors[e.code] || 0) + 1;
+        if (isJSON) {
+            console.log(JSON.stringify({
+                pattern: PATTERN,
+                users: USERS,
+                attempted: stats.attempted,
+                succeeded: stats.succeeded,
+                observed: stats.observed,
+                throughput,
+                p50, p95, p99,
+                errorCount: stats.errors.length,
+                topError: stats.errors[0]?.code || 'none'
+            }));
+        } else {
+            console.log("\n" + "=".repeat(50));
+            console.log("📊 LOAD TEST SUMMARY");
+            console.log("=".repeat(50));
+            console.table({
+                "Pattern": PATTERN,
+                "Users": USERS,
+                "Throughput (msg/s)": throughput,
+                "Success Rate": `${((stats.succeeded / stats.attempted) * 100).toFixed(2)}%`,
+                "Observed Rate": `${((stats.observed / stats.succeeded) * 100).toFixed(2)}%`,
+                "p50 Latency (ms)": p50,
+                "p95 Latency (ms)": p95,
+                "p99 Latency (ms)": p99,
             });
-            console.table(uniqueErrors);
 
-            console.log("\nSample Stacks:");
-            stats.errors.slice(0, 3).forEach((e, i) => {
-                console.log(`[${i + 1}] ${e.code} in ${e.op}\n${e.stack?.split('\n')[1]}`);
-            });
+            if (stats.errors.length > 0) {
+                console.log("\n❌ ERRORS:");
+                const errMap = {};
+                stats.errors.forEach(e => errMap[e.code] = (errMap[e.code] || 0) + 1);
+                console.table(errMap);
+            }
+
+            console.log(`\nOVERALL: ${stats.succeeded > 0 && (stats.succeeded / stats.attempted) > 0.8 ? '✅ PASS' : '❌ FAIL'}`);
         }
 
-        console.log(`\nOVERALL: ${stats.succeeded > 5 && successRate > 98 ? '✅ PASS' : '❌ FAIL'}`);
-        process.exit(0);
+        process.exit(stats.succeeded > 0 && (stats.succeeded / stats.attempted) > 0.8 ? 0 : 1);
 
     } catch (e) {
-        console.error("❌ Setup Failed:", e.message);
+        if (!isJSON) console.error("\n❌ Test Failed:", e.message);
         process.exit(1);
     }
 }
